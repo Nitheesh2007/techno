@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+motor
+pymongo
+python-dotenv
+python-multipart
+passlib[bcrypt]
+pyjwt
+apscheduler
+httpx
+numpy
