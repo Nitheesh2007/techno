@@ -15,7 +15,8 @@ import {
   FileText, 
   Barcode, 
   ArrowLeft,
-  CheckCircle2
+  CheckCircle2,
+  ScanLine
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -102,13 +103,21 @@ export default function AddProduct() {
     <DashboardLayout>
       <div className="max-w-4xl mx-auto">
         {/* Top Breadcrumb */}
-        <div className="mb-6">
+        <div className="flex items-center justify-between mb-6">
           <Link
             to="/products"
             className="inline-flex items-center space-x-2 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
           >
             <ArrowLeft size={16} />
             <span>{language === 'ta' ? '← உணவுகளின் பட்டியலுக்கு திரும்பு' : '← Back to Inventory'}</span>
+          </Link>
+
+          <Link
+            to="/scan"
+            className="inline-flex items-center space-x-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800 hover:scale-105 transition-all"
+          >
+            <ScanLine size={14} />
+            <span>{language === 'ta' ? '📷 பார்கோடு ஸ்கேன் செய்' : '📷 Auto-Scan Barcode'}</span>
           </Link>
         </div>
 
@@ -180,7 +189,7 @@ export default function AddProduct() {
             </div>
           </div>
 
-          {/* Row 2: Expiry Date & Quantity */}
+          {/* Row 2: Expiry Date, Quantity, Unit */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
@@ -222,8 +231,28 @@ export default function AddProduct() {
             </div>
           </div>
 
-          {/* Row 3: Location & Price */}
+          {/* Row 3: Barcode & Location */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 flex items-center justify-between">
+                <span>{language === 'ta' ? 'பார்கோடு (EAN / UPC)' : 'Barcode (EAN / UPC)'}</span>
+                {formData.barcode && (
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">
+                    ✓ {formData.barcode}
+                  </span>
+                )}
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="e.g. 8901030383011"
+                  value={formData.barcode}
+                  onChange={e => setFormData({ ...formData, barcode: e.target.value })}
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-mono outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                 {t('locationLabel')}
@@ -238,10 +267,13 @@ export default function AddProduct() {
                 ))}
               </select>
             </div>
+          </div>
 
+          {/* Row 4: Price & Notes */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                {t('estimatedPriceLabel')}
+                {t('estimatedPriceLabel')} ($)
               </label>
               <input
                 type="number"
@@ -251,20 +283,19 @@ export default function AddProduct() {
                 className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
-          </div>
 
-          {/* Notes */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-              {t('notesLabel')}
-            </label>
-            <input
-              type="text"
-              placeholder={t('notesPlaceholder')}
-              value={formData.notes}
-              onChange={e => setFormData({ ...formData, notes: e.target.value })}
-              className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-            />
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                {t('notesLabel')}
+              </label>
+              <input
+                type="text"
+                placeholder={t('notesPlaceholder')}
+                value={formData.notes}
+                onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
           </div>
 
           {/* Submit Action */}
