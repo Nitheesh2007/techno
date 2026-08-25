@@ -12,11 +12,11 @@ import {
   Apple, 
   Clock, 
   Leaf,
-  ChevronDown
+  Volume1
 } from 'lucide-react';
 import { aiEngine } from '../services/aiEngine';
 import { storage } from '../services/storage';
-import { sound } from '../services/sound';
+import { sound, speakVoice, getBestVoice } from '../services/sound';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function FreshBot() {
@@ -26,6 +26,7 @@ export default function FreshBot() {
   const [isListening, setIsListening] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
   const { language, t } = useLanguage();
@@ -33,14 +34,14 @@ export default function FreshBot() {
   useEffect(() => {
     // Initial welcome message based on language
     const welcome = language === 'ta'
-      ? "👋 வணக்கம்! நான் FreshBot AI, உங்கள் தனிப்பட்ட சமையலறை உணவுப் பாதுகாவலன். உங்கள் உணவுகள் வீணாவதைத் தடுக்க, சமையல் குறிப்புகள் அறிய அல்லது காலாவதியாகும் உணவுகளைப் பற்றி அறிய என்னிடம் தமிழில் கேளுங்கள்!"
-      : "👋 Hi there! I am FreshBot AI, your personal food waste guardian. How can I help you save food and cook smart today?";
+      ? "👋 வணக்கம்! நான் FreshBot AI, உங்கள் தமிழ் சமையலறை குரல் உதவியாளர். காலாவதியாகும் உணவுகள் மற்றும் சமையல் குறிப்புகளைப் பற்றி என்னிடம் தமிழில் பேசிக் கேளுங்கள்!"
+      : "👋 Hi there! I am FreshBot AI, your personal food waste guardian. Speak or ask me anything about cooking smart and preventing waste!";
 
     setMessages([
       { sender: 'bot', text: welcome, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
     ]);
 
-    // Setup Web Speech Recognition for Tamil & English
+    // Setup Web Speech Recognition for Tamil (ta-IN) & English (en-US)
     try {
       if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -81,28 +82,18 @@ export default function FreshBot() {
     if (isOpen) scrollToBottom();
   }, [messages, isOpen]);
 
-  // High-Quality Bilingual Voice Synthesizer (Tamil ta-IN & English en-US)
+  // Voice Synthesizer with Tamil ta-IN integration
   const speakText = (text) => {
-    try {
-      if (!voiceEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const cleanText = (text || '').replace(/[*_#`•]/g, '');
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.rate = 0.95;
-      utterance.lang = language === 'ta' ? 'ta-IN' : 'en-US';
+    if (!voiceEnabled) return;
+    setIsSpeaking(true);
+    speakVoice(text, language, () => setIsSpeaking(false));
+  };
 
-      const voices = window.speechSynthesis.getVoices();
-      if (language === 'ta') {
-        const tamilVoice = voices.find(v => v.lang === 'ta-IN' || v.lang === 'ta_IN' || v.lang.startsWith('ta'));
-        if (tamilVoice) {
-          utterance.voice = tamilVoice;
-        }
-      }
-      
-      window.speechSynthesis.speak(utterance);
-    } catch (err) {
-      console.warn('Speech synthesis notice:', err);
-    }
+  const handleTestTamilVoice = () => {
+    const testText = language === 'ta'
+      ? "வணக்கம்! நான் உங்கள் தமிழ் குரல் உதவியாளர். சமையலறை மற்றும் உணவுகளைப் பற்றி என்னிடம் கேளுங்கள்."
+      : "Hello! I am FreshBot AI, your zero-waste assistant.";
+    speakText(testText);
   };
 
   const handleSend = async (manualText) => {
@@ -130,7 +121,7 @@ export default function FreshBot() {
         if (urgent.length === 0) {
           botResponseText = "✨ உங்கள் சமையலறை புத்தம் புதியதாக உள்ளது! அடுத்த 3 நாட்களில் எந்த உணவும் காலாவதியாகவில்லை.";
         } else {
-          botResponseText = `🚨 அவசரம்: உங்கள் குளிர்சாதனப் பெட்டியில் ${urgent.map(u => u.product_name).join(', ')} விரைவில் காலாவதியாகிறது! இவற்றை வைத்து சமைக்க செய்முறையை உருவாக்குகிறேன்.`;
+          botResponseText = `🚨 அவசரம்: உங்கள் குளிர்சாதனப் பெட்டியில் ${urgent.map(u => u.product_name).join(', ')} விரைவில் காலாவதியாகிறது!`;
         }
       }
 
@@ -146,7 +137,7 @@ export default function FreshBot() {
     } catch (err) {
       console.warn('FreshBot chat error caught safely:', err);
       const fallbackText = language === 'ta'
-        ? "✨ FreshBot AI குரல் உதவியாளர் செயலில் உள்ளது! சமையல் குறிப்புகள் அல்லது காலாவதியாகும் உணவுகளைப் பற்றி தமிழில் கேளுங்கள்."
+        ? "✨ FreshBot AI தமிழ் குரல் உதவியாளர் செயலில் உள்ளது! சமையல் குறிப்புகள் அல்லது காலாவதியாகும் உணவுகளைப் பற்றி தமிழில் கேளுங்கள்."
         : "✨ FreshBot AI is active! Ask me for quick zero-waste recipes or to check what's expiring.";
       
       setMessages((prev) => [
@@ -204,6 +195,9 @@ export default function FreshBot() {
           onClick={() => {
             setIsOpen(true);
             sound.playBeep(900, 0.05);
+            if (language === 'ta') {
+              handleTestTamilVoice();
+            }
           }}
           className="bg-gradient-to-tr from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white p-4 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center relative group"
           aria-label="Open FreshBot Assistant"
@@ -241,6 +235,13 @@ export default function FreshBot() {
             </div>
 
             <div className="flex items-center space-x-1">
+              <button
+                onClick={handleTestTamilVoice}
+                title={language === 'ta' ? 'குரல் ஒலியை சோதிக்கவும்' : 'Test voice synthesis'}
+                className="p-1.5 rounded-lg text-emerald-100 hover:bg-white/10 transition-colors"
+              >
+                <Volume1 size={17} />
+              </button>
               <button
                 onClick={() => setVoiceEnabled(!voiceEnabled)}
                 title={voiceEnabled ? (language === 'ta' ? 'குரல் ஒலியை முடக்கு' : 'Mute speech voice') : (language === 'ta' ? 'குரல் ஒலியை இயக்கு' : 'Enable speech voice')}

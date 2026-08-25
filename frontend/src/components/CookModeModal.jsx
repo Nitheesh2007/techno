@@ -14,7 +14,7 @@ import {
   ChefHat,
   Flame
 } from 'lucide-react';
-import { sound } from '../services/sound';
+import { sound, speakVoice } from '../services/sound';
 import { triggerConfetti } from '../services/confetti';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -25,7 +25,7 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
   const { language, tf } = useLanguage();
   
   // Timer State
-  const [timerSeconds, setTimerSeconds] = useState(300); // 5 mins default
+  const [timerSeconds, setTimerSeconds] = useState(300);
   const [timerRunning, setTimerRunning] = useState(false);
   const timerRef = useRef(null);
 
@@ -63,25 +63,12 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
 
   // Voice Narration on Step Change with Tamil Speech Synthesis
   useEffect(() => {
-    if (ttsActive && typeof window !== 'undefined' && ('speechSynthesis' in window)) {
-      window.speechSynthesis.cancel();
+    if (ttsActive) {
       const text = language === 'ta'
         ? `படி ${currentStepIdx + 1}: ${steps[currentStepIdx]}`
         : `Step ${currentStepIdx + 1}: ${steps[currentStepIdx]}`;
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.95;
-      utterance.lang = language === 'ta' ? 'ta-IN' : 'en-US';
-
-      const voices = window.speechSynthesis.getVoices();
-      if (language === 'ta') {
-        const tamilVoice = voices.find(v => v.lang === 'ta-IN' || v.lang === 'ta_IN' || v.lang.startsWith('ta'));
-        if (tamilVoice) {
-          utterance.voice = tamilVoice;
-        }
-      }
-
-      window.speechSynthesis.speak(utterance);
+      speakVoice(text, language);
     }
   }, [currentStepIdx, ttsActive, language]);
 
@@ -132,6 +119,7 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
             <button
               onClick={onClose}
               className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              title={language === 'ta' ? 'மூடு' : 'Close'}
             >
               <X size={20} />
             </button>

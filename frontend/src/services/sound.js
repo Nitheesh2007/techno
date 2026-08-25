@@ -1,4 +1,63 @@
-// Web Audio API Synthesizer - Zero external audio file dependencies
+// Web Audio API Synthesizer & Multilingual Tamil/English Speech Synthesis Engine
+
+let cachedVoices = [];
+
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+  cachedVoices = window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => {
+    cachedVoices = window.speechSynthesis.getVoices();
+  };
+}
+
+export const getBestVoice = (lang = 'en') => {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
+  const voices = cachedVoices.length > 0 ? cachedVoices : window.speechSynthesis.getVoices();
+  
+  if (lang === 'ta' || lang.startsWith('ta')) {
+    // Look for dedicated Tamil voices (e.g. Google தமிழ், Microsoft Valluvar, Apple Tamil, etc.)
+    const tamilVoice = voices.find(v => 
+      v.lang === 'ta-IN' || 
+      v.lang === 'ta_IN' || 
+      v.lang === 'ta-LK' || 
+      v.lang === 'ta-SG' || 
+      v.lang === 'ta' || 
+      v.name.toLowerCase().includes('tamil') || 
+      v.name.toLowerCase().includes('valluvar') ||
+      v.lang.toLowerCase().startsWith('ta')
+    );
+    if (tamilVoice) return tamilVoice;
+  }
+  
+  return voices.find(v => v.lang === 'en-US' || v.lang.startsWith('en')) || voices[0] || null;
+};
+
+export const speakVoice = (text, lang = 'en', onEnd) => {
+  try {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    
+    const cleanText = (text || '').replace(/[*_#`•]/g, '').trim();
+    if (!cleanText) return;
+    
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = lang === 'ta' ? 0.9 : 1.0;
+    utterance.pitch = 1.0;
+    utterance.lang = lang === 'ta' ? 'ta-IN' : 'en-US';
+    
+    const selectedVoice = getBestVoice(lang);
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+    
+    if (onEnd) {
+      utterance.onend = onEnd;
+    }
+    
+    window.speechSynthesis.speak(utterance);
+  } catch (e) {
+    console.warn('Speech synthesis notice:', e);
+  }
+};
 
 class SoundEngine {
   constructor() {
@@ -13,6 +72,16 @@ class SoundEngine {
         this.ctx = new AudioCtx();
       }
     }
+  }
+
+  speak(text, lang = 'en', onEnd) {
+    if (!this.enabled) return;
+    speakVoice(text, lang, onEnd);
+  }
+
+  speakTamil(text, onEnd) {
+    if (!this.enabled) return;
+    speakVoice(text, 'ta', onEnd);
   }
 
   playBeep(freq = 880, duration = 0.08) {
@@ -43,7 +112,7 @@ class SoundEngine {
       if (!this.ctx || !this.enabled) return;
       if (this.ctx.state === 'suspended') this.ctx.resume();
 
-      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+      const notes = [523.25, 659.25, 783.99, 1046.50];
       notes.forEach((freq, index) => {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
