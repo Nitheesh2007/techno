@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import api from '../services/api';
+import { storage } from '../services/storage';
 import { sound } from '../services/sound';
 import { triggerConfetti } from '../services/confetti';
 import { useLanguage } from '../context/LanguageContext';
@@ -23,14 +24,20 @@ import {
   Zap,
   Copy,
   Check,
-  Edit3
+  Edit3,
+  Calendar,
+  Layers,
+  AlertTriangle,
+  Tag
 } from 'lucide-react';
 
 const PRESET_SAMPLES = [
   {
     name: 'Greek Yogurt (Plain 500g)',
     brand: 'Chobani Pure / Mother Dairy',
+    mfg_date: '2026-08-15',
     expiry: '2026-09-02',
+    batch_number: 'LOT-98214',
     category: 'Dairy & Eggs',
     price: 4.20,
     location: 'Fridge Door',
@@ -42,7 +49,9 @@ const PRESET_SAMPLES = [
   {
     name: 'Organic Whole Milk 1L',
     brand: 'Horizon Organic / Amul',
+    mfg_date: '2026-08-20',
     expiry: '2026-08-30',
+    batch_number: 'LOT-55102',
     category: 'Dairy & Eggs',
     price: 3.89,
     location: 'Fridge Top Shelf',
@@ -54,7 +63,9 @@ const PRESET_SAMPLES = [
   {
     name: 'Artisan Sourdough Loaf',
     brand: 'Rustic Bakery',
+    mfg_date: '2026-08-24',
     expiry: '2026-08-28',
+    batch_number: 'BATCH-004',
     category: 'Bakery',
     price: 5.50,
     location: 'Bread Box',
@@ -66,7 +77,9 @@ const PRESET_SAMPLES = [
   {
     name: 'Fresh Chicken Breast (600g)',
     brand: 'Free-Range Farms',
+    mfg_date: '2026-08-23',
     expiry: '2026-08-27',
+    batch_number: 'MEAT-8812',
     category: 'Meat & Poultry',
     price: 9.40,
     location: 'Fridge Bottom Shelf',
@@ -78,7 +91,9 @@ const PRESET_SAMPLES = [
   {
     name: 'Fresh Strawberries Punnet',
     brand: 'Driscoll Organic',
+    mfg_date: '2026-08-23',
     expiry: '2026-08-26',
+    batch_number: 'BERRY-91',
     category: 'Produce',
     price: 4.50,
     location: 'Fridge Crisper Drawer',
@@ -90,7 +105,9 @@ const PRESET_SAMPLES = [
   {
     name: 'Organic Baby Spinach (300g)',
     brand: 'Earthbound Farm',
+    mfg_date: '2026-08-22',
     expiry: '2026-08-29',
+    batch_number: 'GREENS-42',
     category: 'Produce',
     price: 3.20,
     location: 'Fridge Crisper Drawer',
@@ -101,6 +118,34 @@ const PRESET_SAMPLES = [
   }
 ];
 
+// Multi-Format Date Parser in JS
+function parseFlexibleDate(str) {
+  if (!str) return null;
+  const clean = str.trim();
+
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean;
+
+  // DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
+  const dmy = clean.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if (dmy) {
+    const d = dmy[1].padStart(2, '0');
+    const m = dmy[2].padStart(2, '0');
+    const y = dmy[3];
+    return `${y}-${m}-${d}`;
+  }
+
+  // Textual: 12 Aug 2026 or Aug 12, 2026
+  try {
+    const parsed = new Date(clean);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toISOString().split('T')[0];
+    }
+  } catch (e) {}
+
+  return null;
+}
+
 // Crisp Authentic Mathematical EAN-13 SVG Barcode Graphic Generator
 function SvgBarcode({ code = '8901030383033' }) {
   const { modules, clean } = generateEan13Modules(code);
@@ -109,7 +154,7 @@ function SvgBarcode({ code = '8901030383033' }) {
 
   return (
     <div className="flex flex-col items-center p-4 bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md">
-      <svg width={modules.length * moduleWidth + startX * 2} height={80} className="overflow-visible">
+      <svg width={modules.length * moduleWidth + startX * 2} height={75} className="overflow-visible">
         {modules.map((m, idx) => {
           if (!m.bit) return null;
           return (
@@ -118,15 +163,15 @@ function SvgBarcode({ code = '8901030383033' }) {
               x={startX + idx * moduleWidth}
               y={6}
               width={moduleWidth}
-              height={m.guard ? 58 : 50}
+              height={m.guard ? 55 : 48}
               fill="currentColor"
               className="text-slate-950 dark:text-white"
             />
           );
         })}
       </svg>
-      <div className="font-mono text-sm font-extrabold tracking-widest mt-1 text-slate-900 dark:text-white flex items-center justify-between w-full px-2">
-        <span className="text-xs text-slate-500">{clean[0]}</span>
+      <div className="font-mono text-xs font-extrabold tracking-widest mt-1 text-slate-900 dark:text-white flex items-center justify-between w-full px-2">
+        <span className="text-slate-500">{clean[0]}</span>
         <span>{clean.slice(1, 7)}</span>
         <span>{clean.slice(7, 13)}</span>
       </div>
@@ -140,6 +185,7 @@ export default function Scan() {
   const [activeTab, setActiveTab] = useState('presets');
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
+  const [isEditingResult, setIsEditingResult] = useState(false);
   const [barcodeInput, setBarcodeInput] = useState('');
   const [cameraActive, setCameraActive] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -213,15 +259,21 @@ export default function Scan() {
       const expDate = new Date();
       expDate.setDate(expDate.getDate() + (meta.shelfLifeDays || 5));
 
+      const mfgDate = new Date();
+      mfgDate.setDate(mfgDate.getDate() - 3);
+
       setScanResult({
         product_name: meta.name,
+        brand: meta.brand || 'Verified Producer',
         category: meta.category,
+        mfg_date: mfgDate.toISOString().split('T')[0],
         expiry_date: expDate.toISOString().split('T')[0],
+        batch_number: `BATCH-${cleanCode.slice(-4) || '992'}`,
         estimated_price: meta.price,
         location: meta.location,
         barcode: cleanCode || '8901030383033',
         format: format || 'EAN-13',
-        ocr_confidence: 0.99,
+        ocr_confidence: 0.98,
         unit: meta.unit || 'Unit'
       });
       sound.playSuccess();
@@ -236,8 +288,11 @@ export default function Scan() {
       setIsScanning(false);
       setScanResult({
         product_name: sample.name,
+        brand: sample.brand,
         category: sample.category,
+        mfg_date: sample.mfg_date,
         expiry_date: sample.expiry,
+        batch_number: sample.batch_number,
         estimated_price: sample.price,
         location: sample.location,
         barcode: sample.barcode,
@@ -302,7 +357,27 @@ export default function Scan() {
     }
   };
 
-  const handleProceedToSave = () => {
+  const handleConfirmAndDirectSave = () => {
+    if (!scanResult) return;
+    storage.addProduct({
+      product_name: scanResult.product_name,
+      brand: scanResult.brand,
+      category: scanResult.category,
+      expiry_date: scanResult.expiry_date,
+      mfg_date: scanResult.mfg_date,
+      batch_number: scanResult.batch_number,
+      estimated_price: scanResult.estimated_price,
+      location: scanResult.location,
+      barcode: scanResult.barcode,
+      unit: scanResult.unit,
+      ocr_confidence: scanResult.ocr_confidence
+    });
+    sound.playSuccess();
+    triggerConfetti(3000);
+    navigate('/products');
+  };
+
+  const handleProceedToEditForm = () => {
     if (!scanResult) return;
     navigate('/products/add', { state: { scannedData: scanResult } });
   };
@@ -311,7 +386,7 @@ export default function Scan() {
     <DashboardLayout>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
             <Sparkles size={13} />
             <span>{t('multiEngineBadge')}</span>
@@ -321,7 +396,9 @@ export default function Scan() {
             {t('scannerTitle')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {language === 'ta' ? 'பார்கோடு அல்லது லேபிள்களை கேமரா முன் காட்டி தானாகவே துல்லியமாக ஸ்கேன் செய்யவும்.' : 'Show any barcode in front of the camera or upload an image to automatically extract and decode in real time.'}
+            {language === 'ta'
+              ? 'பார்கோடு, காலாவதி தேதி (EXP) மற்றும் உற்பத்தி தேதி (MFD) துல்லியமாக ஸ்கேன் செய்து சரிபார்க்கவும்.'
+              : 'Multi-engine scanner detecting product name, barcode, expiry date, manufacturing date, and batch number.'}
           </p>
         </div>
 
@@ -395,7 +472,7 @@ export default function Scan() {
           </div>
         )}
 
-        {/* TAB 2: Live Camera (Continuous Automatic Detection - No Manual Capture Required) */}
+        {/* TAB 2: Live Camera */}
         {activeTab === 'camera' && (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm mb-6 text-center">
             <div className="relative max-w-lg mx-auto h-72 sm:h-80 rounded-2xl bg-black overflow-hidden flex items-center justify-center border-2 border-emerald-500/40 mb-4">
@@ -483,19 +560,24 @@ export default function Scan() {
           </div>
         )}
 
-        {/* Scan Results Card with Visual Barcode */}
+        {/* AI OCR & BARCODE VERIFICATION CONFIRMATION CARD */}
         {scanResult && !isScanning && (
-          <div className="bg-gradient-to-br from-emerald-50/80 to-teal-50/60 dark:from-slate-900 dark:to-emerald-950/30 rounded-3xl p-6 sm:p-8 border-2 border-emerald-500/50 shadow-xl animate-in zoom-in-95 duration-200 space-y-6">
+          <div className="bg-gradient-to-br from-emerald-50/90 to-teal-50/70 dark:from-slate-900 dark:to-emerald-950/40 rounded-3xl p-6 sm:p-8 border-2 border-emerald-500/50 shadow-xl animate-in zoom-in-95 duration-200 space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-emerald-200/60 dark:border-emerald-800/40">
               <div className="flex items-center space-x-2">
                 <CheckCircle2 size={22} className="text-emerald-600 dark:text-emerald-400" />
-                <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white">
-                  {language === 'ta' ? 'பார்கோடு வெற்றிகரமாக கண்டறியப்பட்டது!' : 'Barcode & Product Detected!'}
-                </h3>
+                <div>
+                  <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white">
+                    {language === 'ta' ? 'OCR & பார்கோடு முடிவு சரிபார்ப்பு' : 'OCR & Barcode Extraction Result'}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {language === 'ta' ? 'தயவுசெய்து தகவலை சரிபார்த்து சேமிக்கவும்.' : 'Please verify detected data before saving.'}
+                  </p>
+                </div>
               </div>
               <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-600 text-white flex items-center gap-1">
                 <Sparkles size={12} />
-                {t('confidenceLabel', { pct: Math.round(scanResult.ocr_confidence * 100) })}
+                {Math.round(scanResult.ocr_confidence * 100)}% Confidence
               </span>
             </div>
 
@@ -527,7 +609,7 @@ export default function Scan() {
                 </div>
 
                 <p className="text-xs text-slate-400 mt-2">
-                  {language === 'ta' ? 'படத்திலிருந்து நேரடியாக பிரித்தெடுக்கப்பட்டது • நிகழ்நேர வரைபடம்' : 'Extracted directly from image • Real-time verified stripes'}
+                  {language === 'ta' ? 'படத்திலிருந்து நேரடியாக பிரித்தெடுக்கப்பட்டது' : 'Decoded directly from image scan'}
                 </p>
               </div>
 
@@ -537,45 +619,75 @@ export default function Scan() {
               </div>
             </div>
 
-            {/* Product Meta Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
-                <span className="text-[10px] text-slate-400 uppercase font-bold">{t('detectedProduct')}</span>
-                <p className="font-heading font-bold text-base text-slate-900 dark:text-white mt-1">
-                  {tf(scanResult.product_name)}
-                </p>
+            {/* Extracted Fields Specification Form */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700">
+                <span className="text-[10px] text-slate-400 uppercase font-bold">{language === 'ta' ? 'உணவு பெயர்' : 'Product Name'}</span>
+                <input
+                  type="text"
+                  value={scanResult.product_name}
+                  onChange={e => setScanResult({ ...scanResult, product_name: e.target.value })}
+                  className="w-full mt-1 font-bold text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-900 dark:text-white outline-none"
+                />
               </div>
 
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
-                <span className="text-[10px] text-slate-400 uppercase font-bold">{t('parsedExpiry')}</span>
-                <p className="font-heading font-bold text-base text-emerald-600 dark:text-emerald-400 mt-1">
-                  {scanResult.expiry_date}
-                </p>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700">
+                <span className="text-[10px] text-emerald-600 uppercase font-bold">{language === 'ta' ? 'காலாவதி தேதி (EXP)' : 'Expiry Date (EXP)'}</span>
+                <input
+                  type="date"
+                  value={scanResult.expiry_date}
+                  onChange={e => setScanResult({ ...scanResult, expiry_date: e.target.value })}
+                  className="w-full mt-1 font-bold text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-emerald-600 dark:text-emerald-400 outline-none"
+                />
               </div>
 
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
-                <span className="text-[10px] text-slate-400 uppercase font-bold">{t('categoryGroup')}</span>
-                <p className="font-heading font-bold text-base text-slate-900 dark:text-white mt-1">
-                  {tc(scanResult.category)}
-                </p>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700">
+                <span className="text-[10px] text-slate-400 uppercase font-bold">{language === 'ta' ? 'உற்பத்தி தேதி (MFD)' : 'Mfg Date (MFD)'}</span>
+                <input
+                  type="date"
+                  value={scanResult.mfg_date || ''}
+                  onChange={e => setScanResult({ ...scanResult, mfg_date: e.target.value })}
+                  className="w-full mt-1 font-bold text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-900 dark:text-white outline-none"
+                />
+              </div>
+
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700">
+                <span className="text-[10px] text-slate-400 uppercase font-bold">{language === 'ta' ? 'தொகுதி எண் (Batch)' : 'Batch Number'}</span>
+                <input
+                  type="text"
+                  value={scanResult.batch_number || ''}
+                  onChange={e => setScanResult({ ...scanResult, batch_number: e.target.value })}
+                  className="w-full mt-1 font-mono font-bold text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-900 dark:text-white outline-none"
+                />
               </div>
             </div>
 
             {/* Bottom Actions */}
-            <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
               <button
                 onClick={() => { setScanResult(null); setUploadedImagePreview(null); }}
                 className="bg-white dark:bg-slate-800 hover:bg-slate-100 text-slate-700 dark:text-slate-300 font-bold px-4 py-2.5 rounded-xl text-xs border border-slate-200 dark:border-slate-700 transition-colors"
               >
                 {t('scanAnother')}
               </button>
-              <button
-                onClick={handleProceedToSave}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow-md shadow-emerald-600/20 transition-all hover:scale-105 flex items-center space-x-1.5"
-              >
-                <span>{t('confirmAndSave')}</span>
-                <ArrowRight size={15} />
-              </button>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleProceedToEditForm}
+                  className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5"
+                >
+                  <Edit3 size={14} />
+                  <span>{language === 'ta' ? 'படிவத்தில் திருத்து' : 'Edit in Form'}</span>
+                </button>
+
+                <button
+                  onClick={handleConfirmAndDirectSave}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow-md shadow-emerald-600/20 transition-all hover:scale-105 flex items-center space-x-1.5"
+                >
+                  <CheckCircle2 size={16} />
+                  <span>{language === 'ta' ? 'உறுதிசெய்து சேமி' : 'Confirm & Save'}</span>
+                </button>
+              </div>
             </div>
           </div>
         )}

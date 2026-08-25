@@ -1,10 +1,19 @@
-// Intelligent Local Engine for Food Expiry Guardian AI - 100% Fresh Clean State
+// Comprehensive SaaS Storage Engine for Food Expiry Guardian AI
+import { 
+  calculateDaysRemaining, 
+  getExpiryStatus, 
+  calculateWasteRiskScore, 
+  STATUS_TYPES 
+} from '../utils/statusEngine';
 
 const STORAGE_KEYS = {
   PRODUCTS: 'feg_products',
+  ARCHIVED_PRODUCTS: 'feg_archived_products',
   USER: 'feg_user',
   TOKEN: 'token',
   NOTIFICATIONS: 'feg_notifications',
+  WASTE_RECORDS: 'feg_waste_records',
+  ACTIVITY_LOGS: 'feg_activity_logs',
   MEAL_PLAN: 'feg_meal_plan',
   SAVINGS: 'feg_savings_stats',
   THEME: 'feg_theme',
@@ -22,157 +31,21 @@ const getFutureDate = (days) => {
   return d.toISOString().split('T')[0];
 };
 
-// Clean Fresh State: 0 initial items in inventory
-const INITIAL_PRODUCTS = [];
-
-// Sample items available on-demand only if user clicks "Load Samples"
-const SAMPLE_PRODUCTS_PRESET = [
-  {
-    id: 'prod-1',
-    product_name: 'Organic Whole Milk',
-    category: 'Dairy & Eggs',
-    expiry_date: getFutureDate(1),
-    quantity: 1,
-    unit: 'Bottle (1L)',
-    barcode: '8901030383011',
-    estimated_price: 3.89,
-    location: 'Fridge Top Shelf',
-    notes: 'Opened 3 days ago',
-    ocr_confidence: 0.94,
-    calories: 620,
-    protein: 32,
-    carbs: 48,
-    fat: 34,
-    fiber: 0,
-    ownership: 'Shared'
-  },
-  {
-    id: 'prod-2',
-    product_name: 'Fresh Strawberries',
-    category: 'Produce',
-    expiry_date: getFutureDate(0),
-    quantity: 2,
-    unit: 'Punnets (250g)',
-    barcode: '8901030383022',
-    estimated_price: 4.50,
-    location: 'Fridge Crisper Drawer',
-    notes: 'Sweet and ripe, use quickly',
-    ocr_confidence: 0.98,
-    calories: 160,
-    protein: 3,
-    carbs: 38,
-    fat: 1,
-    fiber: 10,
-    ownership: 'Shared'
-  },
-  {
-    id: 'prod-3',
-    product_name: 'Greek Yogurt Plain',
-    category: 'Dairy & Eggs',
-    expiry_date: getFutureDate(3),
-    quantity: 1,
-    unit: 'Tub (500g)',
-    barcode: '8901030383033',
-    estimated_price: 4.20,
-    location: 'Fridge Door',
-    notes: 'Great for smoothies or parfaits',
-    ocr_confidence: 0.91,
-    calories: 380,
-    protein: 50,
-    carbs: 18,
-    fat: 10,
-    fiber: 0,
-    ownership: 'Personal (Alex)'
-  }
-];
-
-const INITIAL_SHOPPING_LIST = [];
-const INITIAL_DONATIONS = [];
-
-const INITIAL_CHALLENGES = {
-  xp: 450,
-  level: 2,
-  levelTitle: 'Eco Guardian Novice',
-  currentStreakDays: 1,
-  bestStreakDays: 7,
-  quests: [
-    { id: 'q-1', title: 'Zero-Waste First Scan', desc: 'Scan your first food item using the OCR scanner.', xpReward: 200, progress: 0, target: 1, completed: false, badge: '📷' },
-    { id: 'q-2', title: 'Fresh Fridge Setup', desc: 'Add 3 fresh grocery items to your inventory.', xpReward: 150, progress: 0, target: 3, completed: false, badge: '🥗' },
-    { id: 'q-3', title: 'Guided Chef Cooking', desc: 'Cook a recipe with your ingredients.', xpReward: 250, progress: 0, target: 1, completed: false, badge: '👨‍🍳' }
-  ],
-  trophies: [
-    { id: 't-1', title: 'First Food Saved', desc: 'Logged your first zero-waste meal.', unlocked: false, icon: '🌱' },
-    { id: 't-2', title: 'Centurion Saver', desc: 'Saved over $100 in prevented food waste.', unlocked: false, icon: '💰' },
-    { id: 't-3', title: 'Community Hero', desc: 'Donated an item to a community food fridge.', unlocked: false, icon: '❤️' },
-    { id: 't-4', title: 'Master Chef Zero', desc: 'Cooked 10 AI zero-waste recipes.', unlocked: false, icon: '👨‍🍳' }
-  ]
-};
-
-const INITIAL_HOUSEHOLD = {
-  name: 'Maplewood Suite 4B',
-  members: [
-    { id: 'mem-1', name: 'Alex Rivera', role: 'Kitchen Admin', avatar: '🥑', color: 'bg-emerald-500' },
-    { id: 'mem-2', name: 'Maya Lin', role: 'Roommate', avatar: '🍓', color: 'bg-rose-500' }
-  ],
-  chores: [],
-  feed: []
-};
-
-const INITIAL_COMPOST = {
-  greensKg: 0.0,
-  brownsKg: 0.0,
-  lastTurned: 'Today',
-  moistureLevel: 'Fresh & Clean (Ready for Scraps)',
-  totalCompostHarvestedKg: 0.0,
-  scrapsSaved: [
-    { id: 'sc-1', item: 'Coffee Grounds', bestUse: 'Soil Nitrogen Booster & Natural Deodorizer', category: 'Garden' },
-    { id: 'sc-2', item: 'Vegetable Peels (Carrot, Onion, Celery)', bestUse: 'Simmer into Golden Homemade Vegetable Scrap Broth', category: 'Broth' },
-    { id: 'sc-3', item: 'Citrus Peels (Orange, Lemon)', bestUse: 'Infuse in white vinegar for eco all-purpose cleaner spray', category: 'Cleaning' },
-    { id: 'sc-4', item: 'Eggshells (Crushed)', bestUse: 'Calcium supplement for tomato plants & natural pest deterrent', category: 'Garden' },
-    { id: 'sc-5', item: 'Banana Peels', bestUse: 'Soak in water for 48h to make organic potassium plant fertilizer', category: 'Liquid Fertilizer' }
-  ]
-};
-
 const DEFAULT_SETTINGS = {
   currency: '$',
   currencyCode: 'USD',
   language: 'en',
-  dietaryPreference: 'All (No Restrictions)',
+  theme: 'system',
   soundEffects: true,
   leadTimeDays: 3,
   notificationsEmail: true,
+  notificationsBrowser: true,
+  notifyIntervals: [30, 14, 7, 3, 1, 0],
   ecoGoalMonthlyKg: 50
 };
 
-export const computeStatus = (expiryDateStr) => {
-  if (!expiryDateStr) return 'SAFE';
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const expiry = new Date(expiryDateStr);
-  expiry.setHours(0, 0, 0, 0);
-  
-  const diffTime = expiry - today;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays < 0) return 'EXPIRED';
-  if (diffDays <= 1) return 'URGENT';
-  if (diffDays <= 3) return 'EXPIRING SOON';
-  return 'SAFE';
-};
-
-export const getDaysRemaining = (expiryDateStr) => {
-  if (!expiryDateStr) return 999;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const expiry = new Date(expiryDateStr);
-  expiry.setHours(0, 0, 0, 0);
-  const diffTime = expiry - today;
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-};
-
 export const storage = {
-  // Products CRUD - Clean Fresh Default
+  // --- Products CRUD & Lifecycle ---
   getProducts: () => {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
@@ -181,11 +54,17 @@ export const storage = {
         return [];
       }
       const parsed = JSON.parse(data);
-      return parsed.map(p => ({
-        ...p,
-        status: computeStatus(p.expiry_date),
-        days_left: getDaysRemaining(p.expiry_date)
-      }));
+      return parsed.map(p => {
+        const days = calculateDaysRemaining(p.expiry_date);
+        const status = getExpiryStatus(p.expiry_date);
+        const waste_risk = calculateWasteRiskScore(p);
+        return {
+          ...p,
+          days_left: days !== null ? days : 999,
+          status,
+          waste_risk
+        };
+      });
     } catch {
       return [];
     }
@@ -200,161 +79,447 @@ export const storage = {
     const newProduct = {
       ...product,
       id: product.id || `prod-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-      quantity: Number(product.quantity) || 1,
-      estimated_price: Number(product.estimated_price) || 3.50,
-      calories: Number(product.calories) || 250,
-      protein: Number(product.protein) || 10,
-      carbs: Number(product.carbs) || 20,
-      fat: Number(product.fat) || 5,
-      fiber: Number(product.fiber) || 2,
+      brand: product.brand || '',
+      batch_number: product.batch_number || '',
+      mfg_date: product.mfg_date || '',
+      purchase_date: product.purchase_date || new Date().toISOString().split('T')[0],
+      quantity: Math.max(1, Number(product.quantity) || 1),
+      unit: product.unit || 'pcs',
+      estimated_price: Math.max(0, Number(product.estimated_price || product.price) || 3.50),
+      location: product.location || 'Fridge Crisper Drawer',
+      barcode: product.barcode || '',
+      notes: product.notes || '',
+      ocr_confidence: product.ocr_confidence || 1.0,
       ownership: product.ownership || 'Shared',
-      created_at: new Date().toISOString()
+      created_at: product.created_at || new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     products.unshift(newProduct);
     storage.saveProducts(products);
+    storage.addActivityLog('ADDED', { name: newProduct.product_name, category: newProduct.category });
     storage.generateNotifications();
-    return { ...newProduct, status: computeStatus(newProduct.expiry_date), days_left: getDaysRemaining(newProduct.expiry_date) };
+    return {
+      ...newProduct,
+      days_left: calculateDaysRemaining(newProduct.expiry_date),
+      status: getExpiryStatus(newProduct.expiry_date),
+      waste_risk: calculateWasteRiskScore(newProduct)
+    };
   },
 
   updateProduct: (id, updatedFields) => {
     const products = storage.getProducts();
     const idx = products.findIndex(p => p.id === id);
     if (idx !== -1) {
-      products[idx] = { ...products[idx], ...updatedFields };
+      products[idx] = {
+        ...products[idx],
+        ...updatedFields,
+        updated_at: new Date().toISOString()
+      };
       storage.saveProducts(products);
+      storage.addActivityLog('UPDATED', { name: products[idx].product_name });
       storage.generateNotifications();
-      return { ...products[idx], status: computeStatus(products[idx].expiry_date), days_left: getDaysRemaining(products[idx].expiry_date) };
+      return {
+        ...products[idx],
+        days_left: calculateDaysRemaining(products[idx].expiry_date),
+        status: getExpiryStatus(products[idx].expiry_date),
+        waste_risk: calculateWasteRiskScore(products[idx])
+      };
     }
     return null;
   },
 
   deleteProduct: (id) => {
     const products = storage.getProducts();
+    const target = products.find(p => p.id === id);
     const filtered = products.filter(p => p.id !== id);
     storage.saveProducts(filtered);
+    if (target) {
+      storage.addActivityLog('DELETED', { name: target.product_name });
+    }
     storage.generateNotifications();
     return true;
   },
 
-  clearAllProducts: () => {
-    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify([]));
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify([]));
-    return [];
-  },
-
-  loadSamplePresetData: () => {
-    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(SAMPLE_PRODUCTS_PRESET));
+  duplicateProduct: (id) => {
+    const products = storage.getProducts();
+    const target = products.find(p => p.id === id);
+    if (!target) return null;
+    const duplicated = {
+      ...target,
+      id: `prod-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      product_name: `${target.product_name} (Copy)`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    products.unshift(duplicated);
+    storage.saveProducts(products);
+    storage.addActivityLog('DUPLICATED', { name: target.product_name });
     storage.generateNotifications();
-    return storage.getProducts();
+    return duplicated;
   },
 
-  consumeProduct: (id) => {
+  archiveProduct: (id) => {
+    const products = storage.getProducts();
+    const target = products.find(p => p.id === id);
+    if (!target) return false;
+    const filtered = products.filter(p => p.id !== id);
+    storage.saveProducts(filtered);
+
+    const archived = storage.getArchivedProducts();
+    archived.unshift({ ...target, archived_at: new Date().toISOString() });
+    localStorage.setItem(STORAGE_KEYS.ARCHIVED_PRODUCTS, JSON.stringify(archived));
+    storage.addActivityLog('ARCHIVED', { name: target.product_name });
+    storage.generateNotifications();
+    return true;
+  },
+
+  restoreProduct: (id) => {
+    const archived = storage.getArchivedProducts();
+    const target = archived.find(p => p.id === id);
+    if (!target) return false;
+    const filtered = archived.filter(p => p.id !== id);
+    localStorage.setItem(STORAGE_KEYS.ARCHIVED_PRODUCTS, JSON.stringify(filtered));
+
+    const products = storage.getProducts();
+    products.unshift({ ...target, updated_at: new Date().toISOString() });
+    storage.saveProducts(products);
+    storage.addActivityLog('RESTORED', { name: target.product_name });
+    storage.generateNotifications();
+    return true;
+  },
+
+  getArchivedProducts: () => {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.ARCHIVED_PRODUCTS);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  // --- Waste Tracking (Consumed vs Discarded vs Donated) ---
+  markAsConsumed: (id, rating = 5, notes = '') => {
     const products = storage.getProducts();
     const product = products.find(p => p.id === id);
-    if (product) {
-      storage.recordSavings(product.estimated_price || 4.0, product.product_name, 'consumed');
-      storage.suggestAutoRestock(product.product_name, product.category, product.unit, product.estimated_price);
-      storage.addQuestXP(50);
-      const filtered = products.filter(p => p.id !== id);
-      storage.saveProducts(filtered);
-      storage.generateNotifications();
-      return product;
-    }
-    return null;
-  },
+    if (!product) return null;
 
-  markWasted: (id) => {
-    const products = storage.getProducts();
-    const product = products.find(p => p.id === id);
-    if (product) {
-      storage.recordSavings(product.estimated_price || 4.0, product.product_name, 'wasted');
-      const filtered = products.filter(p => p.id !== id);
-      storage.saveProducts(filtered);
-      storage.generateNotifications();
-      return product;
-    }
-    return null;
-  },
-
-  resetSampleData: () => {
-    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify([]));
-    localStorage.setItem(STORAGE_KEYS.SHOPPING_LIST, JSON.stringify([]));
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify([]));
-    return [];
-  },
-
-  // Savings & Sustainability Metrics
-  getSavingsStats: () => {
-    const saved = localStorage.getItem(STORAGE_KEYS.SAVINGS);
-    if (saved) return JSON.parse(saved);
-    const initialStats = {
-      moneySaved: 0.0,
-      foodItemsSaved: 0,
-      itemsWasted: 0,
-      co2PreventedKg: 0.0,
-      history: [
-        { month: 'Apr', saved: 0, wasted: 0 },
-        { month: 'May', saved: 0, wasted: 0 },
-        { month: 'Jun', saved: 0, wasted: 0 },
-        { month: 'Jul', saved: 0, wasted: 0 },
-        { month: 'Aug', saved: 0, wasted: 0 }
-      ]
-    };
-    localStorage.setItem(STORAGE_KEYS.SAVINGS, JSON.stringify(initialStats));
-    return initialStats;
-  },
-
-  recordSavings: (amount, itemName, type) => {
-    const stats = storage.getSavingsStats();
-    if (type === 'consumed') {
-      stats.moneySaved = +(stats.moneySaved + amount).toFixed(2);
-      stats.foodItemsSaved += 1;
-      stats.co2PreventedKg = +(stats.co2PreventedKg + (amount * 0.35)).toFixed(1);
-    } else {
-      stats.itemsWasted += 1;
-    }
-    localStorage.setItem(STORAGE_KEYS.SAVINGS, JSON.stringify(stats));
-  },
-
-  // Dashboard Summary
-  getDashboardStats: () => {
-    const products = storage.getProducts();
-    const stats = {
-      total_products: products.length,
-      safe_products: 0,
-      expiring_soon: 0,
-      urgent_products: 0,
-      expired_products: 0
-    };
-
-    products.forEach(p => {
-      const s = computeStatus(p.expiry_date);
-      if (s === 'SAFE') stats.safe_products++;
-      else if (s === 'EXPIRING SOON') stats.expiring_soon++;
-      else if (s === 'URGENT') stats.urgent_products++;
-      else if (s === 'EXPIRED') stats.expired_products++;
+    const value = (Number(product.estimated_price) || 3.50) * (Number(product.quantity) || 1);
+    
+    // Save to waste records
+    storage.addWasteRecord({
+      product_id: product.id,
+      product_name: product.product_name,
+      category: product.category,
+      quantity: product.quantity,
+      unit: product.unit,
+      action: 'CONSUMED',
+      value_saved: value,
+      value_lost: 0,
+      rating,
+      notes,
+      timestamp: new Date().toISOString()
     });
 
-    const savings = storage.getSavingsStats();
+    storage.recordSavings(value, product.product_name, 'consumed');
+    storage.suggestAutoRestock(product.product_name, product.category, product.unit, product.estimated_price);
+    storage.addActivityLog('CONSUMED', { name: product.product_name, value });
+    storage.addQuestXP(50);
+
+    const filtered = products.filter(p => p.id !== id);
+    storage.saveProducts(filtered);
+    storage.generateNotifications();
+    return product;
+  },
+
+  markAsDiscarded: (id, reason = 'Past Expiry Date', discardedQty = null, notes = '') => {
+    const products = storage.getProducts();
+    const product = products.find(p => p.id === id);
+    if (!product) return null;
+
+    const qty = discardedQty !== null ? Number(discardedQty) : Number(product.quantity) || 1;
+    const unitPrice = Number(product.estimated_price) || 3.50;
+    const lossValue = +(unitPrice * qty).toFixed(2);
+
+    storage.addWasteRecord({
+      product_id: product.id,
+      product_name: product.product_name,
+      category: product.category,
+      quantity: qty,
+      unit: product.unit,
+      action: 'DISCARDED',
+      reason,
+      value_saved: 0,
+      value_lost: lossValue,
+      notes,
+      timestamp: new Date().toISOString()
+    });
+
+    storage.recordSavings(lossValue, product.product_name, 'wasted');
+    storage.addActivityLog('DISCARDED', { name: product.product_name, loss: lossValue, reason });
+
+    const filtered = products.filter(p => p.id !== id);
+    storage.saveProducts(filtered);
+    storage.generateNotifications();
+    return product;
+  },
+
+  markAsDonated: (id, recipient = 'Community Fridge') => {
+    const products = storage.getProducts();
+    const product = products.find(p => p.id === id);
+    if (!product) return null;
+
+    const value = (Number(product.estimated_price) || 3.50) * (Number(product.quantity) || 1);
+
+    storage.addWasteRecord({
+      product_id: product.id,
+      product_name: product.product_name,
+      category: product.category,
+      quantity: product.quantity,
+      unit: product.unit,
+      action: 'DONATED',
+      recipient,
+      value_saved: value,
+      value_lost: 0,
+      timestamp: new Date().toISOString()
+    });
+
+    storage.addActivityLog('DONATED', { name: product.product_name, recipient });
+    storage.addQuestXP(75);
+
+    const filtered = products.filter(p => p.id !== id);
+    storage.saveProducts(filtered);
+    storage.generateNotifications();
+    return product;
+  },
+
+  getWasteRecords: () => {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.WASTE_RECORDS);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  addWasteRecord: (record) => {
+    const records = storage.getWasteRecords();
+    records.unshift({
+      id: `wrec-${Date.now()}`,
+      ...record
+    });
+    localStorage.setItem(STORAGE_KEYS.WASTE_RECORDS, JSON.stringify(records));
+  },
+
+  // --- Real Activity Logs ---
+  getActivityLogs: () => {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.ACTIVITY_LOGS);
+      if (!data) return [];
+      return JSON.parse(data);
+    } catch {
+      return [];
+    }
+  },
+
+  addActivityLog: (type, details = {}) => {
+    const logs = storage.getActivityLogs();
+    logs.unshift({
+      id: `act-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      type,
+      details,
+      timestamp: new Date().toISOString()
+    });
+    // Keep last 50 activity items
+    localStorage.setItem(STORAGE_KEYS.ACTIVITY_LOGS, JSON.stringify(logs.slice(0, 50)));
+  },
+
+  // --- KPI & Real Analytics Calculations ---
+  getDashboardStats: () => {
+    const products = storage.getProducts();
+    const wasteRecords = storage.getWasteRecords();
+    
+    let safeCount = 0;
+    let expiringSoonCount = 0;
+    let criticalCount = 0;
+    let expiredCount = 0;
+    let totalQuantity = 0;
+    let potentialWasteLoss = 0;
+
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    let addedThisMonth = 0;
+
+    products.forEach(p => {
+      totalQuantity += Number(p.quantity) || 1;
+      const status = p.status;
+      if (status === STATUS_TYPES.SAFE) safeCount++;
+      else if (status === STATUS_TYPES.EXPIRING_SOON) expiringSoonCount++;
+      else if (status === STATUS_TYPES.CRITICAL) criticalCount++;
+      else if (status === STATUS_TYPES.EXPIRED) {
+        expiredCount++;
+        potentialWasteLoss += (Number(p.estimated_price) || 3.50) * (Number(p.quantity) || 1);
+      }
+
+      if (p.created_at) {
+        const cDate = new Date(p.created_at);
+        if (cDate.getMonth() === currentMonth && cDate.getFullYear() === currentYear) {
+          addedThisMonth++;
+        }
+      }
+    });
+
+    // Calculate real waste loss & saved from waste records
+    let actualFinancialWaste = 0;
+    let actualValueSaved = 0;
+    let consumedCount = 0;
+    let discardedCount = 0;
+
+    wasteRecords.forEach(w => {
+      if (w.action === 'DISCARDED') {
+        actualFinancialWaste += Number(w.value_lost) || 0;
+        discardedCount += Number(w.quantity) || 1;
+      } else if (w.action === 'CONSUMED' || w.action === 'DONATED') {
+        actualValueSaved += Number(w.value_saved) || 0;
+        consumedCount += Number(w.quantity) || 1;
+      }
+    });
+
+    const totalHandled = consumedCount + discardedCount;
+    const wasteScore = totalHandled === 0 ? 100 : Math.round((consumedCount / totalHandled) * 100);
 
     return {
-      ...stats,
-      moneySaved: savings.moneySaved,
-      foodItemsSaved: savings.foodItemsSaved,
-      co2PreventedKg: savings.co2PreventedKg,
-      wasteScore: (savings.foodItemsSaved + savings.itemsWasted) === 0 ? 100 : Math.round((savings.foodItemsSaved / (savings.foodItemsSaved + savings.itemsWasted)) * 100)
+      total_products: products.length,
+      safe_products: safeCount,
+      expiring_soon: expiringSoonCount,
+      critical_products: criticalCount,
+      expired_products: expiredCount,
+      total_quantity: totalQuantity,
+      potential_waste_loss: +potentialWasteLoss.toFixed(2),
+      actual_financial_waste: +actualFinancialWaste.toFixed(2),
+      moneySaved: +actualValueSaved.toFixed(2),
+      foodItemsSaved: consumedCount,
+      itemsWasted: discardedCount,
+      addedThisMonth,
+      wasteScore,
+      co2PreventedKg: +(actualValueSaved * 0.35).toFixed(1)
     };
   },
 
-  // Shopping List
+  // --- Real Multi-Interval Notification Engine ---
+  getNotifications: () => {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
+      if (!data) return storage.generateNotifications();
+      return JSON.parse(data);
+    } catch {
+      return [];
+    }
+  },
+
+  generateNotifications: () => {
+    const products = storage.getProducts();
+    const currentNotifs = storage.getNotifications();
+    const existingIds = new Set(currentNotifs.map(n => n.id));
+    const newNotifs = [...currentNotifs];
+
+    products.forEach(p => {
+      const days = calculateDaysRemaining(p.expiry_date);
+      if (days === null) return;
+
+      let notifType = null;
+      let title = '';
+      let message = '';
+      let notifId = '';
+
+      if (days < 0) {
+        notifId = `notif-exp-${p.id}`;
+        notifType = 'EXPIRED';
+        title = `Expired: ${p.product_name}`;
+        message = `${p.product_name} expired ${Math.abs(days)} day(s) ago. Check freshness or discard.`;
+      } else if (days === 0) {
+        notifId = `notif-0d-${p.id}`;
+        notifType = 'CRITICAL';
+        title = `Expires Today: ${p.product_name}`;
+        message = `Use ${p.product_name} today to prevent waste!`;
+      } else if (days === 1) {
+        notifId = `notif-1d-${p.id}`;
+        notifType = 'CRITICAL';
+        title = `Expires Tomorrow: ${p.product_name}`;
+        message = `${p.product_name} expires tomorrow. Plan a meal or freeze it!`;
+      } else if (days === 3) {
+        notifId = `notif-3d-${p.id}`;
+        notifType = 'WARNING';
+        title = `3 Days Left: ${p.product_name}`;
+        message = `${p.product_name} will expire in 3 days.`;
+      } else if (days === 7) {
+        notifId = `notif-7d-${p.id}`;
+        notifType = 'WARNING';
+        title = `7 Days Left: ${p.product_name}`;
+        message = `${p.product_name} will expire in 1 week.`;
+      } else if (days === 14) {
+        notifId = `notif-14d-${p.id}`;
+        notifType = 'INFO';
+        title = `14 Days Notice: ${p.product_name}`;
+        message = `${p.product_name} will expire in 2 weeks.`;
+      } else if (days === 30) {
+        notifId = `notif-30d-${p.id}`;
+        notifType = 'INFO';
+        title = `30 Days Notice: ${p.product_name}`;
+        message = `${p.product_name} will expire in 1 month.`;
+      }
+
+      if (notifType && !existingIds.has(notifId)) {
+        newNotifs.unshift({
+          id: notifId,
+          product_id: p.id,
+          product_name: p.product_name,
+          title,
+          message,
+          type: notifType,
+          days_left: days,
+          read: false,
+          created_at: new Date().toISOString()
+        });
+        existingIds.add(notifId);
+      }
+    });
+
+    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(newNotifs));
+    return newNotifs;
+  },
+
+  markNotificationRead: (id) => {
+    const notifs = storage.getNotifications();
+    const updated = notifs.map(n => n.id === id ? { ...n, read: true } : n);
+    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(updated));
+    return updated;
+  },
+
+  markAllNotificationsRead: () => {
+    const notifs = storage.getNotifications();
+    const updated = notifs.map(n => ({ ...n, read: true }));
+    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(updated));
+    return updated;
+  },
+
+  deleteNotification: (id) => {
+    const notifs = storage.getNotifications();
+    const filtered = notifs.filter(n => n.id !== id);
+    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(filtered));
+    return filtered;
+  },
+
+  clearAllNotifications: () => {
+    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify([]));
+    return [];
+  },
+
+  // --- Shopping List, Restock, Eco Quests, Settings ---
   getShoppingList: () => {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.SHOPPING_LIST);
-      if (!data) {
-        localStorage.setItem(STORAGE_KEYS.SHOPPING_LIST, JSON.stringify([]));
-        return [];
-      }
-      return JSON.parse(data);
+      return data ? JSON.parse(data) : [];
     } catch {
       return [];
     }
@@ -410,142 +575,31 @@ export const storage = {
     }
   },
 
-  transferCheckedToInventory: () => {
-    const list = storage.getShoppingList();
-    const checkedItems = list.filter(i => i.checked);
-    if (checkedItems.length === 0) return { transferred: 0, items: [] };
-
-    const shelfLifeDays = {
-      'Produce': 5,
-      'Dairy & Eggs': 10,
-      'Meat & Poultry': 3,
-      'Bakery': 4,
-      'Pantry': 120,
-      'Frozen': 90,
-      'Beverages': 14,
-      'Snacks': 60
+  getSavingsStats: () => {
+    const saved = localStorage.getItem(STORAGE_KEYS.SAVINGS);
+    if (saved) return JSON.parse(saved);
+    const initialStats = {
+      moneySaved: 0.0,
+      foodItemsSaved: 0,
+      itemsWasted: 0,
+      co2PreventedKg: 0.0
     };
-
-    const addedProducts = [];
-    checkedItems.forEach(item => {
-      const days = shelfLifeDays[item.category] || 7;
-      const newProduct = storage.addProduct({
-        product_name: item.name,
-        category: item.category,
-        expiry_date: getFutureDate(days),
-        quantity: item.quantity,
-        unit: item.unit,
-        estimated_price: item.estimatedPrice,
-        location: item.category === 'Produce' ? 'Fridge Crisper Drawer' :
-                  item.category === 'Meat & Poultry' ? 'Fridge Bottom Shelf' :
-                  item.category === 'Dairy & Eggs' ? 'Fridge Middle Shelf' :
-                  item.category === 'Bakery' ? 'Bread Box' : 'Pantry Shelf 1'
-      });
-      addedProducts.push(newProduct);
-    });
-
-    const remaining = list.filter(i => !i.checked);
-    storage.saveShoppingList(remaining);
-
-    return { transferred: addedProducts.length, items: addedProducts };
+    localStorage.setItem(STORAGE_KEYS.SAVINGS, JSON.stringify(initialStats));
+    return initialStats;
   },
 
-  // Eco-Challenges
-  getChallenges: () => {
-    const c = localStorage.getItem(STORAGE_KEYS.CHALLENGES);
-    if (c) return JSON.parse(c);
-    localStorage.setItem(STORAGE_KEYS.CHALLENGES, JSON.stringify(INITIAL_CHALLENGES));
-    return INITIAL_CHALLENGES;
-  },
-
-  addQuestXP: (xpAmount) => {
-    const c = storage.getChallenges();
-    c.xp += xpAmount;
-    c.level = Math.floor(c.xp / 400) + 1;
-    localStorage.setItem(STORAGE_KEYS.CHALLENGES, JSON.stringify(c));
-    return c;
-  },
-
-  completeQuest: (questId) => {
-    const c = storage.getChallenges();
-    const q = c.quests.find(x => x.id === questId);
-    if (q && !q.completed) {
-      q.completed = true;
-      q.progress = q.target;
-      c.xp += q.xpReward;
-      c.level = Math.floor(c.xp / 400) + 1;
-      localStorage.setItem(STORAGE_KEYS.CHALLENGES, JSON.stringify(c));
-      return { success: true, xpEarned: q.xpReward, challenges: c };
+  recordSavings: (amount, itemName, type) => {
+    const stats = storage.getSavingsStats();
+    if (type === 'consumed') {
+      stats.moneySaved = +(stats.moneySaved + amount).toFixed(2);
+      stats.foodItemsSaved += 1;
+      stats.co2PreventedKg = +(stats.co2PreventedKg + (amount * 0.35)).toFixed(1);
+    } else {
+      stats.itemsWasted += 1;
     }
-    return { success: false, challenges: c };
+    localStorage.setItem(STORAGE_KEYS.SAVINGS, JSON.stringify(stats));
   },
 
-  // Household
-  getHousehold: () => {
-    const h = localStorage.getItem(STORAGE_KEYS.HOUSEHOLD);
-    if (h) return JSON.parse(h);
-    localStorage.setItem(STORAGE_KEYS.HOUSEHOLD, JSON.stringify(INITIAL_HOUSEHOLD));
-    return INITIAL_HOUSEHOLD;
-  },
-
-  addHouseholdChore: (choreText, memberName, dueDay) => {
-    const h = storage.getHousehold();
-    h.chores.unshift({
-      id: `ch-${Date.now()}`,
-      chore: choreText,
-      assignedTo: memberName,
-      due: dueDay,
-      status: 'Pending'
-    });
-    localStorage.setItem(STORAGE_KEYS.HOUSEHOLD, JSON.stringify(h));
-    return h;
-  },
-
-  toggleChoreStatus: (choreId) => {
-    const h = storage.getHousehold();
-    h.chores = h.chores.map(c => c.id === choreId ? { ...c, status: c.status === 'Completed' ? 'Pending' : 'Completed' } : c);
-    localStorage.setItem(STORAGE_KEYS.HOUSEHOLD, JSON.stringify(h));
-    return h;
-  },
-
-  // Compost Lab
-  getCompostData: () => {
-    const c = localStorage.getItem(STORAGE_KEYS.COMPOST);
-    if (c) return JSON.parse(c);
-    localStorage.setItem(STORAGE_KEYS.COMPOST, JSON.stringify(INITIAL_COMPOST));
-    return INITIAL_COMPOST;
-  },
-
-  addCompostScrap: (type, weightKg) => {
-    const c = storage.getCompostData();
-    if (type === 'greens') c.greensKg = +(c.greensKg + weightKg).toFixed(1);
-    else c.brownsKg = +(c.brownsKg + weightKg).toFixed(1);
-    localStorage.setItem(STORAGE_KEYS.COMPOST, JSON.stringify(c));
-    return c;
-  },
-
-  // Donations
-  getDonations: () => {
-    const d = localStorage.getItem(STORAGE_KEYS.DONATIONS);
-    if (d) return JSON.parse(d);
-    localStorage.setItem(STORAGE_KEYS.DONATIONS, JSON.stringify(INITIAL_DONATIONS));
-    return INITIAL_DONATIONS;
-  },
-
-  addDonation: (donation) => {
-    const list = storage.getDonations();
-    const newDonation = {
-      id: `don-${Date.now()}`,
-      ...donation,
-      status: 'Available',
-      created_at: new Date().toISOString()
-    };
-    list.unshift(newDonation);
-    localStorage.setItem(STORAGE_KEYS.DONATIONS, JSON.stringify(list));
-    return newDonation;
-  },
-
-  // Settings
   getSettings: () => {
     const s = localStorage.getItem(STORAGE_KEYS.SETTINGS);
     if (s) return JSON.parse(s);
@@ -557,81 +611,31 @@ export const storage = {
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
   },
 
-  // Notifications
-  getNotifications: () => {
-    const n = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
-    if (n) return JSON.parse(n);
-    return storage.generateNotifications();
+  getChallenges: () => {
+    const c = localStorage.getItem(STORAGE_KEYS.CHALLENGES);
+    if (c) return JSON.parse(c);
+    const initC = {
+      xp: 450,
+      level: 2,
+      levelTitle: 'Eco Guardian Novice',
+      quests: [
+        { id: 'q-1', title: 'Zero-Waste First Scan', desc: 'Scan your first food item using the OCR scanner.', xpReward: 200, progress: 0, target: 1, completed: false, badge: '📷' },
+        { id: 'q-2', title: 'Fresh Fridge Setup', desc: 'Add 3 fresh grocery items to your inventory.', xpReward: 150, progress: 0, target: 3, completed: false, badge: '🥗' },
+        { id: 'q-3', title: 'Guided Chef Cooking', desc: 'Cook a recipe with your ingredients.', xpReward: 250, progress: 0, target: 1, completed: false, badge: '👨‍🍳' }
+      ]
+    };
+    localStorage.setItem(STORAGE_KEYS.CHALLENGES, JSON.stringify(initC));
+    return initC;
   },
 
-  generateNotifications: () => {
-    const products = storage.getProducts();
-    const notifications = [];
-    
-    products.forEach(p => {
-      const days = getDaysRemaining(p.expiry_date);
-      if (days < 0) {
-        notifications.push({
-          id: `notif-exp-${p.id}`,
-          title: `Expired: ${p.product_name}`,
-          message: `${p.product_name} expired ${Math.abs(days)} day(s) ago. Check freshness before cooking.`,
-          type: 'expired',
-          product_id: p.id,
-          created_at: new Date().toISOString(),
-          read: false
-        });
-      } else if (days === 0) {
-        notifications.push({
-          id: `notif-urg-${p.id}`,
-          title: `Expires Today: ${p.product_name}`,
-          message: `Use ${p.product_name} today to prevent waste! Tap for quick recipe ideas.`,
-          type: 'urgent',
-          product_id: p.id,
-          created_at: new Date().toISOString(),
-          read: false
-        });
-      } else if (days === 1) {
-        notifications.push({
-          id: `notif-urg-${p.id}`,
-          title: `Expires Tomorrow: ${p.product_name}`,
-          message: `${p.product_name} expires tomorrow. Plan a meal or freeze it!`,
-          type: 'urgent',
-          product_id: p.id,
-          created_at: new Date().toISOString(),
-          read: false
-        });
-      } else if (days <= 3) {
-        notifications.push({
-          id: `notif-soon-${p.id}`,
-          title: `Expiring Soon: ${p.product_name}`,
-          message: `${p.product_name} expires in ${days} days.`,
-          type: 'warning',
-          product_id: p.id,
-          created_at: new Date().toISOString(),
-          read: false
-        });
-      }
-    });
-
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications));
-    return notifications;
+  addQuestXP: (xpAmount) => {
+    const c = storage.getChallenges();
+    c.xp += xpAmount;
+    c.level = Math.floor(c.xp / 400) + 1;
+    localStorage.setItem(STORAGE_KEYS.CHALLENGES, JSON.stringify(c));
+    return c;
   },
 
-  markNotificationRead: (id) => {
-    const notifs = storage.getNotifications();
-    const updated = notifs.map(n => n.id === id ? { ...n, read: true } : n);
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(updated));
-    return updated;
-  },
-
-  markAllNotificationsRead: () => {
-    const notifs = storage.getNotifications();
-    const updated = notifs.map(n => ({ ...n, read: true }));
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(updated));
-    return updated;
-  },
-
-  // Meal Planner
   getMealPlan: () => {
     const saved = localStorage.getItem(STORAGE_KEYS.MEAL_PLAN);
     if (saved) return JSON.parse(saved);

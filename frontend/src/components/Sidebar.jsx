@@ -21,7 +21,8 @@ import {
   Trophy, 
   Home, 
   Sparkles, 
-  Leaf 
+  Leaf,
+  FileText
 } from 'lucide-react';
 import { storage } from '../services/storage';
 import { useLanguage } from '../context/LanguageContext';
@@ -38,6 +39,7 @@ export default function Sidebar() {
     { name: t('navProducts'), path: '/products', icon: Package, badge: stats.total_products > 0 ? stats.total_products : null },
     { name: t('navAddProduct'), path: '/products/add', icon: PlusCircle },
     { name: t('navScan'), path: '/scan', icon: ScanLine, highlight: true },
+    { name: language === 'ta' ? 'காலாவதி நாட்காட்டி' : 'Expiry Calendar', path: '/calendar', icon: CalendarDays },
     { name: t('navRecipes'), path: '/recipes', icon: ChefHat },
     { name: t('navMealPlan'), path: '/meal-plan', icon: CalendarDays },
     { name: t('navShoppingList'), path: '/shopping-list', icon: ShoppingCart, badge: unboughtCount > 0 ? unboughtCount : null },
@@ -51,7 +53,8 @@ export default function Sidebar() {
     { name: t('navHousehold'), path: '/household', icon: Home },
     { name: t('navCommunity'), path: '/community', icon: Users },
     { name: t('navAnalytics'), path: '/analytics', icon: BarChart3 },
-    { name: t('navAlerts'), path: '/notifications', icon: Bell, badge: stats.urgent_products > 0 ? `${stats.urgent_products} urgent` : null, badgeColor: 'bg-rose-500' },
+    { name: language === 'ta' ? 'மாதாந்திர அறிக்கை' : 'Monthly Reports', path: '/reports', icon: FileText },
+    { name: t('navAlerts'), path: '/notifications', icon: Bell, badge: stats.critical_products > 0 ? `${stats.critical_products} urgent` : null, badgeColor: 'bg-rose-500' },
     { name: t('navSettings'), path: '/settings', icon: Settings }
   ];
 

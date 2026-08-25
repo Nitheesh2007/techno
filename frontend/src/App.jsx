@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import AddProduct from './pages/AddProduct';
 import Scan from './pages/Scan';
+import Calendar from './pages/Calendar';
+import Reports from './pages/Reports';
 import Recipes from './pages/Recipes';
 import MealPlan from './pages/MealPlan';
 import ShoppingList from './pages/ShoppingList';
@@ -56,6 +58,18 @@ function App() {
               <Route path="/scan" element={
                 <ProtectedRoute>
                   <Scan />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/calendar" element={
+                <ProtectedRoute>
+                  <Calendar />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/reports" element={
+                <ProtectedRoute>
+                  <Reports />
                 </ProtectedRoute>
               } />
 
