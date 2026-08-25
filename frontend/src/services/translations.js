@@ -78,6 +78,22 @@ export const translations = {
     addNewProductBtn: 'Add First Food Item',
     scanLabelBtn: 'Scan Food Package',
 
+    // Scanner
+    multiEngineBadge: 'Multi-Engine AI Scanner',
+    scannerTitle: 'Smart Barcode & OCR Scanner',
+    presetsTab: '1-Click Presets',
+    cameraTab: 'Live Camera',
+    uploadTab: 'Upload Photo',
+    barcodeTab: 'Barcode Lookup',
+    instantTestLabels: 'Instant Test Packaging Presets',
+    capturePhotoBtn: 'Capture & Extract Barcode',
+    confidenceLabel: '{pct}% OCR Confidence',
+    detectedProduct: 'Detected Food Name',
+    parsedExpiry: 'Parsed Expiry Date',
+    categoryGroup: 'Food Category',
+    scanAnother: 'Scan Another Item',
+    confirmAndSave: 'Confirm & Save to Inventory ➔',
+
     // Add Product Form
     addProductTitle: 'Add New Food Item',
     addProductSub: 'Enter food details manually or verify OCR scanned fields before saving.',
@@ -337,6 +353,22 @@ export const translations = {
     addNewProductBtn: 'முதல் பொருளைச் சேர்க்கவும்',
     scanLabelBtn: 'உணவு பாக்கெட்டை ஸ்கேன் செய்',
 
+    // Scanner
+    multiEngineBadge: 'மல்டி-இன்ஜின் AI ஸ்கேனர்',
+    scannerTitle: 'ஸ்மார்ட் பார்கோடு & OCR ஸ்கேனர்',
+    presetsTab: '1-கிளிக் மாதிரிகள்',
+    cameraTab: 'நேரடி கேமரா',
+    uploadTab: 'புகைப்படம் பதிவேற்று',
+    barcodeTab: 'பார்கோடு தேடல்',
+    instantTestLabels: 'உடனடி சோதனை பேக்கேஜிங் மாதிரிகள்',
+    capturePhotoBtn: 'புகைப்படம் எடுத்து பார்கோடைப் பிரித்தெடு',
+    confidenceLabel: '{pct}% OCR துல்லியம்',
+    detectedProduct: 'கண்டறியப்பட்ட உணவு',
+    parsedExpiry: 'பிரித்தெடுக்கப்பட்ட காலாவதி தேதி',
+    categoryGroup: 'உணவுப் பிரிவு',
+    scanAnother: 'மற்றொரு உணவை ஸ்கேன் செய்',
+    confirmAndSave: 'சரிபார்த்து இருப்பில் சேமி ➔',
+
     // Add Product Form
     addProductTitle: 'புதிய உணவைச் சேர்',
     addProductSub: 'உணவு விவரங்களை உள்ளிடவும் அல்லது ஸ்கேன் செய்யப்பட்ட விவரங்களை சரிபார்த்து சேமிக்கவும்.',
@@ -525,6 +557,7 @@ const FOOD_TRANSLATIONS = {
   // Dairy & Alternatives
   'milk': 'பால் (Milk)',
   'organic whole milk': 'ஆர்கானிக் பசும்பால் (Organic Milk)',
+  'organic whole milk 1l': 'ஆர்கானிக் பசும்பால் 1L (Organic Milk)',
   'whole milk': 'முழு பசும்பால் (Whole Milk)',
   'skim milk': 'கொழுப்பு நீக்கிய பால் (Skim Milk)',
   'almond milk': 'பாதாம் பால் (Almond Milk)',
@@ -536,6 +569,7 @@ const FOOD_TRANSLATIONS = {
   'organic eggs': 'ஆர்கானிக் முட்டைகள் (Organic Eggs)',
   'yogurt': 'தயிர் (Yogurt)',
   'greek yogurt': 'கிரேக்க தயிர் (Greek Yogurt)',
+  'greek yogurt (plain 500g)': 'கிரேக்க தயிர் 500g (Greek Yogurt)',
   'cheese': 'சீஸ் (Cheese)',
   'cheddar cheese': 'செடார் சீஸ் (Cheddar Cheese)',
   'mozzarella': 'மொஸரெல்லா சீஸ் (Mozzarella)',
@@ -550,6 +584,7 @@ const FOOD_TRANSLATIONS = {
   'spinach': 'கீரை (Spinach)',
   'baby spinach': 'இளம் பசலைக்கீரை (Baby Spinach)',
   'organic baby spinach': 'ஆர்கானிக் பசலைக்கீரை (Spinach)',
+  'organic baby spinach (300g)': 'ஆர்கானிக் பசலைக்கீரை 300g (Spinach)',
   'tomatoes': 'தக்காளி (Tomatoes)',
   'cherry tomatoes': 'செர்ரி தக்காளி (Cherry Tomatoes)',
   'roma tomatoes': 'ரோமா தக்காளி (Tomatoes)',
@@ -583,6 +618,7 @@ const FOOD_TRANSLATIONS = {
   // Produce - Fruits
   'strawberries': 'ஸ்ட்ராபெர்ரி (Strawberries)',
   'fresh strawberries': 'புதிய ஸ்ட்ராபெர்ரி (Strawberries)',
+  'fresh strawberries punnet': 'புதிய ஸ்ட்ராபெர்ரி பெட்டி (Strawberries)',
   'blueberries': 'ப்ளூபெர்ரி (Blueberries)',
   'raspberries': 'ராஸ்பெர்ரி (Raspberries)',
   'apples': 'ஆப்பிள் (Apples)',
@@ -606,6 +642,7 @@ const FOOD_TRANSLATIONS = {
   'bread': 'ரொட்டி (Bread)',
   'sourdough bread': 'புளிப்பு ரொட்டி (Sourdough)',
   'artisan sourdough': 'கைவினை புளிப்பு ரொட்டி (Sourdough)',
+  'artisan sourdough loaf': 'கைவினை புளிப்பு ரொட்டி (Sourdough)',
   'whole wheat bread': 'கோதுமை ரொட்டி (Wheat Bread)',
   'white bread': 'வெள்ளை ரொட்டி (White Bread)',
   'bagels': 'பேகல் ரொட்டி (Bagels)',
@@ -631,6 +668,7 @@ const FOOD_TRANSLATIONS = {
   // Meat, Poultry & Seafood
   'chicken': 'கோழி இறைச்சி (Chicken)',
   'chicken breast': 'கோழி மார்பு இறைச்சி (Chicken Breast)',
+  'fresh chicken breast (600g)': 'புதிய கோழி மார்பு இறைச்சி 600g (Chicken)',
   'chicken thighs': 'கோழி தொடை இறைச்சி (Chicken Thighs)',
   'ground chicken': 'கொத்து கோழி இறைச்சி (Ground Chicken)',
   'beef': 'மாட்டிறைச்சி (Beef)',
@@ -725,7 +763,9 @@ const UNIT_TRANSLATIONS = {
   'bunches': 'கட்டுகள் (Bunches)',
   'slices': 'துண்டுகள் (Slices)',
   'jar': 'ஜாடி (Jar)',
-  'carton': 'அட்டைப்பெட்டி (Carton)'
+  'carton': 'அட்டைப்பெட்டி (Carton)',
+  'punnet': 'பெட்டி (Punnet)',
+  'tub': 'டப் (Tub)'
 };
 
 const DAY_TRANSLATIONS = {

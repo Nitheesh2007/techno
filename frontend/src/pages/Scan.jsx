@@ -26,6 +26,19 @@ import {
 
 const PRESET_SAMPLES = [
   {
+    name: 'Greek Yogurt (Plain 500g)',
+    brand: 'Chobani Pure',
+    expiry: '2026-09-02',
+    category: 'Dairy & Eggs',
+    price: 4.20,
+    location: 'Fridge Door',
+    confidence: 0.98,
+    batch: 'LOT-4411-B',
+    barcode: '8901030383033',
+    format: 'EAN-13',
+    imgEmoji: '🥣'
+  },
+  {
     name: 'Organic Whole Milk 1L',
     brand: 'Horizon Organic',
     expiry: '2026-08-30',
@@ -37,19 +50,6 @@ const PRESET_SAMPLES = [
     barcode: '8901030383011',
     format: 'EAN-13',
     imgEmoji: '🥛'
-  },
-  {
-    name: 'Greek Yogurt (Plain 500g)',
-    brand: 'Chobani Pure',
-    expiry: '2026-09-02',
-    category: 'Dairy & Eggs',
-    price: 4.20,
-    location: 'Fridge Door',
-    confidence: 0.96,
-    batch: 'LOT-4411-B',
-    barcode: '8901030383033',
-    format: 'EAN-13',
-    imgEmoji: '🥣'
   },
   {
     name: 'Artisan Sourdough Loaf',
@@ -105,47 +105,96 @@ const PRESET_SAMPLES = [
   }
 ];
 
-// Crisp SVG Barcode Graphic Generator
-function SvgBarcode({ code = '8901030383011', width = 240, height = 70 }) {
-  const digits = code.replace(/\D/g, '').padEnd(13, '0').slice(0, 13);
-  
-  // Generate pseudo-bars based on digit pattern
-  const bars = [];
-  let isBar = true;
-  for (let i = 0; i < digits.length; i++) {
-    const val = parseInt(digits[i], 10) || 1;
-    const barWidth = ((val % 3) + 1) * 2;
-    bars.push({ width: barWidth, isBlack: isBar });
-    bars.push({ width: ((val % 2) + 1) * 2, isBlack: !isBar });
-    isBar = !isBar;
-  }
+// Mathematical Standard EAN-13 Barcode Structure
+const EAN13_STRUCTURE = [
+  'LLLLLL', 'LLGLGG', 'LLGGLG', 'LLGGGL', 'LGLLGG',
+  'LGGLLG', 'LGGGLL', 'LGLGLG', 'LGLGGL', 'LGGLGL'
+];
 
-  let currentX = 15;
-  const barElements = [];
-  bars.forEach((b, idx) => {
-    if (b.isBlack) {
-      const isGuard = idx < 3 || idx > bars.length - 4 || Math.abs(idx - bars.length / 2) < 2;
-      barElements.push(
-        <rect
-          key={idx}
-          x={currentX}
-          y={8}
-          width={b.width}
-          height={isGuard ? 48 : 42}
-          fill="currentColor"
-        />
-      );
+const L_PATTERNS = [
+  '0001101', '0011001', '0010011', '0111101', '0100011',
+  '0110001', '0101111', '0111011', '0110111', '0001011'
+];
+
+const G_PATTERNS = [
+  '0100111', '0110011', '0011011', '0100001', '0011101',
+  '0111001', '0000101', '0010001', '0001001', '0010111'
+];
+
+const R_PATTERNS = [
+  '1110010', '1100110', '1101100', '1000010', '1011100',
+  '1001110', '1010000', '1000100', '1001000', '1110100'
+];
+
+// Crisp Authentic EAN-13 SVG Barcode Graphic Generator
+function SvgBarcode({ code = '8901030383033' }) {
+  const clean = code.replace(/\D/g, '').padEnd(13, '0').slice(0, 13);
+  const firstDigit = parseInt(clean[0], 10) || 0;
+  const structure = EAN13_STRUCTURE[firstDigit] || 'LLLLLL';
+  
+  const modules = [];
+  
+  // Start guard (101)
+  modules.push({ bit: 1, guard: true });
+  modules.push({ bit: 0, guard: true });
+  modules.push({ bit: 1, guard: true });
+  
+  // Left 6 digits (pos 1 to 6)
+  for (let i = 1; i <= 6; i++) {
+    const digit = parseInt(clean[i], 10) || 0;
+    const codeType = structure[i - 1];
+    const pattern = codeType === 'L' ? L_PATTERNS[digit] : G_PATTERNS[digit];
+    for (let b = 0; b < pattern.length; b++) {
+      modules.push({ bit: pattern[b] === '1' ? 1 : 0, guard: false });
     }
-    currentX += b.width + 1;
-  });
+  }
+  
+  // Center guard (01010)
+  modules.push({ bit: 0, guard: true });
+  modules.push({ bit: 1, guard: true });
+  modules.push({ bit: 0, guard: true });
+  modules.push({ bit: 1, guard: true });
+  modules.push({ bit: 0, guard: true });
+  
+  // Right 6 digits (pos 7 to 12)
+  for (let i = 7; i <= 12; i++) {
+    const digit = parseInt(clean[i], 10) || 0;
+    const pattern = R_PATTERNS[digit];
+    for (let b = 0; b < pattern.length; b++) {
+      modules.push({ bit: pattern[b] === '1' ? 1 : 0, guard: false });
+    }
+  }
+  
+  // End guard (101)
+  modules.push({ bit: 1, guard: true });
+  modules.push({ bit: 0, guard: true });
+  modules.push({ bit: 1, guard: true });
+
+  const moduleWidth = 2.4;
+  const startX = 20;
 
   return (
-    <div className="flex flex-col items-center p-3 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner">
-      <svg width={Math.max(width, currentX + 15)} height={height} className="overflow-visible">
-        {barElements}
+    <div className="flex flex-col items-center p-4 bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md">
+      <svg width={modules.length * moduleWidth + startX * 2} height={80} className="overflow-visible">
+        {modules.map((m, idx) => {
+          if (!m.bit) return null;
+          return (
+            <rect
+              key={idx}
+              x={startX + idx * moduleWidth}
+              y={6}
+              width={moduleWidth}
+              height={m.guard ? 58 : 50}
+              fill="currentColor"
+              className="text-slate-950 dark:text-white"
+            />
+          );
+        })}
       </svg>
-      <div className="font-mono text-xs font-extrabold tracking-widest mt-1 text-slate-800 dark:text-slate-200">
-        {digits.slice(0, 1)} {digits.slice(1, 7)} {digits.slice(7, 13)}
+      <div className="font-mono text-sm font-extrabold tracking-widest mt-1 text-slate-900 dark:text-white flex items-center justify-between w-full px-2">
+        <span className="text-xs text-slate-500">{clean[0]}</span>
+        <span>{clean.slice(1, 7)}</span>
+        <span>{clean.slice(7, 13)}</span>
       </div>
     </div>
   );
@@ -236,12 +285,12 @@ export default function Scan() {
     setTimeout(() => {
       setIsScanning(false);
       const matched = PRESET_SAMPLES.find(p => p.barcode === rawCode) || {
-        name: `Scanned Item (${rawCode.slice(-4)})`,
+        name: `Scanned Product (${rawCode.slice(-4)})`,
         brand: 'Packaged Grocery',
         expiry: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
-        category: 'Pantry',
-        price: 4.50,
-        location: 'Fridge Crisper Drawer',
+        category: 'Dairy & Eggs',
+        price: 4.20,
+        location: 'Fridge Door',
         confidence: 0.99,
         barcode: rawCode,
         format: 'EAN-13'
@@ -268,16 +317,16 @@ export default function Scan() {
     setIsScanning(true);
     setTimeout(() => {
       setIsScanning(false);
-      const randomPreset = PRESET_SAMPLES[Math.floor(Math.random() * PRESET_SAMPLES.length)];
+      const sample = PRESET_SAMPLES[0];
       setScanResult({
-        product_name: randomPreset.name,
-        category: randomPreset.category,
-        expiry_date: randomPreset.expiry,
-        estimated_price: randomPreset.price,
-        location: randomPreset.location,
-        barcode: randomPreset.barcode,
-        format: randomPreset.format,
-        ocr_confidence: 0.97,
+        product_name: sample.name,
+        category: sample.category,
+        expiry_date: sample.expiry,
+        estimated_price: sample.price,
+        location: sample.location,
+        barcode: sample.barcode,
+        format: sample.format,
+        ocr_confidence: 0.98,
         unit: 'Package'
       });
       sound.playSuccess();
@@ -337,8 +386,8 @@ export default function Scan() {
 
       setTimeout(() => {
         setIsScanning(false);
-        const matched = PRESET_SAMPLES.find(p => p.barcode === detectedBarcode) || PRESET_SAMPLES[Math.floor(Math.random() * PRESET_SAMPLES.length)];
-        const finalBarcode = detectedBarcode || matched.barcode;
+        const matched = PRESET_SAMPLES.find(p => p.barcode === detectedBarcode) || PRESET_SAMPLES[0];
+        const finalBarcode = detectedBarcode || '8901030383033';
 
         setScanResult({
           product_name: matched.name,
@@ -559,7 +608,7 @@ export default function Scan() {
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="e.g. 8901030383011"
+                placeholder="e.g. 8901030383033"
                 value={barcodeInput}
                 onChange={e => setBarcodeInput(e.target.value)}
                 className="flex-1 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-mono outline-none focus:ring-2 focus:ring-emerald-500"
