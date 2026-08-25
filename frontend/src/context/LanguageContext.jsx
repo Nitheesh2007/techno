@@ -1,5 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { translations, translateFood, translateCategory, translateLocation } from '../services/translations';
+import { 
+  translations, 
+  translateFood, 
+  translateCategory, 
+  translateLocation,
+  translateUnit,
+  translateDay,
+  translateMealType,
+  translateCuisine,
+  translateDiet,
+  translateStatus
+} from '../services/translations';
 
 const LanguageContext = createContext();
 
@@ -34,9 +45,28 @@ export const LanguageProvider = ({ children }) => {
   const tf = (name) => translateFood(name, language);
   const tc = (category) => translateCategory(category, language);
   const tl = (location) => translateLocation(location, language);
+  const tu = (unit) => translateUnit(unit, language);
+  const tday = (day) => translateDay(day, language);
+  const tmeal = (meal) => translateMealType(meal, language);
+  const tcuisine = (cuisine) => translateCuisine(cuisine, language);
+  const tdiet = (diet) => translateDiet(diet, language);
+  const tstatus = (status) => translateStatus(status, language);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, tf, tc, tl }}>
+    <LanguageContext.Provider value={{ 
+      language, 
+      setLanguage, 
+      t, 
+      tf, 
+      tc, 
+      tl,
+      tu,
+      tday,
+      tmeal,
+      tcuisine,
+      tdiet,
+      tstatus
+    }}>
       {children}
     </LanguageContext.Provider>
   );

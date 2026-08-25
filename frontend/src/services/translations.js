@@ -520,41 +520,159 @@ export const translations = {
   }
 };
 
-// Automatic Food, Category, Location, and Unit Localizer for Entered Data
+// Extensive Food Dictionary (150+ common groceries and foods)
 const FOOD_TRANSLATIONS = {
-  // Common Foods
+  // Dairy & Alternatives
   'milk': 'பால் (Milk)',
   'organic whole milk': 'ஆர்கானிக் பசும்பால் (Organic Milk)',
+  'whole milk': 'முழு பசும்பால் (Whole Milk)',
+  'skim milk': 'கொழுப்பு நீக்கிய பால் (Skim Milk)',
+  'almond milk': 'பாதாம் பால் (Almond Milk)',
+  'oat milk': 'ஓட்ஸ் பால் (Oat Milk)',
+  'soy milk': 'சோயா பால் (Soy Milk)',
+  'coconut milk': 'தேங்காய் பால் (Coconut Milk)',
   'eggs': 'முட்டைகள் (Eggs)',
   'free-range eggs': 'நாட்டுக்கோழி முட்டைகள் (Free-Range Eggs)',
-  'strawberries': 'ஸ்ட்ராபெர்ரி (Strawberries)',
-  'fresh strawberries': 'புதிய ஸ்ட்ராபெர்ரி (Strawberries)',
+  'organic eggs': 'ஆர்கானிக் முட்டைகள் (Organic Eggs)',
   'yogurt': 'தயிர் (Yogurt)',
   'greek yogurt': 'கிரேக்க தயிர் (Greek Yogurt)',
-  'bread': 'ரொட்டி (Bread)',
-  'sourdough bread': 'புளிப்பு ரொட்டி (Sourdough)',
-  'artisan sourdough': 'கைவினை புளிப்பு ரொட்டி (Sourdough)',
+  'cheese': 'சீஸ் (Cheese)',
+  'cheddar cheese': 'செடார் சீஸ் (Cheddar Cheese)',
+  'mozzarella': 'மொஸரெல்லா சீஸ் (Mozzarella)',
+  'parmesan': 'பர்மேசன் சீஸ் (Parmesan)',
+  'paneer': 'பன்னீர் (Paneer)',
+  'butter': 'வெண்ணெய் (Butter)',
+  'heavy cream': 'கிரீம் (Heavy Cream)',
+  'sour cream': 'புளிப்பு கிரீம் (Sour Cream)',
+  'ghee': 'நெய் (Ghee)',
+
+  // Produce - Vegetables
   'spinach': 'கீரை (Spinach)',
   'baby spinach': 'இளம் பசலைக்கீரை (Baby Spinach)',
   'organic baby spinach': 'ஆர்கானிக் பசலைக்கீரை (Spinach)',
-  'chicken': 'கோழி இறைச்சி (Chicken)',
-  'chicken breast': 'கோழி மார்பு இறைச்சி (Chicken Breast)',
-  'cheese': 'சீஸ் (Cheese)',
-  'cheddar cheese': 'செடார் சீஸ் (Cheddar Cheese)',
+  'tomatoes': 'தக்காளி (Tomatoes)',
+  'cherry tomatoes': 'செர்ரி தக்காளி (Cherry Tomatoes)',
+  'roma tomatoes': 'ரோமா தக்காளி (Tomatoes)',
+  'potatoes': 'உருளைக்கிழங்கு (Potatoes)',
+  'sweet potatoes': 'சர்க்கரைவள்ளி கிழங்கு (Sweet Potatoes)',
+  'onions': 'வெங்காயம் (Onions)',
+  'red onions': 'சிவப்பு வெங்காயம் (Red Onions)',
+  'garlic': 'பூண்டு (Garlic)',
+  'ginger': 'இஞ்சி (Ginger)',
+  'carrots': 'கேரட் (Carrots)',
+  'broccoli': 'ப்ரோக்கோலி (Broccoli)',
+  'cauliflower': 'காலிஃபிளவர் (Cauliflower)',
+  'bell pepper': 'குடைமிளகாய் (Bell Pepper)',
+  'bell peppers': 'குடைமிளகாய்கள் (Bell Peppers)',
+  'capsicum': 'குடைமிளகாய் (Capsicum)',
+  'mushrooms': 'காளான் (Mushrooms)',
+  'cabbage': 'முட்டைக்கோஸ் (Cabbage)',
+  'cucumbers': 'வெள்ளரிக்காய் (Cucumbers)',
+  'cucumber': 'வெள்ளரிக்காய் (Cucumber)',
+  'zucchini': 'சுரைக்காய் / ஜூச்சினி (Zucchini)',
+  'lettuce': 'லெட்யூஸ் இலைகள் (Lettuce)',
+  'kale': 'கேல் கீரை (Kale)',
+  'cilantro': 'கொத்தமல்லி (Cilantro/Coriander)',
+  'coriander': 'கொத்தமல்லி (Coriander)',
+  'mint': 'புதினா (Mint Leaves)',
+  'green chilies': 'பச்சை மிளகாய் (Green Chilies)',
+  'green beans': 'பீன்ஸ் (Green Beans)',
+  'peas': 'பச்சை பட்டாணி (Green Peas)',
+  'corn': 'மக்காச்சோளம் (Corn)',
+
+  // Produce - Fruits
+  'strawberries': 'ஸ்ட்ராபெர்ரி (Strawberries)',
+  'fresh strawberries': 'புதிய ஸ்ட்ராபெர்ரி (Strawberries)',
+  'blueberries': 'ப்ளூபெர்ரி (Blueberries)',
+  'raspberries': 'ராஸ்பெர்ரி (Raspberries)',
+  'apples': 'ஆப்பிள் (Apples)',
+  'gala apples': 'காலா ஆப்பிள் (Apples)',
+  'bananas': 'வாழைப்பழம் (Bananas)',
+  'organic bananas': 'ஆர்கானிக் வாழைப்பழம் (Bananas)',
+  'avocados': 'வெண்ணெய் பழம் (Avocados)',
+  'avocado': 'வெண்ணெய் பழம் (Avocado)',
+  'lemons': 'எலுமிச்சை (Lemons)',
+  'lemon': 'எலுமிச்சை (Lemon)',
+  'limes': 'பச்சை எலுமிச்சை (Limes)',
+  'oranges': 'ஆரஞ்சு பழம் (Oranges)',
+  'mangoes': 'மாம்பழம் (Mangoes)',
+  'grapes': 'திராட்சை (Grapes)',
+  'watermelon': 'தர்பூசணி (Watermelon)',
+  'pineapple': 'அன்னாசிப்பழம் (Pineapple)',
+  'papaya': 'பப்பாளி (Papaya)',
+  'pomegranate': 'மாதுளை (Pomegranate)',
+
+  // Bakery & Grains
+  'bread': 'ரொட்டி (Bread)',
+  'sourdough bread': 'புளிப்பு ரொட்டி (Sourdough)',
+  'artisan sourdough': 'கைவினை புளிப்பு ரொட்டி (Sourdough)',
+  'whole wheat bread': 'கோதுமை ரொட்டி (Wheat Bread)',
+  'white bread': 'வெள்ளை ரொட்டி (White Bread)',
+  'bagels': 'பேகல் ரொட்டி (Bagels)',
+  'croissant': 'குரோசண்ட் (Croissant)',
+  'tortillas': 'டோர்ட்டில்லா (Tortillas)',
+  'pita bread': 'பீட்டா ரொட்டி (Pita Bread)',
   'pasta': 'பாஸ்தா (Pasta)',
   'penne': 'பென்னே பாஸ்தா (Penne Pasta)',
+  'spaghetti': 'ஸ்பாகெட்டி (Spaghetti)',
+  'macaroni': 'மேக்ரோனி (Macaroni)',
   'rice': 'அரிசி (Rice)',
-  'tomatoes': 'தக்காளி (Tomatoes)',
-  'apples': 'ஆப்பிள் (Apples)',
-  'bananas': 'வாழைப்பழம் (Bananas)',
-  'avocados': 'வெண்ணெய் பழம் (Avocados)',
-  'potatoes': 'உருளைக்கிழங்கு (Potatoes)',
-  'onions': 'வெங்காயம் (Onions)',
-  'garlic': 'பூண்டு (Garlic)',
-  'butter': 'வெண்ணெய் (Butter)',
-  'olive oil': 'ஆலிவ் எண்ணெய் (Olive Oil)',
+  'basmati rice': 'பாசுமதி அரிசி (Basmati Rice)',
+  'brown rice': 'கைக்குத்தல் அரிசி (Brown Rice)',
+  'jasmine rice': 'ஜாஸ்மின் அரிசி (Jasmine Rice)',
+  'quinoa': 'கினோவா தானியம் (Quinoa)',
+  'oats': 'ஓட்ஸ் (Oats)',
+  'rolled oats': 'ஓட்ஸ் தானியம் (Rolled Oats)',
+  'flour': 'மாவு (Flour)',
+  'wheat flour': 'கோதுமை மாவு (Wheat Flour)',
+  'all-purpose flour': 'மைதா மாவு (Flour)',
+  'noodles': 'நூடூல்ஸ் (Noodles)',
+
+  // Meat, Poultry & Seafood
+  'chicken': 'கோழி இறைச்சி (Chicken)',
+  'chicken breast': 'கோழி மார்பு இறைச்சி (Chicken Breast)',
+  'chicken thighs': 'கோழி தொடை இறைச்சி (Chicken Thighs)',
+  'ground chicken': 'கொத்து கோழி இறைச்சி (Ground Chicken)',
+  'beef': 'மாட்டிறைச்சி (Beef)',
+  'ground beef': 'கொத்து மாட்டிறைச்சி (Ground Beef)',
+  'pork': 'பன்றி இறைச்சி (Pork)',
+  'mutton': 'ஆட்டிறைச்சி (Mutton)',
+  'lamb': 'செம்மறி ஆட்டிறைச்சி (Lamb)',
   'fish': 'மீன் (Fish)',
-  'salmon': 'சால்மன் மீன் (Salmon)'
+  'salmon': 'சால்மன் மீன் (Salmon)',
+  'tuna': 'சூரை மீன் (Tuna)',
+  'canned tuna': 'டின் சூரை மீன் (Canned Tuna)',
+  'shrimp': 'இறால் (Shrimp / Prawns)',
+  'prawns': 'இறால் (Prawns)',
+  'tofu': 'டோஃபு (Tofu)',
+  'bacon': 'பேக்கன் (Bacon)',
+  'sausages': 'சாசேஜ் (Sausages)',
+
+  // Pantry, Oils, Condiments & Spices
+  'olive oil': 'ஆலிவ் எண்ணெய் (Olive Oil)',
+  'extra virgin olive oil': 'ஆலிவ் எண்ணெய் (Olive Oil)',
+  'vegetable oil': 'சமையல் எண்ணெய் (Vegetable Oil)',
+  'coconut oil': 'தேங்காய் எண்ணெய் (Coconut Oil)',
+  'sesame oil': 'நல்லெண்ணெய் (Sesame Oil)',
+  'soy sauce': 'சோயா சாஸ் (Soy Sauce)',
+  'tomato sauce': 'தக்காளி சாஸ் (Tomato Sauce)',
+  'ketchup': 'கெட்சப் (Ketchup)',
+  'mayonnaise': 'மயோனைஸ் (Mayonnaise)',
+  'mustard': 'கடுகு சாஸ் (Mustard)',
+  'honey': 'தேன் (Honey)',
+  'maple syrup': 'மேப்பிள் சிரப் (Maple Syrup)',
+  'peanut butter': 'கடலை வெண்ணெய் (Peanut Butter)',
+  'jam': 'பழ ஜாம் (Jam)',
+  'salt': 'உப்பு (Salt)',
+  'black pepper': 'கருப்பு மிளகு (Black Pepper)',
+  'sugar': 'சர்க்கரை (Sugar)',
+  'chickpeas': 'கொண்டைக்கடலை (Chickpeas)',
+  'black beans': 'கருப்பு பீன்ஸ் (Black Beans)',
+  'lentils': 'பருப்பு (Lentils)',
+  'red lentils': 'மசூர் பருப்பு (Red Lentils)',
+  'coffee': 'காபித்தூள் (Coffee)',
+  'tea': 'தேயிலைத்தூள் (Tea)',
+  'dark chocolate': 'டார்க் சாக்லேட் (Dark Chocolate)'
 };
 
 const CATEGORY_TRANSLATIONS = {
@@ -579,7 +697,80 @@ const LOCATION_TRANSLATIONS = {
   'Deep Freezer': 'டீப் பிரீசர் (Deep Freezer)',
   'Bread Box': 'ரொட்டி பெட்டி (Bread Box)',
   'Pantry Shelf 1': 'சரக்கறை தட்டு 1 (Pantry)',
-  'Pantry Shelf 2': 'சரக்கறை தட்டு 2 (Pantry)'
+  'Pantry Shelf 2': 'சரக்கறை தட்டு 2 (Pantry)',
+  'Fridge': 'குளிர்சாதனப் பெட்டி (Fridge)',
+  'Freezer': 'பிரீசர் (Freezer)',
+  'Pantry': 'சரக்கறை (Pantry)'
+};
+
+const UNIT_TRANSLATIONS = {
+  'pcs': 'எண்ணிக்கை (pcs)',
+  'piece': 'எண்ணிக்கை (pcs)',
+  'pieces': 'எண்ணிக்கை (pcs)',
+  'bottle': 'பாட்டில் (Bottle)',
+  'bottles': 'பாட்டில்கள் (Bottles)',
+  'bag': 'பை (Bag)',
+  'bags': 'பைகள் (Bags)',
+  'box': 'பெட்டி (Box)',
+  'boxes': 'பெட்டிகள் (Boxes)',
+  'pack': 'பேக் (Pack)',
+  'packs': 'பேக்குகள் (Packs)',
+  'can': 'டின் (Can)',
+  'cans': 'டின்கள் (Cans)',
+  'kg': 'கிலோ (kg)',
+  'g': 'கிராம் (g)',
+  'L': 'லிட்டர் (L)',
+  'ml': 'மி.லி (ml)',
+  'bunch': 'கட்டு (Bunch)',
+  'bunches': 'கட்டுகள் (Bunches)',
+  'slices': 'துண்டுகள் (Slices)',
+  'jar': 'ஜாடி (Jar)',
+  'carton': 'அட்டைப்பெட்டி (Carton)'
+};
+
+const DAY_TRANSLATIONS = {
+  'Monday': 'திங்கட்கிழமை (Mon)',
+  'Tuesday': 'செவ்வாய்க்கிழமை (Tue)',
+  'Wednesday': 'புதன்கிழமை (Wed)',
+  'Thursday': 'வியாழக்கிழமை (Thu)',
+  'Friday': 'வெள்ளிக்கிழமை (Fri)',
+  'Saturday': 'சனிக்கிழமை (Sat)',
+  'Sunday': 'ஞாயிற்றுக்கிழமை (Sun)'
+};
+
+const MEAL_TRANSLATIONS = {
+  'Breakfast': 'காலை உணவு (Breakfast)',
+  'Lunch': 'மதிய உணவு (Lunch)',
+  'Dinner': 'இரவு உணவு (Dinner)',
+  'Snack': 'சிற்றுண்டி (Snack)'
+};
+
+const CUISINE_TRANSLATIONS = {
+  'Italian': 'இத்தாலியன் (Italian)',
+  'Asian': 'ஆசிய உணவு (Asian)',
+  'Mediterranean': 'மத்திய தரைக்கடல் (Mediterranean)',
+  'Indian': 'இந்திய உணவு (Indian)',
+  'Mexican': 'மெக்சிகன் (Mexican)',
+  'American': 'அமெரிக்கன் (American)',
+  'French': 'பிரெஞ்சு (French)',
+  'Fusion': 'ஃபியூஷன் (Fusion)'
+};
+
+const DIET_TRANSLATIONS = {
+  'High-Protein': 'அதிக புரதம் (High-Protein)',
+  'Vegetarian': 'சைவ உணவு (Vegetarian)',
+  'Vegan': 'முழு சைவ உணவு (Vegan)',
+  'Keto': 'கீட்டோ உணவு (Keto)',
+  'Pescatarian': 'மீன் உணவு (Pescatarian)',
+  'Omnivore': 'அனைத்துணவு (Omnivore)',
+  'Gluten-Free': 'பசையம் இல்லாதது (Gluten-Free)'
+};
+
+const STATUS_TRANSLATIONS = {
+  'SAFE': 'பாதுகாப்பானது (Safe)',
+  'EXPIRING SOON': 'விரைவில் காலாவதி (Soon)',
+  'URGENT': 'அவசரம் (Urgent)',
+  'EXPIRED': 'காலாவதியானது (Expired)'
 };
 
 export const translateFood = (name, lang = 'en') => {
@@ -601,4 +792,34 @@ export const translateCategory = (category, lang = 'en') => {
 export const translateLocation = (location, lang = 'en') => {
   if (!location || lang === 'en') return location;
   return LOCATION_TRANSLATIONS[location] || location;
+};
+
+export const translateUnit = (unit, lang = 'en') => {
+  if (!unit || lang === 'en') return unit;
+  return UNIT_TRANSLATIONS[unit.toLowerCase()] || unit;
+};
+
+export const translateDay = (day, lang = 'en') => {
+  if (!day || lang === 'en') return day;
+  return DAY_TRANSLATIONS[day] || day;
+};
+
+export const translateMealType = (meal, lang = 'en') => {
+  if (!meal || lang === 'en') return meal;
+  return MEAL_TRANSLATIONS[meal] || meal;
+};
+
+export const translateCuisine = (cuisine, lang = 'en') => {
+  if (!cuisine || lang === 'en') return cuisine;
+  return CUISINE_TRANSLATIONS[cuisine] || cuisine;
+};
+
+export const translateDiet = (diet, lang = 'en') => {
+  if (!diet || lang === 'en') return diet;
+  return DIET_TRANSLATIONS[diet] || diet;
+};
+
+export const translateStatus = (status, lang = 'en') => {
+  if (!status || lang === 'en') return status;
+  return STATUS_TRANSLATIONS[status] || status;
 };
