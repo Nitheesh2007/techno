@@ -26,9 +26,24 @@ import {
   Filter,
   Utensils,
   Globe,
-  Award
+  Award,
+  Wand2,
+  PlusCircle,
+  Compass,
+  X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+const ALL_CUISINES = [
+  { id: 'ALL', label: 'All Cuisines', emoji: '🌍' },
+  { id: 'Indian', label: 'Indian', emoji: '🇮🇳' },
+  { id: 'Italian', label: 'Italian', emoji: '🇮🇹' },
+  { id: 'Asian', label: 'Asian', emoji: '🥢' },
+  { id: 'Mediterranean', label: 'Mediterranean', emoji: '🫒' },
+  { id: 'Mexican', label: 'Mexican', emoji: '🇲🇽' },
+  { id: 'French', label: 'French', emoji: '🥐' },
+  { id: 'American', label: 'American', emoji: '🇺🇸' }
+];
 
 export default function Recipes() {
   const [recipes, setRecipes] = useState([]);
@@ -40,8 +55,22 @@ export default function Recipes() {
   const [cuisineFilter, setCuisineFilter] = useState('ALL');
   const [dietaryFilter, setDietaryFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Voice Controls State
   const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
   const [isVoicePaused, setIsVoicePaused] = useState(false);
+  
+  // Manual AI Recipe Studio State
+  const [showManualStudio, setShowManualStudio] = useState(false);
+  const [manualForm, setManualForm] = useState({
+    ingredients: 'Paneer, Spinach, Garlic, Basmati Rice',
+    cuisine: 'Indian',
+    mealType: 'Dinner',
+    dietary: 'Vegetarian',
+    notes: 'Extra aromatic, low oil, zero waste'
+  });
+  const [isGeneratingManual, setIsGeneratingManual] = useState(false);
+
   const { t, tf, tc, tl, language } = useLanguage();
 
   const fetchRecipes = async () => {
@@ -49,7 +78,9 @@ export default function Recipes() {
     try {
       const res = await aiEngine.generateRecipe();
       setRecipes(res.recipes);
-      setSelectedRecipe(res.recipes[0]);
+      if (!selectedRecipe && res.recipes.length > 0) {
+        setSelectedRecipe(res.recipes[0]);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -87,8 +118,8 @@ export default function Recipes() {
     setIsVoiceSpeaking(true);
     setIsVoicePaused(false);
     const speechText = language === 'ta'
-      ? `${recipe.title}. செய்முறை விவரம்: ${recipe.summary}. சமையல் நேரம் ${recipe.cookTime}.`
-      : `${recipe.title}. Summary: ${recipe.summary}. Cooking time is ${recipe.cookTime}. Ingredients include: ${recipe.matchedIngredients.join(', ')}.`;
+      ? `${recipe.title}. வகை: ${recipe.cuisine}. செய்முறை விவரம்: ${recipe.summary}. சமையல் நேரம் ${recipe.cookTime}.`
+      : `${recipe.title}. Cuisine: ${recipe.cuisine}. Summary: ${recipe.summary}. Cooking time is ${recipe.cookTime}. Ingredients include: ${recipe.matchedIngredients.join(', ')}.`;
 
     speakVoice(speechText, language, () => {
       setIsVoiceSpeaking(false);
@@ -115,9 +146,29 @@ export default function Recipes() {
     sound.playBeep(450, 0.04);
   };
 
+  // Generate Custom Manual Recipe from Studio
+  const handleGenerateManualRecipe = async (e) => {
+    e.preventDefault();
+    setIsGeneratingManual(true);
+    sound.playBeep(900, 0.05);
+
+    try {
+      const customRecipe = await aiEngine.generateManualRecipe(manualForm);
+      setRecipes(prev => [customRecipe, ...prev]);
+      setSelectedRecipe(customRecipe);
+      setShowManualStudio(false);
+      sound.playSuccess();
+      triggerConfetti(3500);
+    } catch (err) {
+      console.warn('Manual generation error:', err);
+    } finally {
+      setIsGeneratingManual(false);
+    }
+  };
+
   const filteredRecipes = recipes.filter(r => {
     const matchesMeal = mealTypeFilter === 'ALL' || r.mealType === mealTypeFilter || (mealTypeFilter === 'Quick' && (r.cookTime.includes('10') || r.cookTime.includes('8') || r.cookTime.includes('0') || r.cookTime.includes('7')));
-    const matchesCuisine = cuisineFilter === 'ALL' || r.cuisine === cuisineFilter;
+    const matchesCuisine = cuisineFilter === 'ALL' || r.cuisine.toLowerCase() === cuisineFilter.toLowerCase();
     const matchesDiet = dietaryFilter === 'ALL' || r.dietary === dietaryFilter || r.tags.includes(dietaryFilter);
     const matchesSearch = r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -150,86 +201,226 @@ export default function Recipes() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
-            <Sparkles size={13} />
-            <span>{t('aiCulinaryBadge')} (20+ {language === 'ta' ? 'செய்முறைகள்' : 'Dishes'})</span>
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2 border border-emerald-500/20">
+            <Sparkles size={13} className="text-amber-500" />
+            <span>100+ {language === 'ta' ? 'உலகளாவிய சமையல் குறிப்புகள்' : 'Global Master Culinary Recipes'} (115+ {language === 'ta' ? 'உணவுகள்' : 'Dishes'})</span>
           </div>
           <h1 className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             <ChefHat className="text-emerald-600" size={32} />
             {t('recipesTitle')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {language === 'ta' ? 'உங்கள் குளிர்சாதனப் பெட்டியில் உள்ள காலாவதியாகும் உணவுகளைக் கொண்டு 20-க்கும் மேற்பட்ட சுவையான சமையல் குறிப்புகள்.' : 'Explore 20+ smart zero-waste culinary recipes engineered to rescue your ingredients before expiry.'}
+            {language === 'ta'
+              ? 'இந்தியன், இத்தாலியன், ஆசியன், மெக்சிகன் உள்ளிட்ட 100-க்கும் மேற்பட்ட சமையல் குறிப்புகள் மற்றும் தனிப்பயன் AI செய்முறை ஸ்டுடியோ.'
+              : 'Over 100+ zero-waste recipes across Indian, Italian, Asian, Mediterranean, Mexican, French, and American cuisines.'}
           </p>
         </div>
 
-        <button 
-          onClick={fetchRecipes}
-          disabled={loading}
-          className="flex items-center space-x-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all hover:scale-105"
-        >
-          <RefreshCw className={loading ? 'animate-spin text-emerald-500' : 'text-emerald-500'} size={16} />
-          <span>{t('regenerateBtn')}</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          {/* Manual AI Recipe Generator Button */}
+          <button
+            onClick={() => setShowManualStudio(!showManualStudio)}
+            className="flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md shadow-emerald-600/20 transition-all hover:scale-105"
+          >
+            <Wand2 size={15} />
+            <span>{language === 'ta' ? '✨ தனிப்பயன் AI செய்முறை உருவாக்கு' : '✨ Manual AI Recipe Studio'}</span>
+          </button>
+
+          <button 
+            onClick={fetchRecipes}
+            disabled={loading}
+            className="flex items-center space-x-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all hover:scale-105"
+          >
+            <RefreshCw className={loading ? 'animate-spin text-emerald-500' : 'text-emerald-500'} size={16} />
+            <span>{t('regenerateBtn')}</span>
+          </button>
+        </div>
       </div>
 
-      {/* Search & Multi-Filter Deck */}
+      {/* MANUAL AI RECIPE GENERATOR STUDIO MODAL / CARD */}
+      {showManualStudio && (
+        <div className="bg-gradient-to-br from-emerald-50/90 via-teal-50/60 to-slate-50 dark:from-slate-850 dark:via-slate-850 dark:to-emerald-950/30 rounded-3xl p-6 sm:p-8 border-2 border-emerald-500/50 shadow-xl mb-8 animate-in zoom-in-95 duration-150 relative">
+          <button
+            onClick={() => setShowManualStudio(false)}
+            className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
+          >
+            <X size={18} />
+          </button>
+
+          <div className="flex items-center space-x-2 mb-4">
+            <div className="p-2 rounded-xl bg-emerald-600 text-white shadow-md">
+              <Wand2 size={18} />
+            </div>
+            <div>
+              <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white">
+                {language === 'ta' ? '✨ கைமுறை AI செய்முறை யோசனை ஸ்டுடியோ' : '✨ Manual AI Recipe Idea Studio'}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {language === 'ta'
+                  ? 'உங்களிடம் உள்ள எந்த பொருட்களையும் தட்டச்சு செய்து உங்கள் விருப்பமான சமையல் வகையில் புதிய செய்முறையை உடனடியாக உருவாக்குங்கள்.'
+                  : 'Type any ingredients you have and customize your cuisine style for instant tailored culinary instructions.'}
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleGenerateManualRecipe} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                  {language === 'ta' ? 'பொருட்கள் (கமாவால் பிரிக்கவும்):' : 'Available Ingredients (comma separated):'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Paneer, Spinach, Garlic, Basmati Rice, Tomatoes"
+                  value={manualForm.ingredients}
+                  onChange={(e) => setManualForm({ ...manualForm, ingredients: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                  {language === 'ta' ? 'சமையல் வகை (Cuisine):' : 'Target Cuisine:'}
+                </label>
+                <select
+                  value={manualForm.cuisine}
+                  onChange={(e) => setManualForm({ ...manualForm, cuisine: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                >
+                  {['Indian', 'Italian', 'Asian', 'Mediterranean', 'Mexican', 'French', 'American', 'Fusion'].map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                  {language === 'ta' ? 'உணவு நேரம்:' : 'Meal Type:'}
+                </label>
+                <select
+                  value={manualForm.mealType}
+                  onChange={(e) => setManualForm({ ...manualForm, mealType: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                >
+                  {['Dinner', 'Lunch', 'Breakfast', 'Quick Snack'].map(m => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                  {language === 'ta' ? 'உணவு விருப்பம்:' : 'Dietary Preference:'}
+                </label>
+                <select
+                  value={manualForm.dietary}
+                  onChange={(e) => setManualForm({ ...manualForm, dietary: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                >
+                  {['Vegetarian', 'Vegan', 'High-Protein', 'Gluten-Free', 'Keto-Friendly'].map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                  {language === 'ta' ? 'கூடுதல் விருப்பங்கள்:' : 'Custom Cooking Notes / Goal:'}
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Extra spicy, one-pot, crispy"
+                  value={manualForm.notes}
+                  onChange={(e) => setManualForm({ ...manualForm, notes: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="submit"
+                disabled={isGeneratingManual}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-2xl text-xs shadow-md shadow-emerald-600/20 flex items-center space-x-2 transition-all hover:scale-105"
+              >
+                {isGeneratingManual ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" />
+                    <span>{language === 'ta' ? 'உருவாக்குகிறது...' : 'Generating Recipe...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={14} />
+                    <span>{language === 'ta' ? '🚀 தனிப்பயன் செய்முறையை உருவாக்கு' : '🚀 Generate Bespoke AI Recipe'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* ALL CUISINES PILL SELECTOR & MULTI-FILTER DECK */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm mb-6 space-y-4">
-        {/* Row 1: Search & Meal Type */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="relative w-full md:w-80">
+        {/* Row 1: Search & Cuisine Horizontal Scroll Bar */}
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+          <div className="relative w-full lg:w-80 flex-shrink-0">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
               type="text"
-              placeholder={language === 'ta' ? 'செய்முறை அல்லது உணவுகளைத் தேடுங்கள்...' : 'Search recipes, ingredients, tags...'}
+              placeholder={language === 'ta' ? '100+ செய்முறைகளைத் தேடுங்கள்...' : 'Search across 100+ recipes, ingredients, tags...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 shadow-inner"
             />
           </div>
 
-          {/* Meal Type Filter */}
-          <div className="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
-            {[
-              { id: 'ALL', label: language === 'ta' ? 'அனைத்து உணவுகள்' : 'All Dishes' },
-              { id: 'Breakfast', label: language === 'ta' ? '🍳 காலை உணவு' : '🍳 Breakfast' },
-              { id: 'Lunch', label: language === 'ta' ? '🥪 மதிய உணவு' : '🥪 Lunch' },
-              { id: 'Dinner', label: language === 'ta' ? '🍲 இரவு உணவு' : '🍲 Dinner' },
-              { id: 'Quick', label: language === 'ta' ? '⚡ விரைவு (< 15m)' : '⚡ Quick (< 15m)' }
-            ].map((tab) => (
+          {/* All Cuisines Pill Bar */}
+          <div className="flex items-center space-x-1.5 overflow-x-auto w-full pb-1 lg:pb-0 custom-scrollbar">
+            {ALL_CUISINES.map((c) => (
               <button
-                key={tab.id}
-                onClick={() => setMealTypeFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                  mealTypeFilter === tab.id
-                    ? 'bg-emerald-600 text-white shadow-sm'
+                key={c.id}
+                onClick={() => setCuisineFilter(c.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 shadow-sm ${
+                  cuisineFilter === c.id
+                    ? 'bg-emerald-600 text-white scale-105 shadow-emerald-600/20'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
-                {tab.label}
+                <span>{c.emoji}</span>
+                <span>{c.label}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Row 2: Cuisine Pills & Dietary Filter */}
+        {/* Row 2: Meal Type & Dietary Filters */}
         <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-          {/* Cuisine Pills */}
+          {/* Meal Type Filter */}
           <div className="flex items-center space-x-1.5 overflow-x-auto pb-1">
             <span className="text-[10px] font-bold uppercase text-slate-400 mr-1 flex items-center gap-1">
-              <Globe size={11} /> {language === 'ta' ? 'சமையல் வகை:' : 'Cuisine:'}
+              <Utensils size={11} /> {language === 'ta' ? 'உணவு வகை:' : 'Meal:'}
             </span>
-            {['ALL', 'Italian', 'Asian', 'Mediterranean', 'Indian', 'Mexican', 'American', 'French'].map((c) => (
+            {[
+              { id: 'ALL', label: language === 'ta' ? 'அனைத்து' : 'All' },
+              { id: 'Breakfast', label: '🍳 Breakfast' },
+              { id: 'Lunch', label: '🥪 Lunch' },
+              { id: 'Dinner', label: '🍲 Dinner' },
+              { id: 'Quick', label: '⚡ Quick (< 15m)' }
+            ].map((tab) => (
               <button
-                key={c}
-                onClick={() => setCuisineFilter(c)}
+                key={tab.id}
+                onClick={() => setMealTypeFilter(tab.id)}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${
-                  cuisineFilter === c
+                  mealTypeFilter === tab.id
                     ? 'bg-teal-600 text-white font-bold'
                     : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
                 }`}
               >
-                {c === 'ALL' ? (language === 'ta' ? 'அனைத்து' : 'All') : c}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -257,13 +448,13 @@ export default function Recipes() {
       </div>
 
       {loading ? (
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-16 text-center border border-slate-200 dark:border-slate-800">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-16 text-center border border-slate-200 dark:border-slate-800 shadow-sm">
           <ChefHat className="animate-bounce mx-auto text-emerald-500 mb-4" size={48} />
           <h3 className="font-heading font-bold text-lg text-slate-800 dark:text-white">
-            {language === 'ta' ? 'AI செஃப் சமையலறையை ஆய்வு செய்து 20-க்கும் மேற்பட்ட புதிய செய்முறைகளை உருவாக்குகிறார்...' : 'AI Chef is Generating 20+ Fresh Culinary Creations...'}
+            {language === 'ta' ? '100-க்கும் மேற்பட்ட சமையல் குறிப்புகள் ஏற்றப்படுகின்றன...' : 'Loading 100+ Global Master Culinary Recipes...'}
           </h3>
           <p className="text-xs text-slate-400 mt-1">
-            {language === 'ta' ? 'சுவை, சமையல் நேரம் மற்றும் காலாவதி தேதிகள் பொருத்தப்படுகின்றன' : 'Matching flavor profiles, cooking times, and urgent expiry dates'}
+            {language === 'ta' ? 'அனைத்து உலக சமையல் குறிப்புகளும் ஒருங்கிணைக்கப்படுகின்றன' : 'Matching all international cuisines and pantry expiry dates'}
           </p>
         </div>
       ) : (
@@ -272,16 +463,16 @@ export default function Recipes() {
           <div className="lg:col-span-5 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                {t('suggestedDishes')} ({filteredRecipes.length} {language === 'ta' ? 'செய்முறைகள்' : 'dishes'})
+                {t('suggestedDishes')} ({filteredRecipes.length} {language === 'ta' ? 'செய்முறைகள்' : 'recipes found'})
               </h3>
             </div>
 
             {filteredRecipes.length === 0 ? (
               <p className="text-xs text-slate-400 p-8 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
-                {language === 'ta' ? 'இந்த வடிகட்டலுக்கு செய்முறைகள் எதுவும் இல்லை.' : 'No recipes match this search/filter.'}
+                {language === 'ta' ? 'இந்த வடிகட்டலுக்கு செய்முறைகள் எதுவும் இல்லை.' : 'No recipes match this cuisine/search filter.'}
               </p>
             ) : (
-              <div className="space-y-3 max-h-[780px] overflow-y-auto pr-1 custom-scrollbar">
+              <div className="space-y-3 max-h-[820px] overflow-y-auto pr-1 custom-scrollbar">
                 {filteredRecipes.map((r) => {
                   const isSelected = selectedRecipe?.id === r.id;
                   return (
@@ -300,10 +491,10 @@ export default function Recipes() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-                            {r.mealType || 'Dinner'}
+                            {r.cuisine || 'Global'}
                           </span>
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                            {r.cuisine || 'Fusion'}
+                            {r.mealType || 'Dinner'}
                           </span>
                           {r.dietary && (
                             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
@@ -346,7 +537,7 @@ export default function Recipes() {
                       <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-600 text-white">
                         {selectedRecipe.cuisine}
                       </span>
-                      {selectedRecipe.tags.map(tItem => (
+                      {selectedRecipe.tags?.map(tItem => (
                         <span key={tItem} className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                           {tItem}
                         </span>
@@ -450,7 +641,7 @@ export default function Recipes() {
                     {t('ingredientsNeeded')}
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {selectedRecipe.matchedIngredients.map((item, idx) => (
+                    {selectedRecipe.matchedIngredients?.map((item, idx) => (
                       <div key={idx} className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 flex items-center justify-between text-xs font-semibold text-emerald-900 dark:text-emerald-200">
                         <span>{tf(item)}</span>
                         <span className="text-[10px] bg-emerald-200 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1 font-bold">
@@ -458,7 +649,7 @@ export default function Recipes() {
                         </span>
                       </div>
                     ))}
-                    {selectedRecipe.missingIngredients.map((item, idx) => (
+                    {selectedRecipe.missingIngredients?.map((item, idx) => (
                       <div key={idx} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/40 flex items-center justify-between text-xs text-slate-600 dark:text-slate-300">
                         <span>{tf(item)}</span>
                         <span className="text-[10px] text-slate-400 font-medium">{t('pantryStaple')}</span>
@@ -473,7 +664,7 @@ export default function Recipes() {
                     {t('cookingSteps')}
                   </h4>
                   <div className="space-y-3">
-                    {selectedRecipe.instructions.map((step, idx) => (
+                    {selectedRecipe.instructions?.map((step, idx) => (
                       <div key={idx} className="flex items-start space-x-3 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                         <div className="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
                           {idx + 1}
