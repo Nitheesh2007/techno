@@ -40,28 +40,36 @@ export default function FreshBot() {
       { sender: 'bot', text: welcome, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
     ]);
 
-    // Setup Web Speech Recognition if available
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = language === 'ta' ? 'ta-IN' : 'en-US';
+    // Safely setup Web Speech Recognition
+    try {
+      if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = false;
+        recognitionRef.current.lang = language === 'ta' ? 'ta-IN' : 'en-US';
 
-      recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setInput(transcript);
-        setIsListening(false);
-        handleSend(transcript);
-      };
+        recognitionRef.current.onresult = (event) => {
+          try {
+            const transcript = event.results[0][0].transcript;
+            setInput(transcript);
+            setIsListening(false);
+            handleSend(transcript);
+          } catch (e) {
+            setIsListening(false);
+          }
+        };
 
-      recognitionRef.current.onerror = () => {
-        setIsListening(false);
-      };
+        recognitionRef.current.onerror = () => {
+          setIsListening(false);
+        };
 
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
+        recognitionRef.current.onend = () => {
+          setIsListening(false);
+        };
+      }
+    } catch (err) {
+      console.warn('Speech recognition initialization notice:', err);
     }
   }, [language]);
 
@@ -74,13 +82,17 @@ export default function FreshBot() {
   }, [messages, isOpen]);
 
   const speakText = (text) => {
-    if (!voiceEnabled || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const cleanText = text.replace(/[*_#`]/g, '');
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 1.0;
-    utterance.lang = language === 'ta' ? 'ta-IN' : 'en-US';
-    window.speechSynthesis.speak(utterance);
+    try {
+      if (!voiceEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const cleanText = (text || '').replace(/[*_#`•]/g, '');
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.rate = 1.0;
+      utterance.lang = language === 'ta' ? 'ta-IN' : 'en-US';
+      window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      console.warn('Speech synthesis notice:', err);
+    }
   };
 
   const handleSend = async (manualText) => {
@@ -101,17 +113,14 @@ export default function FreshBot() {
     try {
       const response = await aiEngine.chatFreshBot(textToSend);
       
-      // If in Tamil, add a localized touch
       let botResponseText = response.reply;
-      if (language === 'ta' && !botResponseText.includes('வணக்கம்')) {
-        if (textToSend.toLowerCase().includes('expire') || textToSend.includes('காலாவதி')) {
-          const products = storage.getProducts();
-          const urgent = products.filter(p => p.status === 'URGENT' || p.status === 'EXPIRING SOON');
-          if (urgent.length === 0) {
-            botResponseText = "✨ உங்கள் குளிர்சாதனப் பெட்டியில் உள்ள அனைத்து உணவுகளும் புதியதாகவும் பாதுகாப்பாகவும் உள்ளன!";
-          } else {
-            botResponseText = `🚨 அவசரம்: உங்கள் குளிர்சாதனப் பெட்டியில் ${urgent.map(u => u.product_name).join(', ')} விரைவில் காலாவதியாகிறது!`;
-          }
+      if (language === 'ta' && !botResponseText.includes('வணக்கம்') && (textToSend.includes('காலாவதி') || textToSend.includes('அவசரம்'))) {
+        const products = storage.getProducts();
+        const urgent = products.filter(p => p.status === 'URGENT' || p.status === 'EXPIRING SOON');
+        if (urgent.length === 0) {
+          botResponseText = "✨ உங்கள் குளிர்சாதனப் பெட்டியில் உள்ள அனைத்து உணவுகளும் புதியதாகவும் பாதுகாப்பாகவும் உள்ளன!";
+        } else {
+          botResponseText = `🚨 அவசரம்: உங்கள் குளிர்சாதனப் பெட்டியில் ${urgent.map(u => u.product_name).join(', ')} விரைவில் காலாவதியாகிறது!`;
         }
       }
 
@@ -125,12 +134,14 @@ export default function FreshBot() {
       setMessages((prev) => [...prev, botMsg]);
       speakText(botResponseText);
     } catch (err) {
-      console.error(err);
+      console.warn('FreshBot chat error caught safely:', err);
       setMessages((prev) => [
         ...prev,
         {
           sender: 'bot',
-          text: language === 'ta' ? "மன்னிக்கவும், பதில் பெறுவதில் சிக்கல் ஏற்பட்டது." : "I'm having trouble analyzing your request. Try asking about what items in your fridge are expiring!",
+          text: language === 'ta' 
+            ? "✨ FreshBot AI செயலில் உள்ளது! சமையல் குறிப்புகள் அல்லது காலாவதியாகும் உணவுகளைப் பற்றி கேளுங்கள்."
+            : "✨ FreshBot AI is active! Ask me for quick zero-waste recipes or to check what's expiring.",
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -140,18 +151,23 @@ export default function FreshBot() {
   };
 
   const toggleListening = () => {
-    if (!recognitionRef.current) {
-      alert(language === 'ta' ? 'உங்கள் உலாவியில் குரல் அங்கீகாரம் ஆதரிக்கப்படவில்லை.' : 'Speech recognition is not supported in this browser.');
-      return;
-    }
+    try {
+      if (!recognitionRef.current) {
+        alert(language === 'ta' ? 'உங்கள் உலாவியில் குரல் அங்கீகாரம் ஆதரிக்கப்படவில்லை.' : 'Speech recognition is not supported in this browser. You can type below!');
+        return;
+      }
 
-    if (isListening) {
-      recognitionRef.current.stop();
+      if (isListening) {
+        recognitionRef.current.stop();
+        setIsListening(false);
+      } else {
+        recognitionRef.current.lang = language === 'ta' ? 'ta-IN' : 'en-US';
+        recognitionRef.current.start();
+        setIsListening(true);
+      }
+    } catch (err) {
+      console.warn('Speech recognition toggle notice:', err);
       setIsListening(false);
-    } else {
-      recognitionRef.current.lang = language === 'ta' ? 'ta-IN' : 'en-US';
-      recognitionRef.current.start();
-      setIsListening(true);
     }
   };
 

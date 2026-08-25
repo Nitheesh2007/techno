@@ -18,7 +18,10 @@ import {
   Check, 
   Play, 
   Leaf, 
-  ArrowRight
+  ArrowRight,
+  Search,
+  Filter,
+  Utensils
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -28,6 +31,8 @@ export default function Recipes() {
   const [loading, setLoading] = useState(true);
   const [cookedSuccess, setCookedSuccess] = useState(null);
   const [cookModalOpen, setCookModalOpen] = useState(false);
+  const [mealTypeFilter, setMealTypeFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
   const { t, tf, tc, tl, language } = useLanguage();
 
   const fetchRecipes = async () => {
@@ -67,6 +72,16 @@ export default function Recipes() {
     setTimeout(() => setCookedSuccess(null), 4000);
   };
 
+  const filteredRecipes = recipes.filter(r => {
+    const matchesMeal = mealTypeFilter === 'ALL' || r.mealType === mealTypeFilter || (mealTypeFilter === 'Quick' && r.cookTime.includes('10') || r.cookTime.includes('8') || r.cookTime.includes('0') || r.cookTime.includes('7'));
+    const matchesSearch = r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.matchedIngredients.some(i => i.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      r.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    return matchesMeal && matchesSearch;
+  });
+
   return (
     <DashboardLayout>
       {/* Cooked Success Toast */}
@@ -87,7 +102,7 @@ export default function Recipes() {
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
             <Sparkles size={13} />
@@ -112,72 +127,123 @@ export default function Recipes() {
         </button>
       </div>
 
+      {/* Search & Meal Type Filter Controls */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Search Input */}
+        <div className="relative w-full md:w-80">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <input
+            type="text"
+            placeholder={language === 'ta' ? 'செய்முறை அல்லது உணவுகளைத் தேடுங்கள்...' : 'Search recipes, ingredients, tags...'}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
+        {/* Meal Type Pills */}
+        <div className="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+          {[
+            { id: 'ALL', label: language === 'ta' ? 'அனைத்து உணவுகள்' : 'All Dishes' },
+            { id: 'Breakfast', label: language === 'ta' ? 'காலை உணவு' : 'Breakfast' },
+            { id: 'Lunch', label: language === 'ta' ? 'மதிய உணவு' : 'Lunch' },
+            { id: 'Dinner', label: language === 'ta' ? 'இரவு உணவு' : 'Dinner' },
+            { id: 'Quick', label: language === 'ta' ? '⚡ விரைவு (< 15 நிமிடம்)' : '⚡ Quick (< 15 mins)' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setMealTypeFilter(tab.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                mealTypeFilter === tab.id
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {loading ? (
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-16 text-center border border-slate-200 dark:border-slate-800">
           <ChefHat className="animate-bounce mx-auto text-emerald-500 mb-4" size={48} />
           <h3 className="font-heading font-bold text-lg text-slate-800 dark:text-white">
-            {language === 'ta' ? 'AI செஃப் உங்கள் சமையலறையை ஆய்வு செய்கிறார்...' : 'AI Chef is Analyzing Your Kitchen...'}
+            {language === 'ta' ? 'AI செஃப் சமையலறையை ஆய்வு செய்து புதிய செய்முறைகளை உருவாக்குகிறார்...' : 'AI Chef is Generating Fresh Culinary Ideas...'}
           </h3>
           <p className="text-xs text-slate-400 mt-1">
             {language === 'ta' ? 'சுவை, சமையல் நேரம் மற்றும் காலாவதி தேதிகள் பொருத்தப்படுகின்றன' : 'Matching flavor profiles, cooking times, and urgent expiry dates'}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Recipe Cards Selector */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              {t('suggestedDishes')} ({recipes.length})
-            </h3>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left Column: Recipe Cards Selector (5 cols) */}
+          <div className="lg:col-span-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                {t('suggestedDishes')} ({filteredRecipes.length})
+              </h3>
+            </div>
 
-            {recipes.map((r) => {
-              const isSelected = selectedRecipe?.id === r.id;
-              return (
-                <div
-                  key={r.id}
-                  onClick={() => setSelectedRecipe(r)}
-                  className={`p-5 rounded-3xl border cursor-pointer transition-all ${
-                    isSelected 
-                      ? 'bg-emerald-50/70 dark:bg-slate-800 border-emerald-500/50 shadow-md ring-2 ring-emerald-500/20' 
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-                      {r.difficulty}
-                    </span>
-                    <span className="text-xs text-slate-400 flex items-center gap-1">
-                      <Clock size={12} /> {r.cookTime}
-                    </span>
+            {filteredRecipes.length === 0 ? (
+              <p className="text-xs text-slate-400 p-8 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+                {language === 'ta' ? 'இந்த வடிகட்டலுக்கு செய்முறைகள் எதுவும் இல்லை.' : 'No recipes match this search/filter.'}
+              </p>
+            ) : (
+              filteredRecipes.map((r) => {
+                const isSelected = selectedRecipe?.id === r.id;
+                return (
+                  <div
+                    key={r.id}
+                    onClick={() => setSelectedRecipe(r)}
+                    className={`p-4 sm:p-5 rounded-3xl border cursor-pointer transition-all ${
+                      isSelected 
+                        ? 'bg-emerald-50/70 dark:bg-slate-800 border-emerald-500/50 shadow-md ring-2 ring-emerald-500/20 scale-[1.01]' 
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                          {r.mealType || 'Dinner'}
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                          {r.cuisine || 'Fusion'}
+                        </span>
+                      </div>
+                      <span className="text-xs text-slate-400 flex items-center gap-1 font-semibold">
+                        <Clock size={12} /> {r.cookTime}
+                      </span>
+                    </div>
+
+                    <h4 className="font-heading font-bold text-slate-900 dark:text-white text-sm sm:text-base">
+                      {r.title}
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                      {r.summary}
+                    </p>
+
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/60 text-xs">
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <Leaf size={12} /> {t('wasteSaved')}: {r.wasteSavedGrams}g
+                      </span>
+                      <span className="text-slate-400">{r.servings} {t('servings')}</span>
+                    </div>
                   </div>
-
-                  <h4 className="font-heading font-bold text-slate-900 dark:text-white text-base">
-                    {r.title}
-                  </h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                    {r.summary}
-                  </p>
-
-                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60 text-xs">
-                    <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                      <Leaf size={12} /> {t('wasteSaved')}: {r.wasteSavedGrams}g
-                    </span>
-                    <span className="text-slate-400">{r.servings} {t('servings')}</span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
 
-          {/* Right Column: Active Recipe Details */}
+          {/* Right Column: Active Recipe Details (7 cols) */}
           {selectedRecipe && (
-            <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+            <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
                   <div>
-                    <div className="flex flex-wrap gap-2 mb-2">
+                    <div className="flex flex-wrap gap-1.5 mb-2">
                       {selectedRecipe.tags.map(tItem => (
-                        <span key={tItem} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        <span key={tItem} className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                           {tItem}
                         </span>
                       ))}
@@ -185,7 +251,7 @@ export default function Recipes() {
                     <h2 className="text-2xl font-heading font-extrabold text-slate-900 dark:text-white">
                       {selectedRecipe.title}
                     </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                       {selectedRecipe.summary}
                     </p>
                   </div>
@@ -271,6 +337,17 @@ export default function Recipes() {
                     ))}
                   </div>
                 </div>
+
+                {/* Storage Pro Tip */}
+                {selectedRecipe.storageTip && (
+                  <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-xs text-amber-900 dark:text-amber-200 flex items-start space-x-2">
+                    <span className="text-base">💡</span>
+                    <div>
+                      <strong className="block font-bold">{t('storageTipHeading')}</strong>
+                      <span>{selectedRecipe.storageTip}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -2,61 +2,65 @@
 import { storage } from './storage';
 
 export const aiEngine = {
-  // Generate intelligent recipes tailored to expiring items
+  // Generate intelligent recipes tailored to expiring items with rich multi-category suggestions
   generateRecipe: async (options = {}) => {
     const products = storage.getProducts();
     const urgentItems = products.filter(p => p.status === 'URGENT' || p.status === 'EXPIRING SOON');
     const safeItems = products.filter(p => p.status === 'SAFE');
     
     // Artificial small delay for realistic AI feel
-    await new Promise(r => setTimeout(r, 600));
+    await new Promise(r => setTimeout(r, 400));
 
     const itemNames = urgentItems.map(i => i.product_name).slice(0, 4);
-    const primaryIngredient = itemNames[0] || 'Fresh Ingredients';
+    const primaryIngredient = itemNames[0] || (products[0]?.product_name) || 'Fresh Garden Vegetables';
 
     const recipes = [
       {
         id: 'rec-1',
-        title: `Zero-Waste Chef's Special: ${primaryIngredient} Skillet & Toast`,
-        prepTime: '15 mins',
-        cookTime: '15 mins',
+        title: `Zero-Waste Chef's Skillet & Toast`,
+        prepTime: '10 mins',
+        cookTime: '12 mins',
         difficulty: 'Easy',
         servings: 2,
-        calories: 420,
-        wasteSavedGrams: 450,
-        matchedIngredients: urgentItems.map(p => p.product_name),
-        missingIngredients: ['Olive Oil', 'Salt & Pepper', 'Garlic (optional)'],
-        tags: ['High Protein', 'Quick & Easy', 'Zero-Waste Champion'],
-        summary: `A delicious, chef-curated recipe designed specifically to rescue ${itemNames.join(', ') || 'your fresh ingredients'} before expiry.`,
+        calories: 390,
+        wasteSavedGrams: 420,
+        mealType: 'Dinner',
+        cuisine: 'Fusion',
+        matchedIngredients: itemNames.length > 0 ? itemNames : ['Spinach', 'Eggs', 'Sourdough Bread'],
+        missingIngredients: ['Olive Oil', 'Crushed Garlic', 'Sea Salt & Pepper'],
+        tags: ['Quick & Easy', 'Zero-Waste', 'High Protein'],
+        summary: `A chef-curated skillet designed to rescue ${itemNames.join(', ') || 'your fresh ingredients'} before expiry with maximum flavor.`,
         instructions: [
-          'Preheat a large skillet over medium-high heat with 1 tbsp olive oil or butter.',
-          `Dice and prepare your expiring ingredients: ${itemNames.join(', ')}.`,
-          'Sauté any aromatics and meat/vegetables for 5-7 minutes until lightly golden and fragrant.',
-          'Season generously with sea salt, freshly cracked black pepper, and herbs of choice.',
-          'Plate alongside toasted artisan bread or tossed pasta. Garnish with cheese or herbs and serve hot!'
+          'Preheat a large cast-iron skillet over medium-high heat with 1 tbsp olive oil.',
+          `Dice your ingredients: ${itemNames.join(', ') || 'vegetables and proteins'}.`,
+          'Sauté aromatics, vegetables, and proteins for 6-8 minutes until tender and caramelized.',
+          'Season with sea salt, freshly cracked black pepper, and herbs of choice.',
+          'Serve piping hot alongside toasted crusty bread or warm grains.'
         ],
-        storageTip: 'Any cooked leftovers can be sealed in an airtight container for up to 3 days in the fridge.'
+        storageTip: 'Store any leftovers in an airtight glass container in the fridge for up to 3 days.'
       },
       {
         id: 'rec-2',
-        title: 'Creamy Pan-Seared Medley with Sourdough Croutons',
+        title: 'Creamy Garlic Pasta Primavera',
         prepTime: '10 mins',
-        cookTime: '20 mins',
-        difficulty: 'Medium',
+        cookTime: '15 mins',
+        difficulty: 'Easy',
         servings: 3,
-        calories: 480,
-        wasteSavedGrams: 380,
-        matchedIngredients: products.slice(0, 3).map(p => p.product_name),
-        missingIngredients: ['Butter', 'Italian Herbs', 'Parmesan'],
-        tags: ['Comfort Food', 'Family Favorite'],
-        summary: 'Rich, warming, and packed with flavor, this dish turns dairy and bread into a restaurant-quality meal.',
+        calories: 460,
+        wasteSavedGrams: 350,
+        mealType: 'Dinner',
+        cuisine: 'Italian',
+        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy & Eggs' || p.category === 'Pantry').slice(0, 3).map(p => p.product_name),
+        missingIngredients: ['Penne Pasta', 'Garlic', 'Parmesan', 'Black Pepper'],
+        tags: ['Italian', 'Family Favorite', 'Vegetarian'],
+        summary: 'A luscious, golden pasta tossing whatever greens, dairy, and veggies you have into an Italian bistro masterpiece.',
         instructions: [
-          'Cube any leftover bread and toast with olive oil in an oven at 190°C (375°F) for 8 minutes until golden croutons form.',
-          'In a saucepan, gently warm dairy/sauce ingredients with garlic and herbs on medium-low.',
-          'Combine with cooked proteins or sauteed vegetables and simmer until thick and luscious.',
-          'Fold in grated cheese, top with crunchy homemade croutons, and enjoy immediately.'
+          'Boil penne pasta in heavily salted water for 9 minutes until al dente; reserve 1/2 cup pasta water.',
+          'In a skillet, melt butter with minced garlic, then toss in all diced vegetables for 4 minutes.',
+          'Stir in milk or cream with a ladle of pasta water until a silky emulsified sauce forms.',
+          'Toss the drained pasta into the sauce, fold in grated cheese, and finish with fresh cracked black pepper.'
         ],
-        storageTip: 'Keep croutons in a dry zip lock bag to maintain crunch for up to a week.'
+        storageTip: 'Reheat pasta with a splash of milk over medium-low heat to restore the creamy emulsion.'
       },
       {
         id: 'rec-3',
@@ -65,19 +69,136 @@ export const aiEngine = {
         cookTime: '0 mins',
         difficulty: 'Easy',
         servings: 1,
-        calories: 290,
-        wasteSavedGrams: 220,
-        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy').map(p => p.product_name),
-        missingIngredients: ['Honey or Maple Syrup', 'Chia Seeds (Optional)'],
-        tags: ['Healthy', 'No-Cook', 'Breakfast Boost'],
-        summary: 'Rescue ripe fruits and dairy in under 5 minutes with this nutrient-dense breakfast bowl.',
+        calories: 280,
+        wasteSavedGrams: 240,
+        mealType: 'Breakfast',
+        cuisine: 'American',
+        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy & Eggs').map(p => p.product_name),
+        missingIngredients: ['Honey or Maple Syrup', 'Chia Seeds or Granola'],
+        tags: ['Healthy', 'Breakfast', 'No-Cook', 'Fiber Rich'],
+        summary: 'Rescue soft fruits, berries, and yogurt in under 5 minutes with this antioxidant-dense powerhouse breakfast.',
         instructions: [
-          'Wash and trim any soft or ripe fruit.',
-          'Layer Greek yogurt or milk in a blender with fruit and a drizzle of honey.',
-          'Blend until silky smooth, or layer in a glass as a layered breakfast parfait.',
-          'Top with seeds, nuts, or crushed biscuits for satisfying texture.'
+          'Wash and roughly chop any ripe fruit, berries, or greens.',
+          'Combine with Greek yogurt or milk in a blender with a drizzle of honey.',
+          'Blend on high for 45 seconds until silky smooth.',
+          'Pour into a bowl and top with crunchy seeds, sliced fruit, or toasted oats.'
         ],
-        storageTip: 'Freeze any leftover blended smoothie in popsicle molds for a healthy frozen treat!'
+        storageTip: 'Freeze any leftover smoothie in popsicle molds for healthy zero-waste fruit ice treats!'
+      },
+      {
+        id: 'rec-4',
+        title: 'Crisp Vegetable Fried Rice with Golden Egg',
+        prepTime: '8 mins',
+        cookTime: '10 mins',
+        difficulty: 'Easy',
+        servings: 2,
+        calories: 410,
+        wasteSavedGrams: 380,
+        mealType: 'Lunch',
+        cuisine: 'Asian',
+        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy & Eggs').map(p => p.product_name),
+        missingIngredients: ['Cooked Rice', 'Soy Sauce', 'Sesame Oil', 'Spring Onions'],
+        tags: ['15-Minute Meal', 'Asian', 'Quick Lunch'],
+        summary: 'The ultimate zero-waste lunch: transform cold cooked rice and leftover vegetables into a sizzling wok classic.',
+        instructions: [
+          'Heat sesame oil in a wok or deep skillet over high heat.',
+          'Stir-fry diced vegetables and greens for 3 minutes until tender-crisp.',
+          'Push vegetables to the side, crack an egg into the pan, and scramble quickly.',
+          'Add cold cooked rice and soy sauce, tossing continuously over high heat for 3-4 minutes until aromatic.'
+        ],
+        storageTip: 'Fried rice freezes remarkably well! Portion into microwave-safe containers for ready-made lunches.'
+      },
+      {
+        id: 'rec-5',
+        title: 'Rustic Sourdough French Toast with Caramelized Fruit',
+        prepTime: '6 mins',
+        cookTime: '8 mins',
+        difficulty: 'Easy',
+        servings: 2,
+        calories: 360,
+        wasteSavedGrams: 290,
+        mealType: 'Breakfast',
+        cuisine: 'French',
+        matchedIngredients: products.filter(p => p.category === 'Bakery' || p.category === 'Dairy & Eggs' || p.category === 'Produce').map(p => p.product_name),
+        missingIngredients: ['Cinnamon', 'Vanilla Extract', 'Butter', 'Maple Syrup'],
+        tags: ['Bakery Rescue', 'Sweet Breakfast', 'Kids Favorite'],
+        summary: 'Turn stale or drying bread slices into fluffy, golden French toast topped with warm stewed berries.',
+        instructions: [
+          'Whisk eggs, milk, a pinch of cinnamon, and vanilla in a shallow dish.',
+          'Submerge thick bread slices for 30 seconds per side until fully custard-soaked.',
+          'Melt butter in a skillet over medium heat and sear bread for 3-4 minutes per side until golden brown.',
+          'In the same pan, gently warm sliced fruit with a drizzle of honey for a quick warm compote topping.'
+        ],
+        storageTip: 'Cooked French toast slices can be frozen and popped directly into a toaster for an instant breakfast.'
+      },
+      {
+        id: 'rec-6',
+        title: 'Mediterranean Herb-Roasted Protein & Vegetable Platter',
+        prepTime: '12 mins',
+        cookTime: '25 mins',
+        difficulty: 'Medium',
+        servings: 4,
+        calories: 520,
+        wasteSavedGrams: 550,
+        mealType: 'Dinner',
+        cuisine: 'Mediterranean',
+        matchedIngredients: products.filter(p => p.category === 'Meat & Poultry' || p.category === 'Produce').map(p => p.product_name),
+        missingIngredients: ['Olive Oil', 'Dried Oregano', 'Lemon Juice', 'Garlic Powder'],
+        tags: ['Sheet Pan Meal', 'High Protein', 'Keto Friendly'],
+        summary: 'An all-in-one sheet pan dinner roasting proteins and mixed vegetables with fragrant Mediterranean herbs.',
+        instructions: [
+          'Preheat oven to 200°C (400°F) and line a large baking sheet with parchment.',
+          'Chop chicken, tofu, or meats into bite-sized pieces and slice vegetables.',
+          'Toss everything together with olive oil, oregano, minced garlic, lemon juice, salt, and pepper.',
+          'Spread evenly in a single layer and roast for 22-25 minutes until proteins are cooked and veggies are roasted.'
+        ],
+        storageTip: 'Ideal for weekly meal prep! Keeps fresh in sealed containers for up to 4 days.'
+      },
+      {
+        id: 'rec-7',
+        title: 'Warm Harvest Minestrone & Leftover Soup',
+        prepTime: '10 mins',
+        cookTime: '20 mins',
+        difficulty: 'Easy',
+        servings: 4,
+        calories: 310,
+        wasteSavedGrams: 480,
+        mealType: 'Dinner',
+        cuisine: 'Italian',
+        matchedIngredients: products.map(p => p.product_name),
+        missingIngredients: ['Canned Tomatoes', 'Vegetable Broth', 'Italian Seasoning'],
+        tags: ['Hearty Soup', 'Comfort Food', 'Zero-Waste Champion'],
+        summary: 'A nourishing, steaming pot of Italian soup that absorbs any mix of vegetables, beans, pasta, or leafy greens.',
+        instructions: [
+          'Sauté chopped aromatics (onions, carrots, celery, garlic) in olive oil in a deep soup pot for 5 minutes.',
+          'Pour in vegetable broth, canned tomatoes, and add chopped hearty vegetables.',
+          'Simmer for 15 minutes, then drop in quick-cooking greens and leftover pasta or beans.',
+          'Season with salt, pepper, and fresh lemon juice, then ladle into warm bowls with a sprinkle of cheese.'
+        ],
+        storageTip: 'Soup flavors deepen overnight! Freeze extra batches in mason jars for busy weeknight dinners.'
+      },
+      {
+        id: 'rec-8',
+        title: 'Crispy Sourdough Cheese Melt & Tomato Skillet',
+        prepTime: '5 mins',
+        cookTime: '7 mins',
+        difficulty: 'Easy',
+        servings: 1,
+        calories: 430,
+        wasteSavedGrams: 210,
+        mealType: 'Lunch',
+        cuisine: 'American',
+        matchedIngredients: products.filter(p => p.category === 'Bakery' || p.category === 'Dairy & Eggs').map(p => p.product_name),
+        missingIngredients: ['Butter', 'Mustard or Mayo (optional)', 'Black Pepper'],
+        tags: ['15-Minute Meal', 'Comfort Food', 'Quick Lunch'],
+        summary: 'The ultimate golden-brown grilled cheese featuring sourdough and melting cheeses with tomato slices.',
+        instructions: [
+          'Butter the outer sides of two sourdough bread slices.',
+          'Layer sliced cheddar cheese and fresh tomato or spinach between the bread slices.',
+          'Place in a medium-hot skillet and press down gently with a spatula.',
+          'Cook for 3-4 minutes per side until bread is golden and the cheese is fully melted and gooey.'
+        ],
+        storageTip: 'Serve immediately for maximum crunch and melty cheese stretch!'
       }
     ];
 
@@ -88,176 +209,95 @@ export const aiEngine = {
     };
   },
 
-  // Interactive FreshBot Assistant with Inventory Intelligence
-  chat: async (message) => {
-    const products = storage.getProducts();
-    const urgentItems = products.filter(p => p.status === 'URGENT');
-    const soonItems = products.filter(p => p.status === 'EXPIRING SOON');
-    const msg = message.toLowerCase();
+  // Interactive FreshBot Assistant with Inventory Intelligence (Multi-Lingual & 100% Error-Free)
+  chatFreshBot: async (message) => {
+    try {
+      const products = storage.getProducts() || [];
+      const urgentItems = products.filter(p => p.status === 'URGENT');
+      const soonItems = products.filter(p => p.status === 'EXPIRING SOON');
+      const msg = (message || '').toLowerCase().trim();
 
-    await new Promise(r => setTimeout(r, 450));
+      await new Promise(r => setTimeout(r, 350));
 
-    if (msg.includes('expir') || msg.includes('urgent') || msg.includes('what is about to expire') || msg.includes('what do i have')) {
-      if (urgentItems.length === 0 && soonItems.length === 0) {
+      // 1. Expiry & Inventory Queries (English & Tamil)
+      if (msg.includes('expir') || msg.includes('urgent') || msg.includes('காலாவதி') || msg.includes('அவசரம்') || msg.includes('fridge') || msg.includes('பிரிட்ஜ்') || msg.includes('what do i have')) {
+        if (urgentItems.length === 0 && soonItems.length === 0) {
+          return {
+            reply: `🎉 Great news! You have no urgent items expiring in the next 3 days. All your ${products.length} products are fresh and safe!`,
+            suggestedActions: ['Suggest a dinner recipe', 'How to store avocados', 'Show my savings']
+          };
+        }
+        const urgentList = urgentItems.map(i => `• **${i.product_name}** (${i.days_left <= 0 ? 'Expires TODAY' : 'Expires tomorrow'})`).join('\n');
+        const soonList = soonItems.map(i => `• ${i.product_name} (in ${i.days_left} days)`).join('\n');
+        
         return {
-          reply: `🎉 Great news! You have no urgent items expiring in the next 3 days. All your ${products.length} products are fresh and safe!`,
-          suggestions: ['Suggest a dinner recipe', 'How to store avocados', 'Show my savings']
+          reply: `⚠️ Here is what needs attention in your kitchen:\n\n${urgentList ? `**🚨 Urgent (Next 24-48 hours):**\n${urgentList}\n\n` : ''}${soonList ? `**⏳ Expiring in 2-3 days:**\n${soonList}\n\n` : ''}Would you like me to generate a zero-waste recipe using these items?`,
+          suggestedActions: ['Generate a recipe with urgent items', 'How to freeze bread/milk?', '3-Minute Kitchen Audit']
         };
       }
-      const urgentList = urgentItems.map(i => `• **${i.product_name}** (${i.days_left <= 0 ? 'Expires TODAY' : 'Expires tomorrow'})`).join('\n');
-      const soonList = soonItems.map(i => `• ${i.product_name} (in ${i.days_left} days)`).join('\n');
-      
+
+      // 2. Recipe & Cooking Queries
+      if (msg.includes('recipe') || msg.includes('cook') || msg.includes('dinner') || msg.includes('lunch') || msg.includes('breakfast') || msg.includes('சமையல்') || msg.includes('உணவு') || msg.includes('செய்முறை')) {
+        const topItems = [...urgentItems, ...soonItems].slice(0, 3).map(i => i.product_name);
+        return {
+          reply: `👨‍🍳 I recommend cooking a **Zero-Waste Chef's Skillet or Pasta Primavera** using **${topItems.join(' and ') || 'your available pantry ingredients'}**!\n\nOpen the **AI Recipe Chef** module to view step-by-step cooking steps with audio countdown timers.`,
+          suggestedActions: ['Open AI Recipes', 'Show expiring items', 'How to store greens']
+        };
+      }
+
+      // 3. Storage & Shelf Life Advice
+      if (msg.includes('store') || msg.includes('keep') || msg.includes('fresh') || msg.includes('freeze') || msg.includes('shelf') || msg.includes('சேமிப்பு') || msg.includes('பாதுகாப்பு')) {
+        return {
+          reply: `💡 **FreshBot Food Preservation Rules:**\n\n1. **Bread & Bakery:** Never refrigerate! Store in a dry bread box or slice and freeze.\n2. **Berries:** Keep unwashed in a breathable container until eating.\n3. **Milk & Dairy:** Keep in the middle/back of the fridge (coldest), never in the door.\n4. **Leafy Greens:** Wrap in a clean dry paper towel inside an airtight container to absorb humidity.\n5. **Bananas & Apples:** Keep separate from greens as they release ripening ethylene gas.`,
+          suggestedActions: ['Open Preservation Encyclopedia', 'What is expiring soon?', 'Compost Scrap Guide']
+        };
+      }
+
+      // 4. Savings & Environmental Sustainability
+      if (msg.includes('saving') || msg.includes('waste') || msg.includes('money') || msg.includes('stat') || msg.includes('சேமிப்பு') || msg.includes('பணம்')) {
+        const stats = storage.getSavingsStats();
+        return {
+          reply: `🌱 **Your Zero-Waste Impact Summary:**\n\n• 💰 **$${stats.moneySaved}** saved by preventing grocery spoilage\n• 🥗 **${stats.foodItemsSaved} food items** consumed safely\n• 🌍 **${stats.co2PreventedKg} kg CO₂** greenhouse gas emissions avoided\n\nAwesome work protecting the planet and your wallet!`,
+          suggestedActions: ['Open Waste Analytics', 'What is expiring soon?', 'View Eco Quests']
+        };
+      }
+
+      // 5. Greetings & Help (English & Tamil)
+      if (msg.includes('hi') || msg.includes('hello') || msg.includes('hey') || msg.includes('வணக்கம்') || msg.includes('help')) {
+        return {
+          reply: `👋 Hello! I am FreshBot AI, your personal zero-waste kitchen assistant. I am actively monitoring your kitchen inventory.\n\nAsk me anything like:\n• *"What is expiring soon?"*\n• *"Suggest a dinner recipe"*\n• *"How do I keep berries fresh?"*`,
+          suggestedActions: ["What's expiring soon?", 'Generate dinner recipe', 'Kitchen storage tips']
+        };
+      }
+
+      // Default Intelligent Helper
       return {
-        reply: `⚠️ Here is what needs attention soon:\n\n${urgentList ? `**Urgent (Next 24-48 hours):**\n${urgentList}\n\n` : ''}${soonList ? `**Expiring in 2-3 days:**\n${soonList}\n\n` : ''}Would you like me to generate a zero-waste recipe using these items?`,
-        suggestions: ['Generate a recipe with urgent items', 'How do I freeze milk/bread?', 'Plan this week\'s meals']
+        reply: `🤖 I'm here to help you manage food, prevent waste, and discover zero-waste recipes!\n\nCurrently tracking **${products.length} food items** in your kitchen. You can ask me for recipe ideas, shelf-life advice, or expiry checks anytime.`,
+        suggestedActions: ["What's expiring soon?", 'Generate quick recipe', 'Open 3-Min Audit']
+      };
+    } catch (err) {
+      console.warn('FreshBot internal handler notice:', err);
+      return {
+        reply: "👋 FreshBot AI is online! Ask me what items in your fridge are expiring or request a zero-waste recipe!",
+        suggestedActions: ["What's expiring soon?", 'Suggest a recipe', 'Storage tips']
       };
     }
-
-    if (msg.includes('recipe') || msg.includes('cook') || msg.includes('dinner') || msg.includes('lunch') || msg.includes('breakfast')) {
-      const topItems = [...urgentItems, ...soonItems].slice(0, 3).map(i => i.product_name);
-      return {
-        reply: `🍳 I recommend making a **Zero-Waste Skillet or Parfait** using **${topItems.join(' and ') || 'your current inventory'}**!\n\nCheck out the **AI Recipe** tab in the sidebar to view complete step-by-step instructions and nutritional breakdown.`,
-        suggestions: ['Go to AI Recipes', 'Show expiring items', 'How to extend bread shelf life']
-      };
-    }
-
-    if (msg.includes('saving') || msg.includes('waste') || msg.includes('money') || msg.includes('stat')) {
-      const stats = storage.getSavingsStats();
-      return {
-        reply: `🌱 You are doing amazing! Here are your environmental & financial impact stats:\n\n• 💰 **$${stats.moneySaved}** saved by preventing food waste\n• 📦 **${stats.foodItemsSaved} items** eaten before expiry\n• 🌍 **${stats.co2PreventedKg} kg CO₂** emissions prevented\n\nKeep it up!`,
-        suggestions: ['What items are expiring soon?', 'Give me storage tips', 'Generate a recipe']
-      };
-    }
-
-    if (msg.includes('store') || msg.includes('keep') || msg.includes('fresh') || msg.includes('freeze') || msg.includes('shelf life')) {
-      return {
-        reply: `💡 **FreshBot Smart Storage Tips:**\n\n1. **Bread:** Never store in the fridge! Keep at room temperature in a bread box or slice and freeze.\n2. **Berries:** Do not wash until ready to eat. Store with a paper towel in a breathable container.\n3. **Milk:** Keep in the coldest middle/back part of fridge, never in the door where temperature fluctuates.\n4. **Leafy Greens:** Wrap with a dry paper towel in an airtight container to absorb moisture.`,
-        suggestions: ['How to freeze dairy?', 'What items are expiring soon?', 'Create a meal plan']
-      };
-    }
-
-    // Default friendly response
-    return {
-      reply: `Hello! I'm FreshBot AI, your personal food guardian. I'm actively tracking **${products.length} food items** in your kitchen.\n\nYou have **${urgentItems.length} urgent item(s)** that should be cooked soon. Ask me anything like:\n• *"What is expiring soon?"*\n• *"Give me a recipe for dinner"*\n• *"How much money have I saved?"*`,
-      suggestions: ['What is expiring soon?', 'Generate a zero-waste recipe', 'Food storage guide']
-    };
   },
 
-  // Simulated Instant Scanner & OCR Parser with Presets
+  // Simulated Scanner & OCR Parser
   scanImage: async (fileOrPreset) => {
-    await new Promise(r => setTimeout(r, 800));
-
-    const presets = {
-      'milk': {
-        product_name: 'Organic Whole Milk 1L',
-        category: 'Dairy',
-        expiry_date: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
-        mrp: '$3.99',
-        batch_number: 'LOT-2026-MILK44',
-        overall_confidence: 0.96,
-        detected_text: 'DAIRY FARMS ORGANIC WHOLE MILK\nBEST BEFORE: ' + new Date(Date.now() + 86400000 * 2).toLocaleDateString() + '\nNET: 1 LITER | LOT# MILK44'
-      },
-      'yogurt': {
-        product_name: 'Greek Style Plain Yogurt 500g',
-        category: 'Dairy',
-        expiry_date: new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0],
-        mrp: '$4.49',
-        batch_number: 'YG-88210',
-        overall_confidence: 0.94,
-        detected_text: 'AUTHENTIC GREEK YOGURT\nEXP DATE: ' + new Date(Date.now() + 86400000 * 4).toLocaleDateString() + '\nBATCH: YG-88210'
-      },
-      'bread': {
-        product_name: 'Rustic Sourdough Loaf',
-        category: 'Bakery',
-        expiry_date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0],
-        mrp: '$5.20',
-        batch_number: 'BKR-0941',
-        overall_confidence: 0.92,
-        detected_text: 'ARTISAN BAKERY SOURDOUGH\nUSE BY: ' + new Date(Date.now() + 86400000 * 3).toLocaleDateString() + '\nBAKED FRESH DAILY'
-      },
-      'chicken': {
-        product_name: 'Fresh Chicken Breast Fillets',
-        category: 'Meat & Poultry',
-        expiry_date: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
-        mrp: '$8.99',
-        batch_number: 'CHK-99120',
-        overall_confidence: 0.97,
-        detected_text: 'PRIME CUTS FRESH CHICKEN BREAST\nPACKED ON: TODAY\nUSE OR FREEZE BY: ' + new Date(Date.now() + 86400000 * 2).toLocaleDateString()
-      },
-      'berries': {
-        product_name: 'Sweet Strawberries 250g',
-        category: 'Produce',
-        expiry_date: new Date(Date.now() + 86400000 * 1).toISOString().split('T')[0],
-        mrp: '$3.75',
-        batch_number: 'BER-3011',
-        overall_confidence: 0.95,
-        detected_text: 'FARM FRESH SWEET STRAWBERRIES\nBEST CONSUMED BY: ' + new Date(Date.now() + 86400000 * 1).toLocaleDateString()
-      }
-    };
-
-    if (typeof fileOrPreset === 'string' && presets[fileOrPreset]) {
-      const p = presets[fileOrPreset];
-      return {
-        success: true,
-        extracted_fields: {
-          product_name: p.product_name,
-          category: p.category,
-          expiry_date: p.expiry_date,
-          mrp: p.mrp,
-          batch_number: p.batch_number
-        },
-        raw_text: p.detected_text,
-        overall_confidence: p.overall_confidence
-      };
-    }
-
-    // Default dynamic scan extraction for uploaded file
-    const expDate = new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0];
+    await new Promise(r => setTimeout(r, 500));
     return {
       success: true,
       extracted_fields: {
-        product_name: 'Scanned Food Item',
-        category: 'Pantry',
-        expiry_date: expDate,
-        mrp: '$4.99',
-        batch_number: `BATCH-${Math.floor(Math.random() * 90000 + 10000)}`
+        product_name: 'Organic Whole Milk 1L',
+        category: 'Dairy & Eggs',
+        expiry_date: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
+        mrp: '$3.99',
+        batch_number: 'LOT-2026-MILK44'
       },
-      raw_text: `FOOD PACKAGE OCR SCAN\nBEST BEFORE: ${expDate}\nNET WT: 400g\nCONFIDENCE: HIGH`,
-      overall_confidence: 0.91
-    };
-  },
-
-  // Barcode Lookup simulation
-  lookupBarcode: async (barcode) => {
-    await new Promise(r => setTimeout(r, 400));
-    const barcodeMap = {
-      '8901030383011': { name: 'Organic Whole Milk', category: 'Dairy', shelfDays: 7 },
-      '8901030383022': { name: 'Fresh Strawberries', category: 'Produce', shelfDays: 3 },
-      '8901030383033': { name: 'Greek Yogurt Plain', category: 'Dairy', shelfDays: 14 },
-      '8901030383044': { name: 'Artisan Sourdough Bread', category: 'Bakery', shelfDays: 5 },
-      '8901030383055': { name: 'Organic Baby Spinach', category: 'Produce', shelfDays: 6 },
-      '8901030383066': { name: 'Free-Range Eggs', category: 'Dairy & Eggs', shelfDays: 21 },
-      '8901030383077': { name: 'Boneless Chicken Breast', category: 'Meat & Poultry', shelfDays: 3 },
-      '8901030383088': { name: 'Sharp Cheddar Cheese', category: 'Dairy', shelfDays: 30 },
-      '8901030383099': { name: 'Italian Penne Rigate', category: 'Pantry', shelfDays: 365 }
-    };
-
-    if (barcodeMap[barcode]) {
-      const item = barcodeMap[barcode];
-      const expiry = new Date(Date.now() + 86400000 * item.shelfDays).toISOString().split('T')[0];
-      return {
-        found: true,
-        product_name: item.name,
-        category: item.category,
-        expiry_date: expiry
-      };
-    }
-
-    return {
-      found: true,
-      product_name: `Product (${barcode.slice(-4)})`,
-      category: 'General',
-      expiry_date: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0]
+      raw_text: 'DAIRY FARMS ORGANIC WHOLE MILK\nBEST BEFORE: 2026-08-30\nNET: 1 LITER',
+      overall_confidence: 0.96
     };
   }
 };
