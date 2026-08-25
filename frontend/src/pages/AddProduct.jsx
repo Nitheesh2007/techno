@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import api from '../services/api';
@@ -22,15 +22,12 @@ import {
   CheckCircle2,
   Bell,
   Clock,
-  ScanLine,
-  Camera,
   Upload,
   Barcode as BarcodeIcon,
   Zap,
   Copy,
   Check,
-  RefreshCw,
-  X
+  RefreshCw
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -196,72 +193,15 @@ export default function AddProduct() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
-  const [activeScanMode, setActiveScanMode] = useState(null);
-  const [cameraActive, setCameraActive] = useState(false);
-
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const animationFrameRef = useRef(null);
-
-  const stopCamera = () => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    setCameraActive(false);
-    setActiveScanMode(null);
-  };
-
-  useEffect(() => {
-    return () => stopCamera();
-  }, []);
-
-  const startCamera = async () => {
-    try {
-      setActiveScanMode('camera');
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
-      setCameraActive(true);
-      sound.playBeep(880, 0.05);
-
-      // Continuous automatic barcode scanner loop
-      const checkLoop = async () => {
-        if (videoRef.current && videoRef.current.readyState >= 2) {
-          try {
-            const res = await extractBarcodeFromSource(videoRef.current);
-            if (res && res.barcode) {
-              handleApplyBarcode(res.barcode);
-              stopCamera();
-              return;
-            }
-          } catch (e) {}
-        }
-        animationFrameRef.current = requestAnimationFrame(checkLoop);
-      };
-      checkLoop();
-    } catch (err) {
-      console.warn('Camera notice:', err);
-      alert(language === 'ta' ? 'கேமராவைத் தொடங்க முடியவில்லை. மாதிரி பாக்கெட்டுகள் அல்லது கோப்பு பதிவேற்றத்தைப் பயன்படுத்தவும்.' : 'Camera unavailable. Please upload a photo or select a quick preset.');
-      setActiveScanMode(null);
-    }
-  };
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const previewUrl = URL.createObjectURL(file);
+    setIsExtracting(true);
     sound.playBeep(800, 0.04);
 
     const img = new Image();
@@ -270,8 +210,12 @@ export default function AddProduct() {
       try {
         const detection = await extractBarcodeFromSource(img);
         const finalBarcode = detection?.barcode || '8901030383033';
-        handleApplyBarcode(finalBarcode);
+        setTimeout(() => {
+          setIsExtracting(false);
+          handleApplyBarcode(finalBarcode);
+        }, 500);
       } catch (err) {
+        setIsExtracting(false);
         handleApplyBarcode('8901030383033');
       }
     };
@@ -371,21 +315,11 @@ export default function AddProduct() {
             <span>{language === 'ta' ? '← உணவுகளின் பட்டியலுக்கு திரும்பு' : '← Back to Inventory'}</span>
           </Link>
 
-          <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={startCamera}
-              className="inline-flex items-center space-x-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800 hover:scale-105 transition-all"
-            >
-              <Camera size={14} />
-              <span>{language === 'ta' ? '📷 பார்கோடு ஸ்கேன் செய்' : '📷 Scan Barcode'}</span>
-            </button>
-            <label className="inline-flex items-center space-x-1.5 text-xs font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950 px-3 py-1.5 rounded-xl border border-teal-200 dark:border-teal-800 hover:scale-105 transition-all cursor-pointer">
-              <Upload size={14} />
-              <span>{language === 'ta' ? '🖼️ படம் பதிவேற்று' : '🖼️ Upload Photo'}</span>
-              <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-            </label>
-          </div>
+          <label className="inline-flex items-center space-x-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-4 py-2 rounded-2xl border border-emerald-300 dark:border-emerald-700 hover:scale-105 transition-all cursor-pointer shadow-sm">
+            <Upload size={15} className="text-emerald-600 dark:text-emerald-400" />
+            <span>{language === 'ta' ? '🖼️ பார்கோடு படம் பதிவேற்று' : '🖼️ Upload Barcode Image'}</span>
+            <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+          </label>
         </div>
 
         {/* Header */}
@@ -399,45 +333,15 @@ export default function AddProduct() {
             {t('addProductTitle')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {language === 'ta' ? 'பார்கோடை கேமராவில் காட்டி தானாகவே நிரப்பவும் அல்லது படத்தை பதிவேற்றவும்.' : 'Show barcode to camera for instant auto-filling, or upload a photo or type manually.'}
+            {language === 'ta' ? 'பார்கோடு படத்தை பதிவேற்றி அல்லது பார்கோடு எண்ணை உள்ளிட்டவுடன் தயாரிப்பு விவரங்கள் தானாக நிரம்பும்.' : 'Upload a barcode image or type the barcode number to autofill product details instantly.'}
           </p>
         </div>
 
-        {/* EMBEDDED REAL-TIME CAMERA SCANNER VIEW (CONTINUOUS AUTOMATIC DETECTION) */}
-        {activeScanMode === 'camera' && (
-          <div className="p-6 bg-slate-900 text-white rounded-3xl border-2 border-emerald-500/60 shadow-2xl mb-6 text-center animate-in zoom-in-95 duration-150 relative">
-            <button
-              onClick={stopCamera}
-              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-              title={language === 'ta' ? 'மூடு' : 'Close'}
-            >
-              <X size={18} />
-            </button>
-            <div className="relative max-w-md mx-auto h-64 sm:h-72 rounded-2xl bg-black overflow-hidden flex items-center justify-center border-2 border-emerald-400/60 mb-4">
-              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-              {/* Laser Target guide */}
-              <div className="absolute inset-6 border-2 border-dashed border-emerald-400/80 rounded-xl pointer-events-none flex flex-col items-center justify-between p-3">
-                <div className="w-full h-0.5 bg-emerald-400 shadow-[0_0_12px_#34d399] animate-[bounce_2s_infinite]" />
-                <span className="text-[11px] text-white bg-black/70 px-3 py-0.5 rounded-full">
-                  {language === 'ta' ? 'பார்கோடை இந்த கட்டத்திற்குள் காட்டவும் (தானியங்கி ஸ்கேன்)' : 'Align Barcode in this Box (Auto-Scanning)'}
-                </span>
-                <div className="w-full h-0.5 bg-emerald-400/40" />
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-center gap-3">
-              <div className="inline-flex items-center space-x-2 text-xs font-bold text-emerald-400 bg-emerald-950/80 py-2 px-4 rounded-xl border border-emerald-800">
-                <RefreshCw size={13} className="animate-spin text-emerald-400" />
-                <span>{language === 'ta' ? 'நேரலை தானியங்கி கண்டறிதல்...' : 'Live auto-detecting barcode...'}</span>
-              </div>
-              <button
-                type="button"
-                onClick={stopCamera}
-                className="bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2 rounded-xl text-xs"
-              >
-                {language === 'ta' ? 'மூடு' : 'Cancel'}
-              </button>
-            </div>
+        {/* Extracting Indicator */}
+        {isExtracting && (
+          <div className="p-4 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700 rounded-2xl flex items-center space-x-3 mb-6 animate-pulse text-xs font-bold text-emerald-800 dark:text-emerald-200">
+            <RefreshCw size={16} className="animate-spin text-emerald-600" />
+            <span>{language === 'ta' ? 'படத்திலிருந்து பார்கோடு எண் பிரித்தெடுக்கப்படுகிறது...' : 'Extracting barcode number and details from image...'}</span>
           </div>
         )}
 
@@ -476,12 +380,12 @@ export default function AddProduct() {
         {/* Form Container */}
         <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
           
-          {/* VISUAL BARCODE & SCANNER DECK */}
+          {/* VISUAL BARCODE NUMBER DISPLAY BOX */}
           <div className="p-5 rounded-3xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700/80 flex flex-col md:flex-row items-center justify-between gap-5">
             <div className="flex-1 space-y-2 w-full">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  <span className="flex items-center gap-1.5"><BarcodeIcon size={15} className="text-emerald-600" /> {language === 'ta' ? 'பார்கோடு எண்' : 'Product Barcode (EAN / UPC)'}</span>
+                  <span className="flex items-center gap-1.5"><BarcodeIcon size={15} className="text-emerald-600" /> {language === 'ta' ? 'பார்கோடு எண் கட்டம்' : 'Extracted Barcode Box (EAN / UPC)'}</span>
                 </label>
                 <button
                   type="button"
@@ -499,19 +403,11 @@ export default function AddProduct() {
                   placeholder="e.g. 8901030383033"
                   value={formData.barcode}
                   onChange={e => setFormData({ ...formData, barcode: e.target.value })}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs sm:text-sm font-mono outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="flex-1 px-4 py-2.5 rounded-xl border-2 border-emerald-500/50 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs sm:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-emerald-500"
                 />
-                <button
-                  type="button"
-                  onClick={startCamera}
-                  className="px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md flex items-center gap-1"
-                >
-                  <Camera size={14} />
-                  <span>{language === 'ta' ? 'ஸ்கேன்' : 'Scan'}</span>
-                </button>
-                <label className="px-3.5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-md flex items-center gap-1 cursor-pointer">
+                <label className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md flex items-center gap-1.5 cursor-pointer">
                   <Upload size={14} />
-                  <span>{language === 'ta' ? 'பதிவேற்று' : 'Upload'}</span>
+                  <span>{language === 'ta' ? 'படம் பதிவேற்று' : 'Upload Image'}</span>
                   <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
                 </label>
               </div>
