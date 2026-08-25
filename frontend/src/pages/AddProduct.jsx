@@ -235,6 +235,7 @@ export default function AddProduct() {
       setCameraActive(true);
       sound.playBeep(880, 0.05);
 
+      // Continuous automatic barcode scanner loop
       const checkLoop = async () => {
         if (videoRef.current && videoRef.current.readyState >= 2) {
           try {
@@ -254,21 +255,6 @@ export default function AddProduct() {
       alert(language === 'ta' ? 'கேமராவைத் தொடங்க முடியவில்லை. மாதிரி பாக்கெட்டுகள் அல்லது கோப்பு பதிவேற்றத்தைப் பயன்படுத்தவும்.' : 'Camera unavailable. Please upload a photo or select a quick preset.');
       setActiveScanMode(null);
     }
-  };
-
-  const capturePhotoInsideAdd = async () => {
-    sound.playBeep(1200, 0.08);
-    if (videoRef.current) {
-      const res = await extractBarcodeFromSource(videoRef.current);
-      if (res && res.barcode) {
-        handleApplyBarcode(res.barcode);
-        stopCamera();
-        return;
-      }
-    }
-    const randomPreset = SAMPLE_PRESETS[0];
-    handleApplyPreset(randomPreset);
-    stopCamera();
   };
 
   const handleFileUpload = (e) => {
@@ -413,16 +399,17 @@ export default function AddProduct() {
             {t('addProductTitle')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {language === 'ta' ? 'பார்கோடை ஸ்கேன் செய்யவும் அல்லது படத்தைப் பதிவேற்றி உணவு விவரங்களை தானாக நிரப்பவும்.' : 'Scan or upload barcode to autofill food details, or type manually and set reminder alerts.'}
+            {language === 'ta' ? 'பார்கோடை கேமராவில் காட்டி தானாகவே நிரப்பவும் அல்லது படத்தை பதிவேற்றவும்.' : 'Show barcode to camera for instant auto-filling, or upload a photo or type manually.'}
           </p>
         </div>
 
-        {/* EMBEDDED REAL-TIME CAMERA SCANNER VIEW */}
+        {/* EMBEDDED REAL-TIME CAMERA SCANNER VIEW (CONTINUOUS AUTOMATIC DETECTION) */}
         {activeScanMode === 'camera' && (
           <div className="p-6 bg-slate-900 text-white rounded-3xl border-2 border-emerald-500/60 shadow-2xl mb-6 text-center animate-in zoom-in-95 duration-150 relative">
             <button
               onClick={stopCamera}
               className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+              title={language === 'ta' ? 'மூடு' : 'Close'}
             >
               <X size={18} />
             </button>
@@ -432,24 +419,21 @@ export default function AddProduct() {
               <div className="absolute inset-6 border-2 border-dashed border-emerald-400/80 rounded-xl pointer-events-none flex flex-col items-center justify-between p-3">
                 <div className="w-full h-0.5 bg-emerald-400 shadow-[0_0_12px_#34d399] animate-[bounce_2s_infinite]" />
                 <span className="text-[11px] text-white bg-black/70 px-3 py-0.5 rounded-full">
-                  {language === 'ta' ? 'பார்கோடை இந்த கட்டத்திற்குள் வைக்கவும்' : 'Align Barcode in this Box'}
+                  {language === 'ta' ? 'பார்கோடை இந்த கட்டத்திற்குள் காட்டவும் (தானியங்கி ஸ்கேன்)' : 'Align Barcode in this Box (Auto-Scanning)'}
                 </span>
                 <div className="w-full h-0.5 bg-emerald-400/40" />
               </div>
             </div>
+            
             <div className="flex items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={capturePhotoInsideAdd}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow-md flex items-center gap-1.5"
-              >
-                <Camera size={15} />
-                <span>{language === 'ta' ? 'ஸ்கேன் செய்து நிரப்புக' : 'Capture & Autofill Form'}</span>
-              </button>
+              <div className="inline-flex items-center space-x-2 text-xs font-bold text-emerald-400 bg-emerald-950/80 py-2 px-4 rounded-xl border border-emerald-800">
+                <RefreshCw size={13} className="animate-spin text-emerald-400" />
+                <span>{language === 'ta' ? 'நேரலை தானியங்கி கண்டறிதல்...' : 'Live auto-detecting barcode...'}</span>
+              </div>
               <button
                 type="button"
                 onClick={stopCamera}
-                className="bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs"
+                className="bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2 rounded-xl text-xs"
               >
                 {language === 'ta' ? 'மூடு' : 'Cancel'}
               </button>

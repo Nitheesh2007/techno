@@ -164,7 +164,7 @@ export default function Scan() {
     return () => stopCamera();
   }, []);
 
-  // Real-time Barcode Camera Scanner Loop
+  // Continuous Real-Time Barcode Camera Scanner Loop
   const startBarcodeDetectionLoop = () => {
     const checkFrame = async () => {
       if (videoRef.current && videoRef.current.readyState >= 2) {
@@ -227,25 +227,6 @@ export default function Scan() {
       sound.playSuccess();
       triggerConfetti(3000);
     }, 500);
-  };
-
-  const capturePhoto = async () => {
-    sound.playBeep(1200, 0.08);
-    setIsScanning(true);
-
-    if (videoRef.current) {
-      const res = await extractBarcodeFromSource(videoRef.current);
-      if (res && res.barcode) {
-        handleDetectedRawBarcode(res.barcode, res.format);
-        return;
-      }
-    }
-
-    setTimeout(() => {
-      setIsScanning(false);
-      const sample = PRESET_SAMPLES[0];
-      handleDetectedRawBarcode(sample.barcode, sample.format);
-    }, 800);
   };
 
   const handleSelectPreset = (sample) => {
@@ -340,7 +321,7 @@ export default function Scan() {
             {t('scannerTitle')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {language === 'ta' ? 'பார்கோடு அல்லது லேபிள்களை பதிவேற்றி உடனுக்குடன் சரியான பார்கோடு எண்ணைக் கண்டறியவும்.' : 'Upload or scan any barcode to instantly decode and display the exact EAN/UPC barcode number and expiry details.'}
+            {language === 'ta' ? 'பார்கோடு அல்லது லேபிள்களை கேமரா முன் காட்டி தானாகவே துல்லியமாக ஸ்கேன் செய்யவும்.' : 'Show any barcode in front of the camera or upload an image to automatically extract and decode in real time.'}
           </p>
         </div>
 
@@ -414,7 +395,7 @@ export default function Scan() {
           </div>
         )}
 
-        {/* TAB 2: Live Camera */}
+        {/* TAB 2: Live Camera (Continuous Automatic Detection - No Manual Capture Required) */}
         {activeTab === 'camera' && (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm mb-6 text-center">
             <div className="relative max-w-lg mx-auto h-72 sm:h-80 rounded-2xl bg-black overflow-hidden flex items-center justify-center border-2 border-emerald-500/40 mb-4">
@@ -424,19 +405,17 @@ export default function Scan() {
               <div className="absolute inset-x-8 inset-y-12 border-2 border-dashed border-emerald-400/80 rounded-xl pointer-events-none flex flex-col items-center justify-between p-4 overflow-hidden">
                 <div className="w-full h-0.5 bg-emerald-400 shadow-[0_0_12px_#34d399] animate-[bounce_2s_infinite]" />
                 <span className="text-xs text-white/90 bg-black/60 px-3 py-1 rounded-full backdrop-blur-sm">
-                  {language === 'ta' ? 'பார்கோடு அல்லது லேபிளை இந்த கட்டத்திற்குள் வைக்கவும்' : 'Align Barcode or Expiration Stamp Inside Box'}
+                  {language === 'ta' ? 'பார்கோடை இந்த கட்டத்திற்குள் காட்டவும்' : 'Align Barcode Inside Box (Auto-Scanning)'}
                 </span>
                 <div className="w-full h-0.5 bg-emerald-400/40" />
               </div>
             </div>
 
-            <button
-              onClick={capturePhoto}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-2xl text-xs shadow-md shadow-emerald-600/20 transition-all hover:scale-105 flex items-center space-x-2 mx-auto"
-            >
-              <Camera size={16} />
-              <span>{t('capturePhotoBtn')}</span>
-            </button>
+            {/* Continuous Real-time Detection Status Badge */}
+            <div className="inline-flex items-center space-x-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 py-2.5 px-5 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 shadow-sm">
+              <RefreshCw size={14} className="animate-spin text-emerald-500" />
+              <span>{language === 'ta' ? 'நேரலை தானியங்கி பார்கோடு ஸ்கேனர் செயலில் உள்ளது...' : 'Continuous Automatic Barcode Scanner is Live...'}</span>
+            </div>
           </div>
         )}
 
@@ -499,7 +478,7 @@ export default function Scan() {
           <div className="p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 text-center animate-pulse mb-6">
             <RefreshCw className="animate-spin text-emerald-500 mx-auto mb-3" size={32} />
             <p className="font-heading font-bold text-sm text-slate-800 dark:text-white">
-              {language === 'ta' ? 'பார்கோடு மற்றும் லேபிள் தகவல்கள் பிரித்தெடுக்கப்படுகின்றன...' : 'Decoding Barcode & Extracting Expiration Date...'}
+              {language === 'ta' ? 'பார்கோடு மற்றும் லேபிள் தகவல்கள் தானாக பிரித்தெடுக்கப்படுகின்றன...' : 'Decoding Barcode & Extracting Expiration Date...'}
             </p>
           </div>
         )}
