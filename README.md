@@ -5,62 +5,100 @@
 
 ---
 
-## 🌟 20 Integrated Modules & Features
+## 🌟 Key Platform Capabilities
 
-### 🍳 1. AI Culinary & Freshness Engines
-1. **Interactive Kitchen Dashboard (`/dashboard`)**: Visual freshness horizons, Recharts expiry distribution bar chart, category donut chart, urgent action triggers, and real-time sustainability savings tracker.
-2. **Food Inventory Manager (`/products`)**: Real-time searching, multi-status filters (*Safe*, *Soon*, *Urgent*, *Expired*), sorting, and celebratory waste prevention logging.
-3. **Add Product & Autofill (`/products/add`)**: Barcode lookup, storage zone assignment, and shelf-life preset accelerators (`+2d`, `+5d`, `+2w`).
-4. **Multi-Mode AI Food Scanner (`/scan`)**: Live camera feed (`navigator.mediaDevices.getUserMedia`), image upload, **1-Click Test Presets** (Milk, Yogurt, Bread, Chicken, Berries), and barcode lookups.
-5. **AI Recipe Chef (`/recipes`)**: Recipes matched to expiring items + **Guided Step-by-Step Cooking Mode** with audio countdown timers and voice narration.
-6. **Zero-Waste Meal Planner (`/meal-plan`)**: 7-day breakfast/lunch/dinner matrix with **1-Click Auto-Plan** prioritizing expiring ingredients.
+### 🎓 1. Interactive Platform Guide & Instructions Module (Dashboard)
+- **4-Step Fast Guide Deck**: Embedded right at the top of the Kitchen Dashboard (`/dashboard`) with 1-click action shortcuts:
+  1. *Scan or Add Food* (`/scan`)
+  2. *Set Expiry Reminder Days* (`/products/add`)
+  3. *Cook with 20+ AI Zero-Waste Recipes* (`/recipes`)
+  4. *Auto-Restock & 2D Fridge Map* (`/shopping-list` & `/fridge-map`)
+- **Collapsible / Expandable**: Easily toggle between showing the full instructions or keeping a compact dashboard view.
 
-### 🛒 2. Grocery & Storage Intelligence
-7. **Smart Shopping List & Auto-Restock (`/shopping-list`)**: **Auto-Restock Engine** (items you eat auto-populate here), department grouping, budget tally, and **1-Click Transfer Bought Items to Fridge** with auto-calculated shelf-life.
-8. **Fridge 2D Storage Map (`/fridge-map`)**: Interactive 2D schematic of fridge shelves, crisper drawer, freezer, and pantry with thermal guidelines and shelf urgency heatmap dots.
-9. **Food Preservation Encyclopedia (`/preservation-guide`)**: Searchable guide of 50+ ingredients, **The Ethylene Gas Rule** (emitters vs sensitive foods), and anti-waste revival hacks (ice-water crisping, herb freezing).
-10. **Grocery Deals Radar (`/deals-radar`)**: Markdown & surplus produce tracker across Aldi, Trader Joe's, Whole Foods, and Walmart with 1-click add to cart.
-11. **Printable QR Label Maker (`/barcode-hub`)**: Canvas QR code generator for leftovers and meal prep containers with 1-click printable sticker cards.
+### 🌐 2. Complete Multilingual Localization (English ↔ தமிழ் Tamil)
+- **1-Click Language Switcher (`🌐 English` ↔ `🌐 தமிழ்`)**: In the Top Bar, dynamically translating all 20 modules, buttons, charts, and entered food items/categories (*e.g. Milk -> பால், Spinach -> கீரை, Produce -> காய்கறி & பழங்கள்*).
 
-### 🥗 3. Health & Sustainability Labs
-12. **Nutritional & Macro Horizon (`/nutrition`)**: Live macro breakdown (Protein, Carbs, Fats, Fiber, Calories) of your kitchen inventory and AI Dietitian Advisor.
-13. **3-Minute Kitchen Freshness Audit (`/audit`)**: Step-by-step triage wizard (*Cook Today*, *Freeze*, *Donate*, *Compost*) with Kitchen Health Index scoring (0-100%).
-14. **Scrap Repurposing & Compost Lab (`/compost`)**: Inedible scrap recipes (Veggie Scrap Stock, Citrus Eco Cleaner, Banana Plant Tea) and Nitrogen/Carbon compost balance meter.
-15. **Sustainability & Waste Analytics (`/analytics`)**: Monthly savings area charts, water footprint savings, and predictive decay risk matrices.
+### 🔔 3. Customizable Expiry Reminder Lead-Time Selector (`/products/add`)
+- Choose how many days before expiration you want to be alerted (*1 day, 2 days [Recommended], 3 days, 5 days, or 7 days*).
+- Real-time target alert date calculation (e.g. *“🔔 You will be alerted on August 28, 2026 (2 days before expiry)”*).
 
-### 🏆 4. Community, Gamification & Household
-16. **Eco Quests & XP Streaks (`/challenges`)**: Zero-waste challenges (*Zero-Waste Weekend*, *Freezer Reset*), level progression, daily streak counter, and achievement trophies.
-17. **Household & Roommate Kitchen (`/household`)**: Shared community vs personal item labeling, roommate chore rotation, and live activity feeds.
-18. **Community Food Rescue (`/community`)**: Donate surplus food to nearby 24/7 Community Fridges and Pantries.
-19. **FreshBot AI Conversational Assistant**: Voice Recognition (Speech-to-Text) and Spoken Voice (Text-to-Speech) assistant.
-20. **Settings & Backup Engine (`/settings`)**: Dietary customization (Vegetarian, Vegan, Keto, Gluten-Free), currency switcher (`$`, `€`, `£`, `₹`), and full JSON/CSV export & restore.
+### 🍳 4. Smart AI Recipe Generator (20+ International Dishes) (`/recipes`)
+- **20+ Zero-Waste Recipes**: Rescues whatever ingredients are currently in your kitchen (*Pasta Primavera, Coconut Curry, Shakshuka, Fried Rice, Skillets, French Toast, Grain Bowls, Minestrone*).
+- **Multi-Filter Controls**:
+  - **Meal Type**: *All, Breakfast, Lunch, Dinner, ⚡ Quick (< 15 mins)*.
+  - **Cuisine**: *Italian, Asian, Mediterranean, Indian, Mexican, American, French, Fusion*.
+  - **Dietary**: *High-Protein, Vegetarian, Vegan*.
+- **Interactive Guided Cook Mode**: Fullscreen cooking companion with voice narration, step checklist, and interactive countdown timer alarms.
+
+### 📷 5. Multi-Mode Smart Scanner & Barcode Decoder (`/scan`)
+- **4 Detection Engines**: Real-time camera viewfinder, photo upload, 1-click test presets, and 13-digit barcode lookup.
+- **High-Contrast Barcode Card**: Live rendered SVG zebra bars, exact digits display, and 1-click copy.
+
+### 🛒 6. Smart Shopping List & Auto-Restock (`/shopping-list`)
+- **Auto-Restock Intelligence**: Items marked as eaten in inventory automatically transfer here.
+- **1-Click Fridge Transfer**: Move purchased items directly into your fridge with auto-calculated shelf-life.
+- **Budget Tally & WhatsApp Sharing**.
+
+### 🧊 7. 2D Interactive Fridge Thermal Map (`/fridge-map`)
+- Visual 2D schematic of your refrigerator with 7 thermal storage zones and compartment inspection.
+
+### 🥗 8. Nutritional & Macro Horizon (`/nutrition`)
+- Real-time macro breakdown (Calories, Protein, Carbs, Fats, Fiber) and Dietitian balance suggestions.
+
+### 📋 9. 3-Minute Kitchen Freshness Audit (`/audit`)
+- Guided 4-step wizard (*Cook Urgent*, *Freeze Triage*, *Community Donate*, *Health Summary*) awarding **+150 Quest XP**.
+
+### 📚 10. Food Preservation & Shelf-Life Encyclopedia (`/preservation-guide`)
+- The **Ethylene Gas Matrix** (*Emitters vs Sensitive*), storage lifespans across Fridge/Counter/Freezer, and food revival hacks.
+
+### 🌱 11. Food Scrap & Compost Lab (`/compost`)
+- Biomass Nitrogen/Carbon ratio meter and recipes for vegetable scrap stock, citrus eco cleaners, and banana plant fertilizer.
+
+### 🏷️ 12. Grocery Deals Radar (`/deals-radar`)
+- Surplus grocery markdown tracker (30-50% off) across local supermarkets with 1-click cart addition.
+
+### 🏆 13. Zero-Waste Quests & Eco-Trophies (`/challenges`)
+- Weekly missions, Guardian level ranks, daily preservation streaks, and master trophies.
+
+### 🏠 14. Household & Roommate Kitchen (`/household`)
+- Shared chore rotation board and food ownership tagger (*Shared vs Personal*).
+
+### 🤝 15. Community Food Rescue (`/community`)
+- List surplus food and locate nearby 24/7 Community Fridges and Pantries.
+
+### 📈 16. Sustainability & Waste Analytics (`/analytics`)
+- 5-month savings area chart, CO₂ offset, and virtual water footprint tracker.
+
+### 🔔 17. Notifications & Expiry Feed (`/notifications`)
+- Real-time alert feed with urgency filters (*Urgent, Warnings, Expired*).
+
+### 🤖 18. FreshBot AI Conversational Assistant
+- Voice recognition (Speech-to-Text) and spoken voice (Text-to-Speech) zero-waste assistant.
+
+### ⚙️ 19. Settings & Backup Engine (`/settings`)
+- Export & restore inventory in JSON/CSV, toggle synthesizer audio effects, and 100% clean reset.
 
 ---
 
 ## ⌨️ Spotlight Command Palette (`Ctrl+K` / `Cmd+K`)
-Press **`Ctrl+K`** (or click the search button in the top bar) to open the spotlight command palette to jump between all 20 modules or search across all food in your fridge.
+Press **`Ctrl+K`** anywhere to search foods or jump between any module instantly.
 
 ---
 
-## 🏗️ Architecture & Technology Stack
+## 🏗️ Technology Stack
 
 - **Frontend**: React 18, Vite 5, Tailwind CSS, Lucide Icons, Recharts, Web Audio API, Web Speech API, HTML5 Canvas.
-- **Backend (Optional / Standalone Hybrid Adapter)**: Python FastAPI, Motor, Pydantic, OpenCV, OCR Engines.
-- **Client Storage Engine**: Hybrid localStorage persistence layer with instant 1-click demo guest login and fallback intelligence.
+- **Backend**: Python FastAPI, Motor, Pydantic, OpenCV, OCR Engines.
+- **Storage Layer**: Hybrid local persistence with 100% clean zero-seed fresh inventory state and sample preset loaders.
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Prerequisites
-- **Node.js**: v18+ (Node 24 recommended)
-- **npm**: v9+
-
-### 2. Frontend Setup & Launch
+### 1. Launch Frontend Locally
 ```bash
-cd frontend
-npm install
-npm run dev
+npm --prefix frontend install
+npm --prefix frontend run dev
 ```
 
 Open your browser at:
@@ -68,12 +106,13 @@ Open your browser at:
 http://127.0.0.1:5173/
 ```
 
-### 3. Production Build
+### 2. Build for Production
 ```bash
 npm --prefix frontend run build
 ```
 
 ---
 
-## 📄 License
-MIT License. Built for zero food waste and smart culinary living.
+## 📦 GitHub Repository
+- **URL**: [https://github.com/Nitheesh2007/technocultural.git](https://github.com/Nitheesh2007/technocultural.git)
+- **Branch**: `main`
