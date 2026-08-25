@@ -502,13 +502,12 @@ export const aiEngine = {
 
     return {
       recipes,
-      featured: recipes[0],
-      rawText: `👨‍🍳 **AI Zero-Waste Recommendation**\n\n**${recipes[0].title}**\n*Prep:* ${recipes[0].prepTime} | *Cook:* ${recipes[0].cookTime} | *Servings:* ${recipes[0].servings}\n\n**Ingredients from your fridge:**\n${recipes[0].matchedIngredients.map(i => `• ${i} ✅`).join('\n')}\n\n**Step-by-Step Instructions:**\n${recipes[0].instructions.map((step, idx) => `${idx + 1}. ${step}`).join('\n')}\n\n💡 *Pro-Tip:* ${recipes[0].storageTip}`
+      featured: recipes[0]
     };
   },
 
-  // Interactive FreshBot Assistant with Inventory Intelligence (Multi-Lingual & 100% Error-Free)
-  chatFreshBot: async (message) => {
+  // Interactive FreshBot Assistant with Inventory Intelligence (100% Pure Tamil & English)
+  chatFreshBot: async (message, lang = 'en') => {
     try {
       const products = storage.getProducts() || [];
       const urgentItems = products.filter(p => p.status === 'URGENT');
@@ -517,17 +516,32 @@ export const aiEngine = {
 
       await new Promise(r => setTimeout(r, 350));
 
-      // 1. Expiry & Inventory Queries (English & Tamil)
+      const isTa = lang === 'ta' || msg.includes('காலாவதி') || msg.includes('அவசரம்') || msg.includes('பிரிட்ஜ்') || msg.includes('வணக்கம்') || msg.includes('சமையல்');
+
+      // 1. Expiry & Inventory Queries
       if (msg.includes('expir') || msg.includes('urgent') || msg.includes('காலாவதி') || msg.includes('அவசரம்') || msg.includes('fridge') || msg.includes('பிரிட்ஜ்') || msg.includes('what do i have')) {
         if (urgentItems.length === 0 && soonItems.length === 0) {
           return {
-            reply: `🎉 Great news! You have no urgent items expiring in the next 3 days. All your ${products.length} products are fresh and safe!`,
-            suggestedActions: ['Suggest a dinner recipe', 'How to store avocados', 'Show my savings']
+            reply: isTa
+              ? `🎉 மகிழ்ச்சியான செய்தி! அடுத்த 3 நாட்களில் எந்த உணவும் காலாவதியாகவில்லை. உங்கள் ${products.length} உணவுப் பொருட்களும் புத்தம் புதியதாகவும் பாதுகாப்பாகவும் உள்ளன!`
+              : `🎉 Great news! You have no urgent items expiring in the next 3 days. All your ${products.length} products are fresh and safe!`,
+            suggestedActions: isTa
+              ? ['இரவு உணவு செய்முறை தாருங்கள்', 'வெண்ணெய் பழத்தை பாதுகாப்பது எப்படி?', 'சேமிப்பு விவரங்களைக் காட்டு']
+              : ['Suggest a dinner recipe', 'How to store avocados', 'Show my savings']
           };
         }
+        
+        if (isTa) {
+          const urgentList = urgentItems.map(i => `• **${i.product_name}** (${i.days_left <= 0 ? 'இன்றே காலாவதியாகிறது' : 'நாளை காலாவதியாகிறது'})`).join('\n');
+          const soonList = soonItems.map(i => `• ${i.product_name} (${i.days_left} நாட்களில்)`).join('\n');
+          return {
+            reply: `⚠️ உங்கள் சமையலறையில் கவனம் செலுத்த வேண்டிய உணவுகள்:\n\n${urgentList ? `**🚨 அவசரம் (அடுத்த 24-48 மணிநேரம்):**\n${urgentList}\n\n` : ''}${soonList ? `**⏳ 2-3 நாட்களில் காலாவதி:**\n${soonList}\n\n` : ''}இவற்றை வைத்து சுவையான பூஜ்ஜிய கழிவு செய்முறையை உருவாக்கவா?`,
+            suggestedActions: ['அவசர உணவுகளுக்கான செய்முறை', 'ரொட்டியை பிரீசரில் வைப்பது எப்படி?', '3 நிமிட சமையலறை தணிக்கை']
+          };
+        }
+
         const urgentList = urgentItems.map(i => `• **${i.product_name}** (${i.days_left <= 0 ? 'Expires TODAY' : 'Expires tomorrow'})`).join('\n');
         const soonList = soonItems.map(i => `• ${i.product_name} (in ${i.days_left} days)`).join('\n');
-        
         return {
           reply: `⚠️ Here is what needs attention in your kitchen:\n\n${urgentList ? `**🚨 Urgent (Next 24-48 hours):**\n${urgentList}\n\n` : ''}${soonList ? `**⏳ Expiring in 2-3 days:**\n${soonList}\n\n` : ''}Would you like me to generate a zero-waste recipe using these items?`,
           suggestedActions: ['Generate a recipe with urgent items', 'How to freeze bread/milk?', '3-Minute Kitchen Audit']
@@ -538,16 +552,24 @@ export const aiEngine = {
       if (msg.includes('recipe') || msg.includes('cook') || msg.includes('dinner') || msg.includes('lunch') || msg.includes('breakfast') || msg.includes('சமையல்') || msg.includes('உணவு') || msg.includes('செய்முறை')) {
         const topItems = [...urgentItems, ...soonItems].slice(0, 3).map(i => i.product_name);
         return {
-          reply: `👨‍🍳 I have generated **20+ Zero-Waste Recipes** including Pasta Primavera, Coconut Curry, Shakshuka, Fried Rice, and Skillets using **${topItems.join(' and ') || 'your available pantry ingredients'}**!\n\nOpen the **AI Recipe Chef** module to filter by cuisine, meal type, and dietary preferences.`,
-          suggestedActions: ['Open AI Recipes', 'Show expiring items', 'How to store greens']
+          reply: isTa
+            ? `👨‍🍳 உங்கள் குளிர்சாதனப் பெட்டியில் உள்ள **${topItems.join(', ') || 'காய்கறிகள் மற்றும் உணவுகளைக்'}** கொண்டு 20-க்கும் மேற்பட்ட சுவையான சமையல் குறிப்புகள் உருவாக்கப்பட்டுள்ளன!\n\n**AI சமையல் கலைஞர்** பக்கத்திற்கு சென்று உணவு வகை மற்றும் உணவு முறையைத் தேர்ந்தெடுத்து சமைக்கலாம்.`
+            : `👨‍🍳 I have generated **20+ Zero-Waste Recipes** including Pasta Primavera, Coconut Curry, Shakshuka, Fried Rice, and Skillets using **${topItems.join(' and ') || 'your available pantry ingredients'}**!\n\nOpen the **AI Recipe Chef** module to filter by cuisine, meal type, and dietary preferences.`,
+          suggestedActions: isTa
+            ? ['AI சமையல் பக்கத்தை திற', 'காலாவதியாகும் உணவுகள்', 'கீரைகளை சேமிக்கும் முறை']
+            : ['Open AI Recipes', 'Show expiring items', 'How to store greens']
         };
       }
 
       // 3. Storage & Shelf Life Advice
       if (msg.includes('store') || msg.includes('keep') || msg.includes('fresh') || msg.includes('freeze') || msg.includes('shelf') || msg.includes('சேமிப்பு') || msg.includes('பாதுகாப்பு')) {
         return {
-          reply: `💡 **FreshBot Food Preservation Rules:**\n\n1. **Bread & Bakery:** Never refrigerate! Store in a dry bread box or slice and freeze.\n2. **Berries:** Keep unwashed in a breathable container until eating.\n3. **Milk & Dairy:** Keep in the middle/back of the fridge (coldest), never in the door.\n4. **Leafy Greens:** Wrap in a clean dry paper towel inside an airtight container to absorb humidity.\n5. **Bananas & Apples:** Keep separate from greens as they release ripening ethylene gas.`,
-          suggestedActions: ['Open Preservation Encyclopedia', 'What is expiring soon?', 'Compost Scrap Guide']
+          reply: isTa
+            ? `💡 **FreshBot உணவுப் பாதுகாப்பு விதிகள்:**\n\n1. **ரொட்டி & பேக்கரி:** குளிர்சாதனப் பெட்டியில் வைக்காதீர்கள்! ரொட்டிப் பெட்டியில் வைக்கவும் அல்லது நறுக்கி பிரீசரில் சேமிக்கவும்.\n2. **ஸ்ட்ராபெர்ரி & பழங்கள்:** சாப்பிடும் வரை கழுவாமல் காற்றுப்புகும் பெட்டியில் வைக்கவும்.\n3. **பால் & தயிர்:** பிரிட்ஜின் நடுப்பகுதியில் வைக்கவும், கதவுப் பகுதியில் வைக்காதீர்கள்.\n4. **பசலைக்கீரை & கீரைகள்:** உலர்ந்த துணி அல்லது காகிதத்தில் சுற்றி காற்றுப்புகா பெட்டியில் வைக்கவும்.\n5. **வாழைப்பழம் & ஆப்பிள்:** எத்திலீன் வாயுவை வெளியிடுவதால் பிற காய்கறிகளிலிருந்து தள்ளி வைக்கவும்.`
+            : `💡 **FreshBot Food Preservation Rules:**\n\n1. **Bread & Bakery:** Never refrigerate! Store in a dry bread box or slice and freeze.\n2. **Berries:** Keep unwashed in a breathable container until eating.\n3. **Milk & Dairy:** Keep in the middle/back of the fridge (coldest), never in the door.\n4. **Leafy Greens:** Wrap in a clean dry paper towel inside an airtight container to absorb humidity.\n5. **Bananas & Apples:** Keep separate from greens as they release ripening ethylene gas.`,
+          suggestedActions: isTa
+            ? ['பாதுகாப்பு வழிகாட்டியை திற', 'விரைவில் காலாவதியாகும் உணவுகள்', 'உர ஆய்வகம்']
+            : ['Open Preservation Encyclopedia', 'What is expiring soon?', 'Compost Scrap Guide']
         };
       }
 
@@ -555,23 +577,35 @@ export const aiEngine = {
       if (msg.includes('saving') || msg.includes('waste') || msg.includes('money') || msg.includes('stat') || msg.includes('சேமிப்பு') || msg.includes('பணம்')) {
         const stats = storage.getSavingsStats();
         return {
-          reply: `🌱 **Your Zero-Waste Impact Summary:**\n\n• 💰 **$${stats.moneySaved}** saved by preventing grocery spoilage\n• 🥗 **${stats.foodItemsSaved} food items** consumed safely\n• 🌍 **${stats.co2PreventedKg} kg CO₂** greenhouse gas emissions avoided\n\nAwesome work protecting the planet and your wallet!`,
-          suggestedActions: ['Open Waste Analytics', 'What is expiring soon?', 'View Eco Quests']
+          reply: isTa
+            ? `🌱 **உங்கள் பூஜ்ஜிய கழிவு சுற்றுச்சூழல் சாதனை:**\n\n• 💰 **$${stats.moneySaved}** உணவு வீணாவதைத் தடுத்து சேமித்த பணம்\n• 🥗 **${stats.foodItemsSaved} உணவுப் பொருட்கள்** பாதுகாப்பாக சமைக்கப்பட்டன\n• 🌍 **${stats.co2PreventedKg} கிலோ CO₂** பசுமை இல்ல வாயு உமிழ்வு குறைக்கப்பட்டது\n\nபூமியையும் உங்கள் பணத்தையும் பாதுகாக்கும் அற்புதமான பணிக்கு வாழ்த்துகள்!`
+            : `🌱 **Your Zero-Waste Impact Summary:**\n\n• 💰 **$${stats.moneySaved}** saved by preventing grocery spoilage\n• 🥗 **${stats.foodItemsSaved} food items** consumed safely\n• 🌍 **${stats.co2PreventedKg} kg CO₂** greenhouse gas emissions avoided\n\nAwesome work protecting the planet and your wallet!`,
+          suggestedActions: isTa
+            ? ['கழிவு பகுப்பாய்வு', 'காலாவதி நிலவரம்', 'சுற்றுச்சூழல் சவால்கள்']
+            : ['Open Waste Analytics', 'What is expiring soon?', 'View Eco Quests']
         };
       }
 
-      // 5. Greetings & Help (English & Tamil)
+      // 5. Greetings & Help
       if (msg.includes('hi') || msg.includes('hello') || msg.includes('hey') || msg.includes('வணக்கம்') || msg.includes('help')) {
         return {
-          reply: `👋 Hello! I am FreshBot AI, your personal zero-waste kitchen assistant. I am actively monitoring your kitchen inventory.\n\nAsk me anything like:\n• *"What is expiring soon?"*\n• *"Suggest a dinner recipe"*\n• *"How do I keep berries fresh?"*`,
-          suggestedActions: ["What's expiring soon?", 'Generate dinner recipe', 'Kitchen storage tips']
+          reply: isTa
+            ? `👋 வணக்கம்! நான் FreshBot AI, உங்கள் சமையலறை உணவுப் பாதுகாவலன். உங்கள் உணவுகள் வீணாவதைத் தடுக்க நான் தயாராக உள்ளேன்.\n\nஎன்னிடம் கேளுங்கள்:\n• *"குளிர்சாதனப் பெட்டியில் என்ன காலாவதியாகிறது?"*\n• *"இன்றைய உணவு செய்முறை தாருங்கள்"*\n• *"பழங்களை எவ்வாறு பாதுகாப்பது?"*`
+            : `👋 Hello! I am FreshBot AI, your personal zero-waste kitchen assistant. I am actively monitoring your kitchen inventory.\n\nAsk me anything like:\n• *"What is expiring soon?"*\n• *"Suggest a dinner recipe"*\n• *"How do I keep berries fresh?"*`,
+          suggestedActions: isTa
+            ? ['காலாவதியாகும் உணவுகள்', 'இரவு உணவு செய்முறை', 'உணவு சேமிப்பு முறைகள்']
+            : ["What's expiring soon?", 'Generate dinner recipe', 'Kitchen storage tips']
         };
       }
 
       // Default Intelligent Helper
       return {
-        reply: `🤖 I'm here to help you manage food, prevent waste, and discover zero-waste recipes!\n\nCurrently tracking **${products.length} food items** in your kitchen. You can ask me for recipe ideas, shelf-life advice, or expiry checks anytime.`,
-        suggestedActions: ["What's expiring soon?", 'Generate quick recipe', 'Open 3-Min Audit']
+        reply: isTa
+          ? `🤖 சமையலறை உணவுகளை நிர்வகிக்கவும், கழிவைத் தடுக்கவும், சுவையான செய்முறைகளை உருவாக்கவும் நான் உதவுகிறேன்!\n\nதற்போது உங்கள் சமையலறையில் **${products.length} உணவுகள்** கண்காணிக்கப்படுகின்றன. சமையல் யோசனைகள் அல்லது காலாவதி விவரங்களை எப்போது வேண்டுமானாலும் கேட்கலாம்.`
+          : `🤖 I'm here to help you manage food, prevent waste, and discover zero-waste recipes!\n\nCurrently tracking **${products.length} food items** in your kitchen. You can ask me for recipe ideas, shelf-life advice, or expiry checks anytime.`,
+        suggestedActions: isTa
+          ? ['காலாவதி நிலவரம்', 'விரைவு செய்முறை', '3 நிமிட தணிக்கை']
+          : ["What's expiring soon?", 'Generate quick recipe', 'Open 3-Min Audit']
       };
     } catch (err) {
       console.warn('FreshBot internal handler notice:', err);

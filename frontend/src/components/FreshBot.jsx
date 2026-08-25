@@ -33,14 +33,14 @@ export default function FreshBot() {
   useEffect(() => {
     // Initial welcome message based on language
     const welcome = language === 'ta'
-      ? "👋 வணக்கம்! நான் FreshBot AI, உங்கள் தனிப்பட்ட உணவு பாதுகாவலன். உங்கள் சமையலறை உணவு வீணாவதைத் தடுக்க நான் எவ்வாறு உதவ முடியும்?"
+      ? "👋 வணக்கம்! நான் FreshBot AI, உங்கள் சமையலறை உணவுப் பாதுகாவலன். உங்கள் உணவுகள் வீணாவதைத் தடுக்க நான் எவ்வாறு உதவ முடியும்?"
       : "👋 Hi there! I am FreshBot AI, your personal food waste guardian. How can I help you save food and cook smart today?";
 
     setMessages([
       { sender: 'bot', text: welcome, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
     ]);
 
-    // Safely setup Web Speech Recognition
+    // Setup Web Speech Recognition
     try {
       if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -81,14 +81,24 @@ export default function FreshBot() {
     if (isOpen) scrollToBottom();
   }, [messages, isOpen]);
 
+  // High-Quality Bilingual Voice Synthesizer
   const speakText = (text) => {
     try {
       if (!voiceEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
       const cleanText = (text || '').replace(/[*_#`•]/g, '');
       const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.rate = 1.0;
+      utterance.rate = 0.95;
       utterance.lang = language === 'ta' ? 'ta-IN' : 'en-US';
+
+      const voices = window.speechSynthesis.getVoices();
+      if (language === 'ta') {
+        const tamilVoice = voices.find(v => v.lang === 'ta-IN' || v.lang === 'ta_IN' || v.lang.startsWith('ta'));
+        if (tamilVoice) {
+          utterance.voice = tamilVoice;
+        }
+      }
+      
       window.speechSynthesis.speak(utterance);
     } catch (err) {
       console.warn('Speech synthesis notice:', err);
@@ -111,16 +121,16 @@ export default function FreshBot() {
     sound.playClick?.() || sound.playBeep(800, 0.04);
 
     try {
-      const response = await aiEngine.chatFreshBot(textToSend);
+      const response = await aiEngine.chatFreshBot(textToSend, language);
       
       let botResponseText = response.reply;
-      if (language === 'ta' && !botResponseText.includes('வணக்கம்') && (textToSend.includes('காலாவதி') || textToSend.includes('அவசரம்'))) {
+      if (language === 'ta' && (textToSend.includes('காலாவதி') || textToSend.includes('அவசரம்') || textToSend.includes('பிரிட்ஜ்'))) {
         const products = storage.getProducts();
         const urgent = products.filter(p => p.status === 'URGENT' || p.status === 'EXPIRING SOON');
         if (urgent.length === 0) {
-          botResponseText = "✨ உங்கள் குளிர்சாதனப் பெட்டியில் உள்ள அனைத்து உணவுகளும் புதியதாகவும் பாதுகாப்பாகவும் உள்ளன!";
+          botResponseText = "✨ உங்கள் சமையலறை புத்தம் புதியதாக உள்ளது! அடுத்த 3 நாட்களில் எந்த உணவும் காலாவதியாகவில்லை.";
         } else {
-          botResponseText = `🚨 அவசரம்: உங்கள் குளிர்சாதனப் பெட்டியில் ${urgent.map(u => u.product_name).join(', ')} விரைவில் காலாவதியாகிறது!`;
+          botResponseText = `🚨 அவசரம்: உங்கள் குளிர்சாதனப் பெட்டியில் ${urgent.map(u => u.product_name).join(', ')} விரைவில் காலாவதியாகிறது! இவற்றை வைத்து சமைக்க செய்முறையை உருவாக்குகிறேன்.`;
         }
       }
 
@@ -135,16 +145,19 @@ export default function FreshBot() {
       speakText(botResponseText);
     } catch (err) {
       console.warn('FreshBot chat error caught safely:', err);
+      const fallbackText = language === 'ta'
+        ? "✨ FreshBot AI குரல் உதவியாளர் செயலில் உள்ளது! சமையல் குறிப்புகள் அல்லது காலாவதியாகும் உணவுகளைப் பற்றி கேளுங்கள்."
+        : "✨ FreshBot AI is active! Ask me for quick zero-waste recipes or to check what's expiring.";
+      
       setMessages((prev) => [
         ...prev,
         {
           sender: 'bot',
-          text: language === 'ta' 
-            ? "✨ FreshBot AI செயலில் உள்ளது! சமையல் குறிப்புகள் அல்லது காலாவதியாகும் உணவுகளைப் பற்றி கேளுங்கள்."
-            : "✨ FreshBot AI is active! Ask me for quick zero-waste recipes or to check what's expiring.",
+          text: fallbackText,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
+      speakText(fallbackText);
     } finally {
       setIsTyping(false);
     }
@@ -153,7 +166,7 @@ export default function FreshBot() {
   const toggleListening = () => {
     try {
       if (!recognitionRef.current) {
-        alert(language === 'ta' ? 'உங்கள் உலாவியில் குரல் அங்கீகாரம் ஆதரிக்கப்படவில்லை.' : 'Speech recognition is not supported in this browser. You can type below!');
+        alert(language === 'ta' ? 'உங்கள் உலாவியில் குரல் உள்ளீடு ஆதரிக்கப்படவில்லை. கீழே தட்டச்சு செய்யலாம்!' : 'Speech recognition is not supported in this browser. You can type below!');
         return;
       }
 
@@ -172,10 +185,10 @@ export default function FreshBot() {
   };
 
   const quickPrompts = language === 'ta' ? [
-    'பிரிட்ஜில் என்ன காலாவதியாகிறது?',
-    'இன்றைய சமையல் குறிப்பு தாருங்கள்',
-    'உணவு வீணாவதைத் தடுக்கும் குறிப்புகள்',
-    'பூஜ்ஜிய கழிவு சமையல்'
+    'குளிர்சாதனப் பெட்டியில் என்ன காலாவதியாகிறது?',
+    'இன்றைய இரவு உணவு செய்முறை தாருங்கள்',
+    'உணவு வீணாவதைத் தடுக்கும் சேமிப்பு முறைகள்',
+    'பூஜ்ஜிய கழிவு சமையல் வழிகாட்டல்'
   ] : [
     "What's expiring soon?",
     "Quick recipe for dinner",
@@ -298,7 +311,7 @@ export default function FreshBot() {
                   ? 'bg-rose-500 text-white animate-pulse' 
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'
               }`}
-              title={isListening ? 'Stop Listening' : 'Voice Input'}
+              title={isListening ? (language === 'ta' ? 'குரல் உள்ளீட்டை நிறுத்து' : 'Stop Listening') : (language === 'ta' ? 'குரல் உள்ளீடு' : 'Voice Input')}
             >
               {isListening ? <MicOff size={16} /> : <Mic size={16} />}
             </button>

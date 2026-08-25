@@ -16,23 +16,30 @@ import {
 } from 'lucide-react';
 import { sound } from '../services/sound';
 import { triggerConfetti } from '../services/confetti';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [checkedIngredients, setCheckedIngredients] = useState({});
   const [ttsActive, setTtsActive] = useState(true);
+  const { language, tf } = useLanguage();
   
   // Timer State
   const [timerSeconds, setTimerSeconds] = useState(300); // 5 mins default
   const [timerRunning, setTimerRunning] = useState(false);
   const timerRef = useRef(null);
 
-  const steps = recipe?.instructions || [
+  const steps = recipe?.instructions || (language === 'ta' ? [
+    'தேவைக்கேற்ப பாத்திரம் அல்லது கடாயை முன்கூட்டியே சூடாக்கவும்.',
+    'காலாவதியாகும் காய்கறிகள் மற்றும் பொருட்களை நறுக்கி தயார் செய்யவும்.',
+    'கடாயில் 5-7 நிமிடங்கள் வதக்கி ஒன்றாக கலக்கவும்.',
+    'கொத்தமல்லி தூவி சூடாக பரிமாறவும்!'
+  ] : [
     'Preheat pan or oven as required.',
     'Chop and prepare your expiring ingredients.',
     'Sauté and combine in pan for 5-7 minutes.',
     'Garnish and serve hot!'
-  ];
+  ]);
 
   // Timer Tick
   useEffect(() => {
@@ -54,16 +61,29 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
     return () => clearInterval(timerRef.current);
   }, [timerRunning]);
 
-  // Voice Narration on Step Change
+  // Voice Narration on Step Change with Tamil Speech Synthesis
   useEffect(() => {
-    if (ttsActive && window.speechSynthesis) {
+    if (ttsActive && typeof window !== 'undefined' && ('speechSynthesis' in window)) {
       window.speechSynthesis.cancel();
-      const text = `Step ${currentStepIdx + 1}: ${steps[currentStepIdx]}`;
+      const text = language === 'ta'
+        ? `படி ${currentStepIdx + 1}: ${steps[currentStepIdx]}`
+        : `Step ${currentStepIdx + 1}: ${steps[currentStepIdx]}`;
+
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
+      utterance.rate = 0.95;
+      utterance.lang = language === 'ta' ? 'ta-IN' : 'en-US';
+
+      const voices = window.speechSynthesis.getVoices();
+      if (language === 'ta') {
+        const tamilVoice = voices.find(v => v.lang === 'ta-IN' || v.lang === 'ta_IN' || v.lang.startsWith('ta'));
+        if (tamilVoice) {
+          utterance.voice = tamilVoice;
+        }
+      }
+
       window.speechSynthesis.speak(utterance);
     }
-  }, [currentStepIdx, ttsActive]);
+  }, [currentStepIdx, ttsActive, language]);
 
   const toggleIng = (ing) => {
     setCheckedIngredients(prev => ({ ...prev, [ing]: !prev[ing] }));
@@ -94,7 +114,9 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
               <ChefHat size={22} />
             </div>
             <div>
-              <span className="text-xs font-mono uppercase tracking-widest text-emerald-400">Step-by-Step Guided Cook Mode</span>
+              <span className="text-xs font-mono uppercase tracking-widest text-emerald-400">
+                {language === 'ta' ? 'குரல் வழிகாட்டுதல் சமையல் முறை' : 'Step-by-Step Guided Cook Mode'}
+              </span>
               <h2 className="font-heading font-extrabold text-lg sm:text-xl truncate max-w-md">{recipe.title}</h2>
             </div>
           </div>
@@ -103,7 +125,7 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
             <button
               onClick={() => setTtsActive(!ttsActive)}
               className={`p-2 rounded-xl transition-colors ${ttsActive ? 'bg-white/20 text-white' : 'text-slate-400 hover:bg-white/10'}`}
-              title={ttsActive ? 'Voice narration on' : 'Voice narration off'}
+              title={ttsActive ? (language === 'ta' ? 'குரல் வழிகாட்டல் இயக்கம்' : 'Voice narration on') : (language === 'ta' ? 'குரல் வழிகாட்டல் நிறுத்து' : 'Voice narration off')}
             >
               {ttsActive ? <Volume2 size={18} /> : <VolumeX size={18} />}
             </button>
@@ -122,7 +144,7 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
           <div className="md:col-span-4 bg-slate-50 dark:bg-slate-800/40 p-5 rounded-3xl border border-slate-200 dark:border-slate-700/60 flex flex-col justify-between">
             <div>
               <h3 className="font-heading font-bold text-xs uppercase tracking-wider text-slate-400 mb-3">
-                Ingredient Checklist
+                {language === 'ta' ? 'தேவையான பொருட்கள் பட்டியல்' : 'Ingredient Checklist'}
               </h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {recipe.matchedIngredients?.map((ing, idx) => (
@@ -135,7 +157,7 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
                       {checkedIngredients[ing] && <Check size={12} />}
                     </div>
                     <span className={checkedIngredients[ing] ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-100'}>
-                      {ing}
+                      {tf(ing)}
                     </span>
                   </div>
                 ))}
@@ -144,7 +166,9 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
 
             {/* Built-in Cooking Countdown Timer */}
             <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">Cooking Timer</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                {language === 'ta' ? 'சமையல் டைமர்' : 'Cooking Timer'}
+              </span>
               <div className="p-4 rounded-2xl bg-slate-900 text-white text-center">
                 <p className="text-3xl font-mono font-extrabold tracking-wider text-emerald-400">
                   {formatTime(timerSeconds)}
@@ -178,8 +202,8 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
             <div>
               {/* Progress bar */}
               <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                <span>Step {currentStepIdx + 1} of {steps.length}</span>
-                <span>{Math.round(((currentStepIdx + 1) / steps.length) * 100)}% Completed</span>
+                <span>{language === 'ta' ? `படி ${currentStepIdx + 1} / ${steps.length}` : `Step ${currentStepIdx + 1} of ${steps.length}`}</span>
+                <span>{Math.round(((currentStepIdx + 1) / steps.length) * 100)}% {language === 'ta' ? 'முடிந்தது' : 'Completed'}</span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden mb-8">
                 <div 
@@ -209,7 +233,7 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
                 className="flex items-center space-x-2 px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 disabled:opacity-30 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 <ChevronLeft size={16} />
-                <span>Previous Step</span>
+                <span>{language === 'ta' ? 'முந்தைய படி' : 'Previous Step'}</span>
               </button>
 
               {currentStepIdx < steps.length - 1 ? (
@@ -220,7 +244,7 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
                   }}
                   className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl text-xs font-bold shadow-md shadow-emerald-600/20 transition-all hover:scale-105"
                 >
-                  <span>Next Step</span>
+                  <span>{language === 'ta' ? 'அடுத்த படி' : 'Next Step'}</span>
                   <ChevronRight size={16} />
                 </button>
               ) : (
@@ -229,7 +253,7 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
                   className="flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-8 py-3 rounded-2xl text-xs font-bold shadow-xl shadow-emerald-600/30 transition-all hover:scale-105 animate-pulse"
                 >
                   <Sparkles size={16} />
-                  <span>Meal Finished! Celebrate 🎉</span>
+                  <span>{language === 'ta' ? 'சமையல் முடிந்தது! கொண்டாடுங்கள் 🎉' : 'Meal Finished! Celebrate 🎉'}</span>
                 </button>
               )}
             </div>
