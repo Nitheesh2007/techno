@@ -21,7 +21,9 @@ import {
   ArrowRight,
   Search,
   Filter,
-  Utensils
+  Utensils,
+  Globe,
+  Award
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -32,6 +34,8 @@ export default function Recipes() {
   const [cookedSuccess, setCookedSuccess] = useState(null);
   const [cookModalOpen, setCookModalOpen] = useState(false);
   const [mealTypeFilter, setMealTypeFilter] = useState('ALL');
+  const [cuisineFilter, setCuisineFilter] = useState('ALL');
+  const [dietaryFilter, setDietaryFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const { t, tf, tc, tl, language } = useLanguage();
 
@@ -73,13 +77,16 @@ export default function Recipes() {
   };
 
   const filteredRecipes = recipes.filter(r => {
-    const matchesMeal = mealTypeFilter === 'ALL' || r.mealType === mealTypeFilter || (mealTypeFilter === 'Quick' && r.cookTime.includes('10') || r.cookTime.includes('8') || r.cookTime.includes('0') || r.cookTime.includes('7'));
+    const matchesMeal = mealTypeFilter === 'ALL' || r.mealType === mealTypeFilter || (mealTypeFilter === 'Quick' && (r.cookTime.includes('10') || r.cookTime.includes('8') || r.cookTime.includes('0') || r.cookTime.includes('7')));
+    const matchesCuisine = cuisineFilter === 'ALL' || r.cuisine === cuisineFilter;
+    const matchesDiet = dietaryFilter === 'ALL' || r.dietary === dietaryFilter || r.tags.includes(dietaryFilter);
     const matchesSearch = r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.matchedIngredients.some(i => i.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      r.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      r.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (r.cuisine && r.cuisine.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    return matchesMeal && matchesSearch;
+    return matchesMeal && matchesCuisine && matchesDiet && matchesSearch;
   });
 
   return (
@@ -106,14 +113,14 @@ export default function Recipes() {
         <div>
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
             <Sparkles size={13} />
-            <span>{t('aiCulinaryBadge')}</span>
+            <span>{t('aiCulinaryBadge')} (20+ {language === 'ta' ? 'செய்முறைகள்' : 'Dishes'})</span>
           </div>
           <h1 className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             <ChefHat className="text-emerald-600" size={32} />
             {t('recipesTitle')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {t('recipesSub')}
+            {language === 'ta' ? 'உங்கள் குளிர்சாதனப் பெட்டியில் உள்ள காலாவதியாகும் உணவுகளைக் கொண்டு 20-க்கும் மேற்பட்ட சுவையான சமையல் குறிப்புகள்.' : 'Explore 20+ smart zero-waste culinary recipes engineered to rescue your ingredients before expiry.'}
           </p>
         </div>
 
@@ -127,41 +134,86 @@ export default function Recipes() {
         </button>
       </div>
 
-      {/* Search & Meal Type Filter Controls */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* Search Input */}
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-          <input
-            type="text"
-            placeholder={language === 'ta' ? 'செய்முறை அல்லது உணவுகளைத் தேடுங்கள்...' : 'Search recipes, ingredients, tags...'}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
-          />
+      {/* Search & Multi-Filter Deck */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm mb-6 space-y-4">
+        {/* Row 1: Search & Meal Type */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input
+              type="text"
+              placeholder={language === 'ta' ? 'செய்முறை அல்லது உணவுகளைத் தேடுங்கள்...' : 'Search recipes, ingredients, tags...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* Meal Type Filter */}
+          <div className="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+            {[
+              { id: 'ALL', label: language === 'ta' ? 'அனைத்து உணவுகள்' : 'All Dishes' },
+              { id: 'Breakfast', label: language === 'ta' ? '🍳 காலை உணவு' : '🍳 Breakfast' },
+              { id: 'Lunch', label: language === 'ta' ? '🥪 மதிய உணவு' : '🥪 Lunch' },
+              { id: 'Dinner', label: language === 'ta' ? '🍲 இரவு உணவு' : '🍲 Dinner' },
+              { id: 'Quick', label: language === 'ta' ? '⚡ விரைவு (< 15m)' : '⚡ Quick (< 15m)' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setMealTypeFilter(tab.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  mealTypeFilter === tab.id
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Meal Type Pills */}
-        <div className="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
-          {[
-            { id: 'ALL', label: language === 'ta' ? 'அனைத்து உணவுகள்' : 'All Dishes' },
-            { id: 'Breakfast', label: language === 'ta' ? 'காலை உணவு' : 'Breakfast' },
-            { id: 'Lunch', label: language === 'ta' ? 'மதிய உணவு' : 'Lunch' },
-            { id: 'Dinner', label: language === 'ta' ? 'இரவு உணவு' : 'Dinner' },
-            { id: 'Quick', label: language === 'ta' ? '⚡ விரைவு (< 15 நிமிடம்)' : '⚡ Quick (< 15 mins)' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setMealTypeFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                mealTypeFilter === tab.id
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* Row 2: Cuisine Pills & Dietary Filter */}
+        <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+          {/* Cuisine Pills */}
+          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1">
+            <span className="text-[10px] font-bold uppercase text-slate-400 mr-1 flex items-center gap-1">
+              <Globe size={11} /> {language === 'ta' ? 'சமையல் வகை:' : 'Cuisine:'}
+            </span>
+            {['ALL', 'Italian', 'Asian', 'Mediterranean', 'Indian', 'Mexican', 'American', 'French'].map((c) => (
+              <button
+                key={c}
+                onClick={() => setCuisineFilter(c)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${
+                  cuisineFilter === c
+                    ? 'bg-teal-600 text-white font-bold'
+                    : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                }`}
+              >
+                {c === 'ALL' ? (language === 'ta' ? 'அனைத்து' : 'All') : c}
+              </button>
+            ))}
+          </div>
+
+          {/* Dietary Filter */}
+          <div className="flex items-center space-x-1.5">
+            <span className="text-[10px] font-bold uppercase text-slate-400 mr-1 flex items-center gap-1">
+              <Award size={11} /> {language === 'ta' ? 'உணவு முறை:' : 'Diet:'}
+            </span>
+            {['ALL', 'High-Protein', 'Vegetarian', 'Vegan'].map((d) => (
+              <button
+                key={d}
+                onClick={() => setDietaryFilter(d)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${
+                  dietaryFilter === d
+                    ? 'bg-purple-600 text-white font-bold'
+                    : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                }`}
+              >
+                {d === 'ALL' ? (language === 'ta' ? 'அனைத்து' : 'All') : d}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -169,7 +221,7 @@ export default function Recipes() {
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-16 text-center border border-slate-200 dark:border-slate-800">
           <ChefHat className="animate-bounce mx-auto text-emerald-500 mb-4" size={48} />
           <h3 className="font-heading font-bold text-lg text-slate-800 dark:text-white">
-            {language === 'ta' ? 'AI செஃப் சமையலறையை ஆய்வு செய்து புதிய செய்முறைகளை உருவாக்குகிறார்...' : 'AI Chef is Generating Fresh Culinary Ideas...'}
+            {language === 'ta' ? 'AI செஃப் சமையலறையை ஆய்வு செய்து 20-க்கும் மேற்பட்ட புதிய செய்முறைகளை உருவாக்குகிறார்...' : 'AI Chef is Generating 20+ Fresh Culinary Creations...'}
           </h3>
           <p className="text-xs text-slate-400 mt-1">
             {language === 'ta' ? 'சுவை, சமையல் நேரம் மற்றும் காலாவதி தேதிகள் பொருத்தப்படுகின்றன' : 'Matching flavor profiles, cooking times, and urgent expiry dates'}
@@ -181,7 +233,7 @@ export default function Recipes() {
           <div className="lg:col-span-5 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                {t('suggestedDishes')} ({filteredRecipes.length})
+                {t('suggestedDishes')} ({filteredRecipes.length} {language === 'ta' ? 'செய்முறைகள்' : 'dishes'})
               </h3>
             </div>
 
@@ -190,48 +242,55 @@ export default function Recipes() {
                 {language === 'ta' ? 'இந்த வடிகட்டலுக்கு செய்முறைகள் எதுவும் இல்லை.' : 'No recipes match this search/filter.'}
               </p>
             ) : (
-              filteredRecipes.map((r) => {
-                const isSelected = selectedRecipe?.id === r.id;
-                return (
-                  <div
-                    key={r.id}
-                    onClick={() => setSelectedRecipe(r)}
-                    className={`p-4 sm:p-5 rounded-3xl border cursor-pointer transition-all ${
-                      isSelected 
-                        ? 'bg-emerald-50/70 dark:bg-slate-800 border-emerald-500/50 shadow-md ring-2 ring-emerald-500/20 scale-[1.01]' 
-                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-                          {r.mealType || 'Dinner'}
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                          {r.cuisine || 'Fusion'}
+              <div className="space-y-3 max-h-[780px] overflow-y-auto pr-1 custom-scrollbar">
+                {filteredRecipes.map((r) => {
+                  const isSelected = selectedRecipe?.id === r.id;
+                  return (
+                    <div
+                      key={r.id}
+                      onClick={() => setSelectedRecipe(r)}
+                      className={`p-4 sm:p-5 rounded-3xl border cursor-pointer transition-all ${
+                        isSelected 
+                          ? 'bg-emerald-50/70 dark:bg-slate-800 border-emerald-500/50 shadow-md ring-2 ring-emerald-500/20 scale-[1.01]' 
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                            {r.mealType || 'Dinner'}
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                            {r.cuisine || 'Fusion'}
+                          </span>
+                          {r.dietary && (
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                              {r.dietary}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-slate-400 flex items-center gap-1 font-semibold">
+                          <Clock size={12} /> {r.cookTime}
                         </span>
                       </div>
-                      <span className="text-xs text-slate-400 flex items-center gap-1 font-semibold">
-                        <Clock size={12} /> {r.cookTime}
-                      </span>
-                    </div>
 
-                    <h4 className="font-heading font-bold text-slate-900 dark:text-white text-sm sm:text-base">
-                      {r.title}
-                    </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-                      {r.summary}
-                    </p>
+                      <h4 className="font-heading font-bold text-slate-900 dark:text-white text-sm sm:text-base">
+                        {r.title}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                        {r.summary}
+                      </p>
 
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/60 text-xs">
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                        <Leaf size={12} /> {t('wasteSaved')}: {r.wasteSavedGrams}g
-                      </span>
-                      <span className="text-slate-400">{r.servings} {t('servings')}</span>
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/60 text-xs">
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <Leaf size={12} /> {t('wasteSaved')}: {r.wasteSavedGrams}g
+                        </span>
+                        <span className="text-slate-400">{r.servings} {t('servings')}</span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })}
+              </div>
             )}
           </div>
 
@@ -242,6 +301,9 @@ export default function Recipes() {
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
                   <div>
                     <div className="flex flex-wrap gap-1.5 mb-2">
+                      <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-600 text-white">
+                        {selectedRecipe.cuisine}
+                      </span>
                       {selectedRecipe.tags.map(tItem => (
                         <span key={tItem} className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                           {tItem}

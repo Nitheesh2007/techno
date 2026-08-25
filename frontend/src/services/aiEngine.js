@@ -2,16 +2,16 @@
 import { storage } from './storage';
 
 export const aiEngine = {
-  // Generate intelligent recipes tailored to expiring items with rich multi-category suggestions
+  // Generate comprehensive, intelligent recipes tailored to expiring items with 20+ diverse culinary dishes
   generateRecipe: async (options = {}) => {
     const products = storage.getProducts();
     const urgentItems = products.filter(p => p.status === 'URGENT' || p.status === 'EXPIRING SOON');
     const safeItems = products.filter(p => p.status === 'SAFE');
     
-    // Artificial small delay for realistic AI feel
-    await new Promise(r => setTimeout(r, 400));
+    // Small artificial delay for realistic AI feel
+    await new Promise(r => setTimeout(r, 350));
 
-    const itemNames = urgentItems.map(i => i.product_name).slice(0, 4);
+    const itemNames = urgentItems.map(i => i.product_name).slice(0, 5);
     const primaryIngredient = itemNames[0] || (products[0]?.product_name) || 'Fresh Garden Vegetables';
 
     const recipes = [
@@ -26,15 +26,16 @@ export const aiEngine = {
         wasteSavedGrams: 420,
         mealType: 'Dinner',
         cuisine: 'Fusion',
+        dietary: 'High-Protein',
         matchedIngredients: itemNames.length > 0 ? itemNames : ['Spinach', 'Eggs', 'Sourdough Bread'],
         missingIngredients: ['Olive Oil', 'Crushed Garlic', 'Sea Salt & Pepper'],
         tags: ['Quick & Easy', 'Zero-Waste', 'High Protein'],
-        summary: `A chef-curated skillet designed to rescue ${itemNames.join(', ') || 'your fresh ingredients'} before expiry with maximum flavor.`,
+        summary: `A chef-curated skillet designed to rescue ${itemNames.join(', ') || 'your fresh ingredients'} before expiry with maximum flavor and zero waste.`,
         instructions: [
-          'Preheat a large cast-iron skillet over medium-high heat with 1 tbsp olive oil.',
+          'Preheat a large cast-iron skillet over medium-high heat with 1 tbsp olive oil or butter.',
           `Dice your ingredients: ${itemNames.join(', ') || 'vegetables and proteins'}.`,
           'Sauté aromatics, vegetables, and proteins for 6-8 minutes until tender and caramelized.',
-          'Season with sea salt, freshly cracked black pepper, and herbs of choice.',
+          'Season generously with sea salt, freshly cracked black pepper, and herbs of choice.',
           'Serve piping hot alongside toasted crusty bread or warm grains.'
         ],
         storageTip: 'Store any leftovers in an airtight glass container in the fridge for up to 3 days.'
@@ -50,6 +51,7 @@ export const aiEngine = {
         wasteSavedGrams: 350,
         mealType: 'Dinner',
         cuisine: 'Italian',
+        dietary: 'Vegetarian',
         matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy & Eggs' || p.category === 'Pantry').slice(0, 3).map(p => p.product_name),
         missingIngredients: ['Penne Pasta', 'Garlic', 'Parmesan', 'Black Pepper'],
         tags: ['Italian', 'Family Favorite', 'Vegetarian'],
@@ -73,13 +75,14 @@ export const aiEngine = {
         wasteSavedGrams: 240,
         mealType: 'Breakfast',
         cuisine: 'American',
+        dietary: 'Vegan',
         matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy & Eggs').map(p => p.product_name),
         missingIngredients: ['Honey or Maple Syrup', 'Chia Seeds or Granola'],
         tags: ['Healthy', 'Breakfast', 'No-Cook', 'Fiber Rich'],
         summary: 'Rescue soft fruits, berries, and yogurt in under 5 minutes with this antioxidant-dense powerhouse breakfast.',
         instructions: [
           'Wash and roughly chop any ripe fruit, berries, or greens.',
-          'Combine with Greek yogurt or milk in a blender with a drizzle of honey.',
+          'Combine with Greek yogurt or plant milk in a blender with a drizzle of honey.',
           'Blend on high for 45 seconds until silky smooth.',
           'Pour into a bowl and top with crunchy seeds, sliced fruit, or toasted oats.'
         ],
@@ -96,6 +99,7 @@ export const aiEngine = {
         wasteSavedGrams: 380,
         mealType: 'Lunch',
         cuisine: 'Asian',
+        dietary: 'Quick',
         matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy & Eggs').map(p => p.product_name),
         missingIngredients: ['Cooked Rice', 'Soy Sauce', 'Sesame Oil', 'Spring Onions'],
         tags: ['15-Minute Meal', 'Asian', 'Quick Lunch'],
@@ -119,6 +123,7 @@ export const aiEngine = {
         wasteSavedGrams: 290,
         mealType: 'Breakfast',
         cuisine: 'French',
+        dietary: 'Vegetarian',
         matchedIngredients: products.filter(p => p.category === 'Bakery' || p.category === 'Dairy & Eggs' || p.category === 'Produce').map(p => p.product_name),
         missingIngredients: ['Cinnamon', 'Vanilla Extract', 'Butter', 'Maple Syrup'],
         tags: ['Bakery Rescue', 'Sweet Breakfast', 'Kids Favorite'],
@@ -133,7 +138,7 @@ export const aiEngine = {
       },
       {
         id: 'rec-6',
-        title: 'Mediterranean Herb-Roasted Protein & Vegetable Platter',
+        title: 'Mediterranean Herb-Roasted Protein & Veggie Platter',
         prepTime: '12 mins',
         cookTime: '25 mins',
         difficulty: 'Medium',
@@ -142,6 +147,7 @@ export const aiEngine = {
         wasteSavedGrams: 550,
         mealType: 'Dinner',
         cuisine: 'Mediterranean',
+        dietary: 'High-Protein',
         matchedIngredients: products.filter(p => p.category === 'Meat & Poultry' || p.category === 'Produce').map(p => p.product_name),
         missingIngredients: ['Olive Oil', 'Dried Oregano', 'Lemon Juice', 'Garlic Powder'],
         tags: ['Sheet Pan Meal', 'High Protein', 'Keto Friendly'],
@@ -165,6 +171,7 @@ export const aiEngine = {
         wasteSavedGrams: 480,
         mealType: 'Dinner',
         cuisine: 'Italian',
+        dietary: 'Vegan',
         matchedIngredients: products.map(p => p.product_name),
         missingIngredients: ['Canned Tomatoes', 'Vegetable Broth', 'Italian Seasoning'],
         tags: ['Hearty Soup', 'Comfort Food', 'Zero-Waste Champion'],
@@ -188,6 +195,7 @@ export const aiEngine = {
         wasteSavedGrams: 210,
         mealType: 'Lunch',
         cuisine: 'American',
+        dietary: 'Quick',
         matchedIngredients: products.filter(p => p.category === 'Bakery' || p.category === 'Dairy & Eggs').map(p => p.product_name),
         missingIngredients: ['Butter', 'Mustard or Mayo (optional)', 'Black Pepper'],
         tags: ['15-Minute Meal', 'Comfort Food', 'Quick Lunch'],
@@ -199,6 +207,296 @@ export const aiEngine = {
           'Cook for 3-4 minutes per side until bread is golden and the cheese is fully melted and gooey.'
         ],
         storageTip: 'Serve immediately for maximum crunch and melty cheese stretch!'
+      },
+      {
+        id: 'rec-9',
+        title: 'Avocado Lime Green Goddess Grain Bowl',
+        prepTime: '8 mins',
+        cookTime: '10 mins',
+        difficulty: 'Easy',
+        servings: 2,
+        calories: 380,
+        wasteSavedGrams: 320,
+        mealType: 'Lunch',
+        cuisine: 'Mexican',
+        dietary: 'Vegan',
+        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Pantry').map(p => p.product_name),
+        missingIngredients: ['Cooked Quinoa or Rice', 'Lime Juice', 'Cumin', 'Coriander / Cilantro'],
+        tags: ['Superfood', 'Healthy', 'Gluten-Free', 'Vegan'],
+        summary: 'A vibrant power bowl packed with grains, creamy diced avocados, greens, and a zesty lime vinaigrette.',
+        instructions: [
+          'Warm pre-cooked grains (quinoa, brown rice, or couscous) in a bowl.',
+          'Dice ripe avocados, tomatoes, cucumbers, and shred fresh leafy greens.',
+          'Whisk lime juice, olive oil, minced garlic, cumin, salt, and cilantro for the dressing.',
+          'Layer the ingredients in colorful bowls, drizzle generously with dressing, and enjoy!'
+        ],
+        storageTip: 'Keep dressing separate until ready to serve to keep greens crisp.'
+      },
+      {
+        id: 'rec-10',
+        title: 'Creamy Coconut Curry with Wilted Greens & Protein',
+        prepTime: '10 mins',
+        cookTime: '18 mins',
+        difficulty: 'Easy',
+        servings: 3,
+        calories: 490,
+        wasteSavedGrams: 410,
+        mealType: 'Dinner',
+        cuisine: 'Indian',
+        dietary: 'High-Protein',
+        matchedIngredients: products.map(p => p.product_name),
+        missingIngredients: ['Coconut Milk', 'Curry Powder or Garam Masala', 'Turmeric', 'Ginger'],
+        tags: ['Indian Curry', 'Comfort Food', 'Warm & Spiced'],
+        summary: 'A rich, golden curry simmering whatever vegetables and proteins you have in aromatic coconut broth.',
+        instructions: [
+          'Heat oil in a wide pot and sauté diced onions, garlic, and minced ginger for 3 minutes.',
+          'Stir in curry powder, turmeric, and cumin until fragrant.',
+          'Add your diced vegetables, proteins, and pour in 1 can of coconut milk.',
+          'Simmer on medium-low for 15 minutes, tossing in leafy greens in the last 2 minutes until wilted. Serve over basmati rice.'
+        ],
+        storageTip: 'Curry tastes even better on day 2 as spices meld together!'
+      },
+      {
+        id: 'rec-11',
+        title: 'Golden Spinach & Feta Frittata Bake',
+        prepTime: '8 mins',
+        cookTime: '16 mins',
+        difficulty: 'Easy',
+        servings: 3,
+        calories: 340,
+        wasteSavedGrams: 300,
+        mealType: 'Breakfast',
+        cuisine: 'Mediterranean',
+        dietary: 'High-Protein',
+        matchedIngredients: products.filter(p => p.category === 'Dairy & Eggs' || p.category === 'Produce').map(p => p.product_name),
+        missingIngredients: ['Eggs (4-6)', 'Feta or Cheddar Cheese', 'Olive Oil', 'Black Pepper'],
+        tags: ['High-Protein', 'Keto Friendly', 'Easy Brunch'],
+        summary: 'A fluffy oven or skillet frittata turning excess eggs and wilting greens into an upscale brunch centerpiece.',
+        instructions: [
+          'Preheat oven to 190°C (375°F) or heat an oven-safe skillet on the stovetop.',
+          'Sauté spinach, peppers, and onions in olive oil until soft and wilted.',
+          'Whisk eggs with a splash of milk, salt, pepper, and pour evenly over the vegetables.',
+          'Crumble feta cheese on top and bake or cook covered on low for 12-15 minutes until set and puffy.'
+        ],
+        storageTip: 'Slices can be wrapped in foil and kept in the fridge for up to 4 days for grab-and-go morning protein.'
+      },
+      {
+        id: 'rec-12',
+        title: 'Loaded Sweet Potato & Black Bean Burrito Skillet',
+        prepTime: '10 mins',
+        cookTime: '15 mins',
+        difficulty: 'Easy',
+        servings: 3,
+        calories: 420,
+        wasteSavedGrams: 370,
+        mealType: 'Dinner',
+        cuisine: 'Mexican',
+        dietary: 'Vegetarian',
+        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Pantry').map(p => p.product_name),
+        missingIngredients: ['Canned Black Beans', 'Salsa', 'Cheddar Cheese', 'Taco Seasoning'],
+        tags: ['Tex-Mex', 'One-Pan Meal', 'Family Friendly'],
+        summary: 'All the vibrant flavors of a loaded burrito packed into a fast, cheesy one-pan weeknight skillet.',
+        instructions: [
+          'Dice sweet potatoes or potatoes and microwave for 3 minutes to accelerate cooking.',
+          'In a hot skillet with olive oil, sauté the potatoes and vegetables with taco seasoning for 6 minutes.',
+          'Fold in rinsed black beans, salsa, and simmer for 4 minutes until bubbling.',
+          'Top with shredded cheese, cover with a lid for 2 minutes to melt, and garnish with green onions.'
+        ],
+        storageTip: 'Great filling for wraps, quesadillas, or over tortilla chips for loaded nachos!'
+      },
+      {
+        id: 'rec-13',
+        title: 'Spicy Garlic Sesame Noodles with Crunchy Greens',
+        prepTime: '5 mins',
+        cookTime: '8 mins',
+        difficulty: 'Easy',
+        servings: 2,
+        calories: 390,
+        wasteSavedGrams: 260,
+        mealType: 'Lunch',
+        cuisine: 'Asian',
+        dietary: 'Quick',
+        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Pantry').map(p => p.product_name),
+        missingIngredients: ['Noodles or Spaghetti', 'Soy Sauce', 'Chili Crisp / Sriracha', 'Sesame Seeds'],
+        tags: ['15-Minute Meal', 'Pan-Asian', 'Quick Lunch'],
+        summary: 'Slurpable, addictive garlic chili noodles tossed with whatever leftover crisp veggies you need to finish.',
+        instructions: [
+          'Boil noodles according to package directions; drain and rinse with cold water.',
+          'In a bowl, whisk soy sauce, sesame oil, minced garlic, chili crisp, and a pinch of sugar.',
+          'In a hot pan, quickly flash-fry sliced cabbage, carrots, or greens for 2 minutes.',
+          'Toss noodles, vegetables, and the spicy sauce together over medium heat until glossy and coated.'
+        ],
+        storageTip: 'Delicious served either piping hot or chilled straight out of the fridge!'
+      },
+      {
+        id: 'rec-14',
+        title: 'Crispy Smashed Rosemary Potatoes with Garlic Aioli',
+        prepTime: '10 mins',
+        cookTime: '20 mins',
+        difficulty: 'Easy',
+        servings: 2,
+        calories: 320,
+        wasteSavedGrams: 350,
+        mealType: 'Lunch',
+        cuisine: 'American',
+        dietary: 'Vegetarian',
+        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Pantry').map(p => p.product_name),
+        missingIngredients: ['Olive Oil', 'Fresh Rosemary or Thyme', 'Sea Salt', 'Mayo & Garlic'],
+        tags: ['Crispy Side', 'Snack', 'Comfort Food'],
+        summary: 'Boiled and crushed baby potatoes roasted until ultra-crisp and served with a quick lemon garlic dip.',
+        instructions: [
+          'Boil whole potatoes in salted water for 12 minutes until fork-tender.',
+          'Place potatoes on a baking sheet and smash flat using the bottom of a glass cup.',
+          'Drizzle generously with olive oil, salt, pepper, and chopped rosemary.',
+          'Bake at 220°C (425°F) for 18 minutes until edges are golden brown and crackly.'
+        ],
+        storageTip: 'Reheat in an air fryer for 3 minutes to regain 100% crispiness.'
+      },
+      {
+        id: 'rec-15',
+        title: 'Overripe Banana Walnut Fluffy Oat Pancakes',
+        prepTime: '6 mins',
+        cookTime: '8 mins',
+        difficulty: 'Easy',
+        servings: 2,
+        calories: 350,
+        wasteSavedGrams: 280,
+        mealType: 'Breakfast',
+        cuisine: 'American',
+        dietary: 'Vegetarian',
+        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy & Eggs' || p.category === 'Bakery').map(p => p.product_name),
+        missingIngredients: ['Rolled Oats or Flour', 'Baking Powder', 'Cinnamon', 'Maple Syrup'],
+        tags: ['Zero Sugar Added', 'Kid Friendly', 'Bakery Rescue'],
+        summary: 'Rescue spotted or browning bananas by turning them into naturally sweet, protein-rich fluffy pancakes.',
+        instructions: [
+          'Mash 2 ripe bananas in a bowl until smooth.',
+          'Whisk in 2 eggs, 1 cup oats (blended or rolled), 1 tsp baking powder, and a dash of cinnamon.',
+          'Ladle batter onto a buttered non-stick pan over medium heat.',
+          'Flip once bubbles appear (about 2 minutes per side) and serve warm with walnuts and maple syrup.'
+        ],
+        storageTip: 'Freeze cooked pancakes separated by parchment paper; pop into the toaster anytime!'
+      },
+      {
+        id: 'rec-16',
+        title: 'Zesty Citrus Herb Chicken Salad with Sourdough Croutons',
+        prepTime: '10 mins',
+        cookTime: '12 mins',
+        difficulty: 'Easy',
+        servings: 2,
+        calories: 440,
+        wasteSavedGrams: 390,
+        mealType: 'Lunch',
+        cuisine: 'Mediterranean',
+        dietary: 'High-Protein',
+        matchedIngredients: products.filter(p => p.category === 'Meat & Poultry' || p.category === 'Produce' || p.category === 'Bakery').map(p => p.product_name),
+        missingIngredients: ['Dijon Mustard', 'Olive Oil', 'Lemon Juice', 'Parmesan'],
+        tags: ['High-Protein', 'Fresh Salad', 'Keto Friendly'],
+        summary: 'Tender pan-seared chicken breast tossed over crisp greens with toasted homemade garlic croutons.',
+        instructions: [
+          'Season chicken breast with salt, pepper, and dried oregano; pan-sear for 6 minutes per side until cooked.',
+          'Cube leftover bread and toast with olive oil in a skillet until crunchy croutons form.',
+          'Whisk olive oil, Dijon mustard, lemon juice, salt, and pepper into a bright vinaigrette.',
+          'Slice warm chicken and assemble over greens with croutons, shaved parmesan, and dressing.'
+        ],
+        storageTip: 'Store grilled chicken in the fridge for easy meal additions throughout the week.'
+      },
+      {
+        id: 'rec-17',
+        title: 'Savory Bread & Cheese Strata Casserole',
+        prepTime: '12 mins',
+        cookTime: '25 mins',
+        difficulty: 'Medium',
+        servings: 4,
+        calories: 480,
+        wasteSavedGrams: 520,
+        mealType: 'Dinner',
+        cuisine: 'Italian',
+        dietary: 'Vegetarian',
+        matchedIngredients: products.filter(p => p.category === 'Bakery' || p.category === 'Dairy & Eggs' || p.category === 'Produce').map(p => p.product_name),
+        missingIngredients: ['Eggs (4)', 'Milk (1 cup)', 'Cheddar / Mozzarella', 'Nutmeg / Herbs'],
+        tags: ['Family Dinner', 'Comfort Food', 'Zero-Waste Champion'],
+        summary: 'A golden baked Italian strata turning day-old bread, eggs, cheese, and vegetables into a luscious soufflé bake.',
+        instructions: [
+          'Cube 3-4 slices of day-old bread and arrange in a greased baking dish.',
+          'Layer sautéed vegetables (spinach, onions, tomatoes) and shredded cheese between bread cubes.',
+          'Whisk eggs, milk, salt, pepper, and a pinch of nutmeg; pour evenly over the dish.',
+          'Bake at 180°C (350°F) for 25 minutes until golden, puffed, and set in the center.'
+        ],
+        storageTip: 'Can be assembled the night before and baked fresh in the morning!'
+      },
+      {
+        id: 'rec-18',
+        title: 'Chilled Mango Yogurt Lassi & Chia Seed Bowl',
+        prepTime: '5 mins',
+        cookTime: '0 mins',
+        difficulty: 'Easy',
+        servings: 2,
+        calories: 220,
+        wasteSavedGrams: 200,
+        mealType: 'Breakfast',
+        cuisine: 'Indian',
+        dietary: 'Quick',
+        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy & Eggs').map(p => p.product_name),
+        missingIngredients: ['Cardamom Powder', 'Honey', 'Crushed Pistachios'],
+        tags: ['No-Cook', 'Probiotic Boost', 'Refreshing Drink'],
+        summary: 'A cool, creamy Indian yogurt drink rescuing ripe mangoes or sweet fruits with aromatic cardamom.',
+        instructions: [
+          'Peel and dice ripe mango or tropical fruit.',
+          'Blend yogurt, fruit, cold water or milk, a dash of ground cardamom, and a spoonful of honey.',
+          'Blend until frothy and smooth.',
+          'Pour into chilled glasses and garnish with crushed pistachios or mint leaves.'
+        ],
+        storageTip: 'Keeps refreshing and cold in an insulated flask for up to 24 hours.'
+      },
+      {
+        id: 'rec-19',
+        title: 'Smoky Chipotle Shakshuka with Poached Eggs',
+        prepTime: '8 mins',
+        cookTime: '14 mins',
+        difficulty: 'Easy',
+        servings: 2,
+        calories: 360,
+        wasteSavedGrams: 340,
+        mealType: 'Breakfast',
+        cuisine: 'Mediterranean',
+        dietary: 'High-Protein',
+        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy & Eggs').map(p => p.product_name),
+        missingIngredients: ['Canned Chopped Tomatoes', 'Eggs (3-4)', 'Smoked Paprika', 'Cumin'],
+        tags: ['Middle Eastern', 'One-Skillet', 'Spiced Brunch'],
+        summary: 'Eggs gently poached in a simmering spiced sauce of tomatoes, bell peppers, garlic, and smoked chili.',
+        instructions: [
+          'Sauté chopped onions, garlic, and bell peppers in olive oil in a wide skillet for 5 minutes.',
+          'Add canned tomatoes, cumin, smoked paprika, salt, and black pepper; simmer until sauce thickens.',
+          'Make 3-4 small wells in the sauce and crack whole eggs directly into each well.',
+          'Cover with a lid and cook on low heat for 5-7 minutes until egg whites are set but yolks remain runny.',
+          'Garnish with fresh parsley and serve with warm bread for dipping.'
+        ],
+        storageTip: 'Leftover tomato base can be frozen or used as a rich pasta sauce.'
+      },
+      {
+        id: 'rec-20',
+        title: 'Crispy Vegetable Fritters with Garlic Herb Dip',
+        prepTime: '10 mins',
+        cookTime: '10 mins',
+        difficulty: 'Easy',
+        servings: 3,
+        calories: 290,
+        wasteSavedGrams: 400,
+        mealType: 'Lunch',
+        cuisine: 'Fusion',
+        dietary: 'Quick',
+        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy & Eggs').map(p => p.product_name),
+        missingIngredients: ['Flour (1/2 cup)', 'Baking Powder', 'Egg (1)', 'Yogurt Dip'],
+        tags: ['Finger Food', 'Scrap Rescue', 'Crispy Snack'],
+        summary: 'Grated zucchini, carrots, potatoes, and greens bound in a light batter and pan-fried until golden crisp.',
+        instructions: [
+          'Grate or finely shred any surplus vegetables (carrots, potatoes, zucchini, broccoli stems).',
+          'Squeeze out excess moisture with a clean kitchen towel.',
+          'Mix with 1 egg, 1/2 cup flour, salt, pepper, and herbs until a thick batter forms.',
+          'Drop spoonfuls into hot oil in a skillet, flattening slightly, and fry for 3-4 minutes per side until golden brown.',
+          'Serve hot with a side of garlic yogurt or spicy mayo dip.'
+        ],
+        storageTip: 'Fritters reheat to crispy perfection in an oven or air fryer at 200°C for 4 minutes.'
       }
     ];
 
@@ -240,7 +538,7 @@ export const aiEngine = {
       if (msg.includes('recipe') || msg.includes('cook') || msg.includes('dinner') || msg.includes('lunch') || msg.includes('breakfast') || msg.includes('சமையல்') || msg.includes('உணவு') || msg.includes('செய்முறை')) {
         const topItems = [...urgentItems, ...soonItems].slice(0, 3).map(i => i.product_name);
         return {
-          reply: `👨‍🍳 I recommend cooking a **Zero-Waste Chef's Skillet or Pasta Primavera** using **${topItems.join(' and ') || 'your available pantry ingredients'}**!\n\nOpen the **AI Recipe Chef** module to view step-by-step cooking steps with audio countdown timers.`,
+          reply: `👨‍🍳 I have generated **20+ Zero-Waste Recipes** including Pasta Primavera, Coconut Curry, Shakshuka, Fried Rice, and Skillets using **${topItems.join(' and ') || 'your available pantry ingredients'}**!\n\nOpen the **AI Recipe Chef** module to filter by cuisine, meal type, and dietary preferences.`,
           suggestedActions: ['Open AI Recipes', 'Show expiring items', 'How to store greens']
         };
       }
