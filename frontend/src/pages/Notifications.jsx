@@ -1,46 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { storage } from '../services/storage';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   Bell, 
-  CheckCheck, 
+  Sparkles, 
   AlertTriangle, 
   Clock, 
-  ChefHat, 
-  ArrowRight,
-  RotateCcw,
-  Sparkles
+  CheckCircle2, 
+  CheckCheck, 
+  Trash2,
+  Utensils
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function Notifications() {
-  const [notifications, setNotifications] = useState(storage.getNotifications());
-  const [filter, setFilter] = useState('ALL');
+  const [notifications, setNotifications] = useState([]);
+  const [activeFilter, setActiveFilter] = useState('ALL');
+  const { t, tf, tc, tl, language } = useLanguage();
   const navigate = useNavigate();
 
-  const loadNotifs = () => {
+  const loadNotifications = () => {
     setNotifications(storage.getNotifications());
   };
 
   useEffect(() => {
-    loadNotifs();
+    loadNotifications();
   }, []);
 
   const handleMarkAllRead = () => {
     storage.markAllNotificationsRead();
-    loadNotifs();
+    loadNotifications();
   };
 
-  const handleItemClick = (notif) => {
+  const handleNotificationClick = (notif) => {
     storage.markNotificationRead(notif.id);
-    loadNotifs();
     navigate('/products');
   };
 
-  const filteredNotifs = notifications.filter(n => {
-    if (filter === 'ALL') return true;
-    if (filter === 'UNREAD') return !n.read;
-    return n.type === filter;
+  const filtered = notifications.filter(n => {
+    if (activeFilter === 'ALL') return true;
+    if (activeFilter === 'URGENT') return n.type === 'urgent';
+    if (activeFilter === 'WARNING') return n.type === 'warning';
+    if (activeFilter === 'EXPIRED') return n.type === 'expired';
+    return true;
   });
 
   return (
@@ -51,42 +54,43 @@ export default function Notifications() {
           <div>
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
               <Sparkles size={13} />
-              <span>Smart Alert Intelligence</span>
+              <span>{t('notificationsTitle')}</span>
             </div>
             <h1 className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
               <Bell className="text-emerald-600" size={32} />
-              Alerts & Notifications
+              {t('notificationsTitle')}
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Real-time expiration alerts and zero-waste action reminders.
+              {t('notificationsSub')}
             </p>
           </div>
 
-          <button
-            onClick={handleMarkAllRead}
-            className="flex items-center space-x-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all"
-          >
-            <CheckCheck size={16} className="text-emerald-500" />
-            <span>Mark All as Read</span>
-          </button>
+          {notifications.some(n => !n.read) && (
+            <button
+              onClick={handleMarkAllRead}
+              className="flex items-center space-x-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-slate-50 transition-all shadow-sm"
+            >
+              <CheckCheck size={16} className="text-emerald-500" />
+              <span>{t('markAllRead')}</span>
+            </button>
+          )}
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center space-x-2 mb-6 overflow-x-auto pb-2">
+        {/* Filters */}
+        <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm mb-6 max-w-md">
           {[
-            { id: 'ALL', label: 'All Alerts' },
-            { id: 'UNREAD', label: 'Unread Only' },
-            { id: 'urgent', label: 'Urgent Expiries' },
-            { id: 'warning', label: 'Expiring Soon' },
-            { id: 'expired', label: 'Expired' }
-          ].map(tab => (
+            { id: 'ALL', label: t('allAlertsTab') },
+            { id: 'URGENT', label: t('urgentAlertsTab') },
+            { id: 'WARNING', label: t('warningAlertsTab') },
+            { id: 'EXPIRED', label: t('expiredAlertsTab') }
+          ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setFilter(tab.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                filter === tab.id
+              onClick={() => setActiveFilter(tab.id)}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeFilter === tab.id
                   ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               {tab.label}
@@ -95,66 +99,46 @@ export default function Notifications() {
         </div>
 
         {/* Notifications List */}
-        <div className="space-y-3">
-          {filteredNotifs.length === 0 ? (
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-16 text-center border border-slate-200 dark:border-slate-800">
-              <Bell className="mx-auto text-slate-300 dark:text-slate-600 mb-4" size={40} />
-              <p className="text-base font-heading font-bold text-slate-800 dark:text-white">
-                No notifications found
-              </p>
-              <p className="text-xs text-slate-400 mt-1">
-                Your kitchen inventory is well managed!
-              </p>
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden p-6">
+          {filtered.length === 0 ? (
+            <div className="text-center py-12">
+              <Bell className="mx-auto text-slate-300 dark:text-slate-700 mb-3" size={44} />
+              <p className="text-xs text-slate-400 max-w-sm mx-auto">{t('noAlerts')}</p>
             </div>
           ) : (
-            filteredNotifs.map(notif => (
-              <div
-                key={notif.id}
-                onClick={() => handleItemClick(notif)}
-                className={`p-5 rounded-3xl border cursor-pointer transition-all hover:shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                  !notif.read
-                    ? 'bg-emerald-50/40 dark:bg-slate-800/80 border-emerald-300/50 dark:border-emerald-800/50'
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
-                }`}
-              >
-                <div className="flex items-start space-x-3.5">
-                  <div className={`p-2.5 rounded-2xl flex-shrink-0 ${
-                    notif.type === 'expired' ? 'bg-rose-100 text-rose-600 dark:bg-rose-950' :
-                    notif.type === 'urgent' ? 'bg-amber-100 text-amber-600 dark:bg-amber-950' :
+            <div className="space-y-3">
+              {filtered.map((n) => (
+                <div
+                  key={n.id}
+                  onClick={() => handleNotificationClick(n)}
+                  className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-start space-x-3.5 ${
+                    !n.read
+                      ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/80 shadow-sm'
+                      : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  <div className={`mt-0.5 p-2 rounded-xl ${
+                    n.type === 'expired' ? 'bg-rose-100 text-rose-600 dark:bg-rose-950' :
+                    n.type === 'urgent' ? 'bg-amber-100 text-amber-600 dark:bg-amber-950' :
                     'bg-blue-100 text-blue-600 dark:bg-blue-950'
                   }`}>
-                    {notif.type === 'expired' ? <AlertTriangle size={18} /> : <Clock size={18} />}
+                    {n.type === 'expired' ? <AlertTriangle size={18} /> : <Clock size={18} />}
                   </div>
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <h4 className="font-heading font-bold text-slate-900 dark:text-white text-sm">
-                        {notif.title}
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-heading font-bold text-sm text-slate-900 dark:text-white truncate">
+                        {tf(n.title)}
                       </h4>
-                      {!notif.read && (
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      )}
+                      <span className="text-[10px] text-slate-400">{new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      {notif.message}
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                      {tf(n.message)}
                     </p>
                   </div>
                 </div>
-
-                <div className="flex items-center space-x-3 self-end sm:self-center">
-                  <Link
-                    to="/recipes"
-                    onClick={(e) => e.stopPropagation()}
-                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-emerald-700 text-xs font-bold flex items-center gap-1.5 transition-colors"
-                  >
-                    <ChefHat size={14} />
-                    <span>Cook</span>
-                  </Link>
-                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                    View Item <ArrowRight size={14} />
-                  </span>
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </div>

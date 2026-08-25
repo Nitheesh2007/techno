@@ -3,108 +3,95 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import { storage } from '../services/storage';
 import { sound } from '../services/sound';
 import { triggerConfetti } from '../services/confetti';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   Users, 
-  Heart, 
-  Share2, 
+  Gift, 
   MapPin, 
   Sparkles, 
   Plus, 
   CheckCircle2, 
-  Gift, 
-  Award, 
-  Building2, 
-  Clock,
-  ArrowRight
+  Clock, 
+  Heart,
+  Share2
 } from 'lucide-react';
 
 const COMMUNITY_FRIDGES = [
   {
-    name: 'Downtown Community Food Fridge #2',
-    address: '452 Elm Street, Downtown',
+    name: 'Downtown 24/7 Community Fridge & Pantry',
+    address: '422 Central Ave, Downtown',
     distance: '0.8 miles away',
-    hours: 'Open 24/7',
-    accepts: ['Fresh Produce', 'Unopened Dairy', 'Canned Goods', 'Bread'],
-    status: 'Active & Accepting'
+    openStatus: 'Open 24/7',
+    accepts: 'Fresh produce, sealed bakery, canned goods',
+    fridgeColor: 'border-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20'
   },
   {
-    name: 'St. Mary Food Pantry & Kitchen',
-    address: '109 Oak Avenue, Midtown',
+    name: 'West End Mutual Aid Sharing Pantry',
+    address: '108 Elm Street, West End',
     distance: '1.4 miles away',
-    hours: 'Mon-Sat: 8 AM - 6 PM',
-    accepts: ['Dry Staples', 'Canned Vegetables', 'Packaged Snacks', 'Baby Food'],
-    status: 'High Need for Staples'
+    openStatus: 'Open 7 AM - 9 PM',
+    accepts: 'Dry grains, unopened sauces, sealed dairy',
+    fridgeColor: 'border-teal-400 bg-teal-50/50 dark:bg-teal-950/20'
   },
   {
-    name: 'West End Eco Fridge Hub',
-    address: '780 Pine Boulevard, West End',
+    name: 'St. Mary Food Rescue Station',
+    address: '750 Oak Blvd, North District',
     distance: '2.1 miles away',
-    hours: 'Open 24/7',
-    accepts: ['Fresh Fruit', 'Bakery Loaves', 'Pantry Staples'],
-    status: 'Active & Accepting'
+    openStatus: 'Open 24/7',
+    accepts: 'All unopened food staples and fresh fruits',
+    fridgeColor: 'border-blue-400 bg-blue-50/50 dark:bg-blue-950/20'
   }
 ];
 
 export default function Community() {
   const [donations, setDonations] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [showDonateModal, setShowDonateModal] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState('');
-  const [targetFridge, setTargetFridge] = useState(COMMUNITY_FRIDGES[0].name);
+  const [showModal, setShowModal] = useState(false);
+  const [donateName, setDonateName] = useState('');
+  const [donateCategory, setDonateCategory] = useState('Produce');
+  const [donateQty, setDonateQty] = useState(2);
+  const [donateLocation, setDonateLocation] = useState('Downtown 24/7 Community Fridge & Pantry');
   const [toastMsg, setToastMsg] = useState(null);
+  const { t, tf, tc, tl, language } = useLanguage();
 
-  const loadData = () => {
+  const loadDonations = () => {
     setDonations(storage.getDonations());
-    setProducts(storage.getProducts());
   };
 
   useEffect(() => {
-    loadData();
+    loadDonations();
   }, []);
 
-  const handleDonateProduct = (e) => {
+  const handleCreateDonation = (e) => {
     e.preventDefault();
-    if (!selectedProductId) return;
-
-    const prod = products.find(p => p.id === selectedProductId);
-    if (!prod) return;
+    if (!donateName.trim()) return;
 
     storage.addDonation({
-      name: prod.product_name,
-      category: prod.category,
-      quantity: prod.quantity,
-      bestBefore: prod.expiry_date,
-      donor: 'Alex Rivera (You)',
-      location: targetFridge
+      name: donateName.trim(),
+      category: donateCategory,
+      quantity: donateQty,
+      bestBefore: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+      donor: 'Alex Rivera',
+      location: donateLocation
     });
 
-    // Remove from active inventory
-    storage.deleteProduct(prod.id);
-
+    storage.addQuestXP(150);
     sound.playSuccess();
-    triggerConfetti(3000);
-    setToastMsg(`❤️ Thank you! "${prod.product_name}" listed for community donation at ${targetFridge}.`);
-    setTimeout(() => setToastMsg(null), 4000);
+    triggerConfetti(2500);
+    setToastMsg(language === 'ta'
+      ? `❤️ "${donateName}" சமூக உணவு தானமாகப் பட்டியலிடப்பட்டது! +150 XP பெறப்பட்டது!`
+      : `❤️ Listed "${donateName}" for community donation! Earned +150 XP!`);
+    setTimeout(() => setToastMsg(null), 3500);
 
-    setShowDonateModal(false);
-    loadData();
-  };
-
-  const handleClaim = (id, name) => {
-    const updated = donations.map(d => d.id === id ? { ...d, status: 'Claimed' } : d);
-    localStorage.setItem('feg_donations', JSON.stringify(updated));
-    setDonations(updated);
-    sound.playSuccess();
-    setToastMsg(`🙌 You reserved "${name}" for pickup!`);
-    setTimeout(() => setToastMsg(null), 3000);
+    setDonateName('');
+    setShowModal(false);
+    loadDonations();
   };
 
   return (
     <DashboardLayout>
-      {/* Toast */}
       {toastMsg && (
         <div className="fixed top-20 right-8 z-50 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center space-x-2 animate-in fade-in slide-in-from-top-4 duration-200">
-          <Heart size={20} className="text-rose-300 fill-rose-300" />
+          <CheckCircle2 size={20} className="text-emerald-200" />
           <span className="text-sm font-semibold">{toastMsg}</span>
         </div>
       )}
@@ -115,221 +102,182 @@ export default function Community() {
           <div>
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
               <Sparkles size={13} />
-              <span>Zero-Waste Neighborhood Network</span>
+              <span>{t('communityTitle')}</span>
             </div>
             <h1 className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
               <Users className="text-emerald-600" size={32} />
-              Community Food Rescue & Sharing Hub
+              {t('communityTitle')}
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Share surplus food before it expires with local community pantries, neighbors, and food banks.
+              {t('communitySub')}
             </p>
           </div>
 
           <button
-            onClick={() => setShowDonateModal(true)}
+            onClick={() => setShowModal(true)}
             className="flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-md shadow-emerald-600/20 transition-all hover:scale-105"
           >
-            <Gift size={16} />
-            <span>Donate Surplus Food</span>
+            <Heart size={16} />
+            <span>{t('donateFoodBtn')}</span>
           </button>
         </div>
 
-        {/* Community Hero Badges Banner */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center space-x-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xl flex-shrink-0">
-              ❤️
-            </div>
-            <div>
-              <p className="font-heading font-bold text-sm text-slate-900 dark:text-white">Community Giver</p>
-              <p className="text-xs text-slate-400">4 items shared this month</p>
-            </div>
-          </div>
-
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center space-x-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xl flex-shrink-0">
-              🌱
-            </div>
-            <div>
-              <p className="font-heading font-bold text-sm text-slate-900 dark:text-white">Zero Waste Hero</p>
-              <p className="text-xs text-slate-400">Top 10% in neighborhood</p>
-            </div>
-          </div>
-
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center space-x-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xl flex-shrink-0">
-              🏆
-            </div>
-            <div>
-              <p className="font-heading font-bold text-sm text-slate-900 dark:text-white">Meals Rescued</p>
-              <p className="text-xs text-slate-400">18 meals fed to families</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Two Columns: Live Donation Feed & Nearby Pantries */}
+        {/* 2-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-          {/* Live Donation Feed (7 cols) */}
-          <div className="lg:col-span-7 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white">
-                  Live Community Food Feed
-                </h3>
-                <p className="text-xs text-slate-400">Items available for pickup near you</p>
-              </div>
-              <span className="text-xs bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold px-3 py-1 rounded-full">
-                {donations.filter(d => d.status === 'Available').length} Available Now
-              </span>
-            </div>
+          {/* Left: Available Surplus Listings (7 cols) */}
+          <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white mb-1">
+              {t('availableSurplus')}
+            </h3>
+            <p className="text-xs text-slate-400 mb-6">{language === 'ta' ? 'அண்டை வீட்டாரால் பகிரப்பட்ட திறக்கப்படாத உணவுகள்' : 'Listed by neighbors and community fridges ready for pickup'}</p>
 
-            <div className="space-y-4">
-              {donations.map((item) => (
-                <div
-                  key={item.id}
-                  className={`p-5 rounded-2xl border transition-all ${
-                    item.status === 'Available'
-                      ? 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700'
-                      : 'bg-slate-100/50 dark:bg-slate-800/20 border-slate-200 dark:border-slate-800 opacity-60'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
+            {donations.length === 0 ? (
+              <p className="text-xs text-slate-400 p-8 text-center bg-slate-50 dark:bg-slate-800 rounded-2xl">{language === 'ta' ? 'தற்போது தானங்கள் எதுவும் இல்லை. நீங்கள் முதல் உணவைத் தானம் செய்யுங்கள்!' : 'No surplus food listed currently. Be the first to share!'}</p>
+            ) : (
+              <div className="space-y-3">
+                {donations.map((d) => (
+                  <div
+                    key={d.id}
+                    className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between"
+                  >
                     <div>
                       <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                          {item.category}
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                          {tc(d.category)}
                         </span>
-                        <span className="text-xs text-slate-400 font-medium">Shared by {item.donor}</span>
+                        <span className="text-xs text-slate-400">Qty: {d.quantity}</span>
                       </div>
-                      <h4 className="font-heading font-bold text-slate-900 dark:text-white text-base">
-                        {item.name}
-                      </h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
-                        <MapPin size={13} className="text-emerald-500" />
-                        <span>Pickup Location: {item.location}</span>
-                      </p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        Best Before: {new Date(item.bestBefore).toLocaleDateString()}
-                      </p>
-                    </div>
-
-                    <div>
-                      {item.status === 'Available' ? (
-                        <button
-                          onClick={() => handleClaim(item.id, item.name)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-sm transition-all"
-                        >
-                          Claim Item
-                        </button>
-                      ) : (
-                        <span className="text-xs font-bold text-slate-400 bg-slate-200 dark:bg-slate-800 px-3 py-1 rounded-full">
-                          Claimed ✓
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Nearby Pantries & Fridges (5 cols) */}
-          <div className="lg:col-span-5 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white mb-1">
-              Nearby Community Fridges & Pantries
-            </h3>
-            <p className="text-xs text-slate-400 mb-6">Drop off or pickup food anytime</p>
-
-            <div className="space-y-4">
-              {COMMUNITY_FRIDGES.map((hub, idx) => (
-                <div key={idx} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                  <div className="flex items-start justify-between">
-                    <div>
                       <h4 className="font-heading font-bold text-sm text-slate-900 dark:text-white">
-                        {hub.name}
+                        {tf(d.name)}
                       </h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1">
-                        <MapPin size={12} /> {hub.address} ({hub.distance})
+                      <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
+                        <MapPin size={11} className="text-emerald-500" /> {d.location}
                       </p>
                     </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-                      {hub.status}
+
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                      {d.status === 'Available' ? (language === 'ta' ? 'கிடைக்கும்' : 'Available') : (language === 'ta' ? 'பெறப்பட்டது' : 'Claimed')}
                     </span>
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-                  <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700/60 flex flex-wrap gap-1">
-                    {hub.accepts.map(acc => (
-                      <span key={acc} className="text-[10px] bg-white dark:bg-slate-900 px-2 py-0.5 rounded-md font-semibold text-slate-600 dark:text-slate-300">
-                        {acc}
+          {/* Right: Nearby 24/7 Community Fridges (5 cols) */}
+          <div className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+            <div>
+              <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white mb-1">
+                {t('nearbyFridges')}
+              </h3>
+              <p className="text-xs text-slate-400 mb-6">{language === 'ta' ? '24 மணி நேர இலவச சமூக குளிர்சாதனப் பெட்டிகள்' : 'Drop-off locations open to the public'}</p>
+
+              <div className="space-y-4">
+                {COMMUNITY_FRIDGES.map((f, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-4 rounded-2xl border ${f.fridgeColor} transition-all`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-heading font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
+                          {f.name}
+                        </h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{f.address}</p>
+                      </div>
+                      <span className="text-[10px] font-extrabold text-emerald-600 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-700">
+                        {f.distance}
                       </span>
-                    ))}
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 text-[11px] text-slate-600 dark:text-slate-300">
+                      <strong>{language === 'ta' ? 'ஏற்றுக்கொள்ளப்படுபவை:' : 'Accepts:'}</strong> {f.accepts}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Donation Modal */}
-        {showDonateModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl animate-in zoom-in-95 duration-150">
-              <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white mb-2">
-                Donate Surplus Food to Community
+        {/* Modal: Donate Food */}
+        {showModal && (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in zoom-in-95 duration-150">
+              <h3 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white mb-2">
+                {t('donateFoodBtn')}
               </h3>
-              <p className="text-xs text-slate-400 mb-6">
-                Choose an item from your kitchen to make available at a local community fridge.
-              </p>
+              <p className="text-xs text-slate-400 mb-6">{language === 'ta' ? 'உபரி உணவை சமூகப் பகிர்விற்கு பட்டியலிடுங்கள்:' : 'List an item for neighborhood food rescue:'}</p>
 
-              <form onSubmit={handleDonateProduct} className="space-y-4">
+              <form onSubmit={handleCreateDonation} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                    Select Item from Inventory
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                    {t('productNameLabel')} *
                   </label>
-                  <select
-                    value={selectedProductId}
-                    onChange={(e) => setSelectedProductId(e.target.value)}
+                  <input
+                    type="text"
                     required
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option value="">-- Choose an item to donate --</option>
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.product_name} ({p.quantity} {p.unit || ''}) - Expires in {p.days_left}d
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="e.g. Canned Soup, Fresh Apples..."
+                    value={donateName}
+                    onChange={e => setDonateName(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                      {t('categoryLabel')}
+                    </label>
+                    <select
+                      value={donateCategory}
+                      onChange={e => setDonateCategory(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs outline-none"
+                    >
+                      {['Produce', 'Pantry', 'Bakery', 'Dairy & Eggs'].map(c => <option key={c} value={c}>{tc(c)}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                      {t('quantityLabel')}
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={donateQty}
+                      onChange={e => setDonateQty(Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                    Drop-off Location
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                    {language === 'ta' ? 'இலக்கு சமூக குளிர்சாதன பெட்டி' : 'Target Drop-off Fridge'}
                   </label>
                   <select
-                    value={targetFridge}
-                    onChange={(e) => setTargetFridge(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                    value={donateLocation}
+                    onChange={e => setDonateLocation(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs outline-none"
                   >
-                    {COMMUNITY_FRIDGES.map(f => (
-                      <option key={f.name} value={f.name}>{f.name} ({f.distance})</option>
-                    ))}
+                    {COMMUNITY_FRIDGES.map(f => <option key={f.name} value={f.name}>{f.name}</option>)}
                   </select>
                 </div>
 
-                <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex justify-end gap-2 pt-3">
                   <button
                     type="button"
-                    onClick={() => setShowDonateModal(false)}
-                    className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500"
                   >
-                    Cancel
+                    {language === 'ta' ? 'ரத்துசெய்' : 'Cancel'}
                   </button>
                   <button
                     type="submit"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow-md shadow-emerald-600/20"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2 rounded-xl text-xs shadow-md"
                   >
-                    Confirm Donation
+                    {t('donateFoodBtn')}
                   </button>
                 </div>
               </form>

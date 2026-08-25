@@ -3,6 +3,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import { storage } from '../services/storage';
 import { sound } from '../services/sound';
 import { triggerConfetti } from '../services/confetti';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   ClipboardCheck, 
   Sparkles, 
@@ -18,17 +19,17 @@ import {
 import { Link } from 'react-router-dom';
 
 export default function KitchenAudit() {
-  const [step, setStep] = useState(1); // 1: Urgent Review, 2: Freeze Triage, 3: Donation Check, 4: Final Summary
+  const [step, setStep] = useState(1);
   const [products, setProducts] = useState([]);
   const [cookItems, setCookItems] = useState([]);
   const [freezeItems, setFreezeItems] = useState([]);
   const [donateItems, setDonateItems] = useState([]);
   const [auditComplete, setAuditComplete] = useState(false);
+  const { t, tf, tc, tl, language } = useLanguage();
 
   useEffect(() => {
     const list = storage.getProducts();
     setProducts(list);
-    // Pre-populate intelligent triage
     setCookItems(list.filter(p => p.status === 'URGENT').map(p => p.id));
     setFreezeItems(list.filter(p => (p.category === 'Bakery' || p.category === 'Meat & Poultry') && p.status === 'EXPIRING SOON').map(p => p.id));
     setDonateItems(list.filter(p => p.category === 'Pantry' && p.status === 'SAFE').slice(0, 1).map(p => p.id));
@@ -50,7 +51,6 @@ export default function KitchenAudit() {
   };
 
   const handleApplyAudit = () => {
-    // Move freeze items to Freezer location in storage
     freezeItems.forEach(id => {
       storage.updateProduct(id, { location: 'Freezer Basket' });
     });
@@ -71,24 +71,24 @@ export default function KitchenAudit() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
             <Sparkles size={13} />
-            <span>3-Minute Freshness Reset Tool</span>
+            <span>{t('auditTitle')}</span>
           </div>
           <h1 className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-3">
             <ClipboardCheck className="text-emerald-600" size={32} />
-            Kitchen Freshness Audit Wizard
+            {t('auditTitle')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-lg mx-auto">
-            A quick interactive checklist to triage urgent items, freeze what can be saved, and ensure zero food waste.
+            {t('auditSub')}
           </p>
         </div>
 
         {/* Progress Stepper */}
         <div className="flex items-center justify-center space-x-3 mb-8">
           {[
-            { num: 1, label: '1. Cook Urgent' },
-            { num: 2, label: '2. Freeze Guard' },
-            { num: 3, label: '3. Community Share' },
-            { num: 4, label: '4. Health Summary' }
+            { num: 1, label: t('auditStep1') },
+            { num: 2, label: t('auditStep2') },
+            { num: 3, label: t('auditStep3') },
+            { num: 4, label: t('auditStep4') }
           ].map(s => (
             <div key={s.num} className="flex items-center space-x-2">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
@@ -113,46 +113,50 @@ export default function KitchenAudit() {
             <div className="flex items-center space-x-2 mb-2">
               <Flame className="text-rose-500" size={20} />
               <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white">
-                Step 1: Identify Items to Cook in the Next 24-48h
+                {t('auditStep1')}
               </h3>
             </div>
             <p className="text-xs text-slate-400 mb-6">
-              Check off items that should be used immediately for dinner or meal prep:
+              {language === 'ta' ? 'அடுத்த 24-48 மணி நேரத்தில் சமைக்க வேண்டிய உணவுகளைத் தேர்ந்தெடுக்கவும்:' : 'Check off items that should be used immediately for dinner or meal prep:'}
             </p>
 
-            <div className="space-y-3 mb-8">
-              {products.map(p => (
-                <div
-                  key={p.id}
-                  onClick={() => toggleCook(p.id)}
-                  className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
-                    cookItems.includes(p.id)
-                      ? 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-400 dark:border-rose-800'
-                      : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-6 h-6 rounded-lg border flex items-center justify-center ${cookItems.includes(p.id) ? 'bg-rose-600 border-rose-600 text-white' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'}`}>
-                      {cookItems.includes(p.id) && <Check size={14} />}
+            {products.length === 0 ? (
+              <p className="text-xs text-slate-400 p-8 text-center bg-slate-50 dark:bg-slate-800 rounded-2xl mb-6">{t('noItemsInInventory')}</p>
+            ) : (
+              <div className="space-y-3 mb-8">
+                {products.map(p => (
+                  <div
+                    key={p.id}
+                    onClick={() => toggleCook(p.id)}
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
+                      cookItems.includes(p.id)
+                        ? 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-400 dark:border-rose-800'
+                        : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-6 h-6 rounded-lg border flex items-center justify-center ${cookItems.includes(p.id) ? 'bg-rose-600 border-rose-600 text-white' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'}`}>
+                        {cookItems.includes(p.id) && <Check size={14} />}
+                      </div>
+                      <div>
+                        <p className="font-heading font-bold text-sm text-slate-900 dark:text-white">{tf(p.product_name)}</p>
+                        <p className="text-xs text-slate-400">Qty: {p.quantity} {p.unit || ''} • {tl(p.location || 'Fridge')}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-heading font-bold text-sm text-slate-900 dark:text-white">{p.product_name}</p>
-                      <p className="text-xs text-slate-400">Qty: {p.quantity} {p.unit || ''} • {p.location || 'Fridge'}</p>
-                    </div>
+                    <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${p.status === 'URGENT' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}>
+                      {p.status === 'URGENT' ? t('statusUrgent') : t('statusSafe')}
+                    </span>
                   </div>
-                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${p.status === 'URGENT' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}>
-                    {p.status}
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             <div className="flex justify-end">
               <button
                 onClick={() => setStep(2)}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-2xl text-xs flex items-center gap-2 shadow-md"
               >
-                <span>Continue to Step 2: Freeze Triage</span>
+                <span>{language === 'ta' ? 'படி 2-க்கு தொடரவும்' : 'Continue to Step 2'}</span>
                 <ArrowRight size={16} />
               </button>
             </div>
@@ -165,11 +169,11 @@ export default function KitchenAudit() {
             <div className="flex items-center space-x-2 mb-2">
               <Snowflake className="text-blue-500" size={20} />
               <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white">
-                Step 2: Move to Freezer to Pause Decay
+                {t('auditStep2')}
               </h3>
             </div>
             <p className="text-xs text-slate-400 mb-6">
-              Freezing pauses expiry for months. Select items you won't finish this week to store in the freezer:
+              {language === 'ta' ? 'கெடுதலைத் தடுத்து நீண்ட காலம் பாதுகாக்க பிரீசருக்கு மாற்ற வேண்டிய உணவுகளைத் தேர்ந்தெடுக்கவும்:' : 'Freezing pauses expiry for months. Select items you want to pause in the freezer:'}
             </p>
 
             <div className="space-y-3 mb-8">
@@ -188,24 +192,24 @@ export default function KitchenAudit() {
                       {freezeItems.includes(p.id) && <Check size={14} />}
                     </div>
                     <div>
-                      <p className="font-heading font-bold text-sm text-slate-900 dark:text-white">{p.product_name}</p>
-                      <p className="text-xs text-slate-400">Current: {p.location || 'Fridge'}</p>
+                      <p className="font-heading font-bold text-sm text-slate-900 dark:text-white">{tf(p.product_name)}</p>
+                      <p className="text-xs text-slate-400">{tl(p.location || 'Fridge')}</p>
                     </div>
                   </div>
                   <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
-                    {freezeItems.includes(p.id) ? '❄️ Move to Freezer' : 'Keep on Shelf'}
+                    {freezeItems.includes(p.id) ? (language === 'ta' ? '❄️ பிரீசருக்கு மாற்று' : '❄️ Move to Freezer') : (language === 'ta' ? 'அப்படியே வை' : 'Keep on Shelf')}
                   </span>
                 </div>
               ))}
             </div>
 
             <div className="flex justify-between">
-              <button onClick={() => setStep(1)} className="px-5 py-3 rounded-2xl text-xs font-bold text-slate-500">Back</button>
+              <button onClick={() => setStep(1)} className="px-5 py-3 rounded-2xl text-xs font-bold text-slate-500">{language === 'ta' ? 'பின்செல்' : 'Back'}</button>
               <button
                 onClick={() => setStep(3)}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-2xl text-xs flex items-center gap-2 shadow-md"
               >
-                <span>Continue to Step 3: Donation Check</span>
+                <span>{language === 'ta' ? 'படி 3-க்கு தொடரவும்' : 'Continue to Step 3'}</span>
                 <ArrowRight size={16} />
               </button>
             </div>
@@ -218,15 +222,15 @@ export default function KitchenAudit() {
             <div className="flex items-center space-x-2 mb-2">
               <Gift className="text-teal-500" size={20} />
               <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white">
-                Step 3: Unopened Staples for Community Pantries
+                {t('auditStep3')}
               </h3>
             </div>
             <p className="text-xs text-slate-400 mb-6">
-              Have extra unopened canned goods, pasta, or staples you don't plan to use? Share with neighbors:
+              {language === 'ta' ? 'நீங்கள் பயன்படுத்தாத திறக்கப்படாத உலர் உணவுகளை அண்டை வீட்டாருடன் பகிர்ந்து கொள்ளுங்கள்:' : 'Unopened canned goods or dry staples to share with community food fridges:'}
             </p>
 
             <div className="space-y-3 mb-8">
-              {products.filter(p => p.category === 'Pantry' || p.category === 'Produce').map(p => (
+              {products.map(p => (
                 <div
                   key={p.id}
                   onClick={() => toggleDonate(p.id)}
@@ -241,25 +245,25 @@ export default function KitchenAudit() {
                       {donateItems.includes(p.id) && <Check size={14} />}
                     </div>
                     <div>
-                      <p className="font-heading font-bold text-sm text-slate-900 dark:text-white">{p.product_name}</p>
+                      <p className="font-heading font-bold text-sm text-slate-900 dark:text-white">{tf(p.product_name)}</p>
                       <p className="text-xs text-slate-400">Qty: {p.quantity} {p.unit || ''}</p>
                     </div>
                   </div>
                   <span className="text-xs font-semibold text-teal-600 dark:text-teal-400">
-                    {donateItems.includes(p.id) ? '❤️ Donate to Food Fridge' : 'Keep at Home'}
+                    {donateItems.includes(p.id) ? (language === 'ta' ? '❤️ தானம் செய்' : '❤️ Donate') : (language === 'ta' ? 'வீட்டில் வை' : 'Keep at Home')}
                   </span>
                 </div>
               ))}
             </div>
 
             <div className="flex justify-between">
-              <button onClick={() => setStep(2)} className="px-5 py-3 rounded-2xl text-xs font-bold text-slate-500">Back</button>
+              <button onClick={() => setStep(2)} className="px-5 py-3 rounded-2xl text-xs font-bold text-slate-500">{language === 'ta' ? 'பின்செல்' : 'Back'}</button>
               <button
                 onClick={handleApplyAudit}
                 className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold px-8 py-3 rounded-2xl text-xs flex items-center gap-2 shadow-xl shadow-emerald-600/30 hover:scale-105 transition-all"
               >
                 <Sparkles size={16} />
-                <span>Complete Audit & Apply Triage 🎉</span>
+                <span>{t('completeAuditBtn')}</span>
               </button>
             </div>
           </div>
@@ -272,42 +276,26 @@ export default function KitchenAudit() {
               🏆
             </div>
             <h2 className="text-2xl font-heading font-extrabold text-slate-900 dark:text-white">
-              Kitchen Freshness Audit Complete!
+              {language === 'ta' ? 'சமையலறை புத்துணர்ச்சி தணிக்கை முடிந்தது!' : 'Kitchen Freshness Audit Complete!'}
             </h2>
             <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
-              Your kitchen freshness health score has risen to <strong className="text-emerald-500">{healthScore}%</strong>. +150 Quest XP earned!
+              {language === 'ta' 
+                ? `உங்கள் சமையலறை ஆரோக்கிய மதிப்பெண் ${healthScore}% ஆக உயர்ந்துள்ளது. +150 XP பெறப்பட்டது!`
+                : `Your freshness health score has risen to ${healthScore}%. +150 Quest XP earned!`}
             </p>
 
-            {/* Results Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-8 text-left max-w-2xl mx-auto">
-              <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900">
-                <span className="text-xs font-bold text-rose-700 dark:text-rose-300 block mb-1">🍳 Cook Today ({cookItems.length})</span>
-                <p className="text-xs text-slate-600 dark:text-slate-300">Targeted for immediate zero-waste dinner.</p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900">
-                <span className="text-xs font-bold text-blue-700 dark:text-blue-300 block mb-1">❄️ Frozen ({freezeItems.length})</span>
-                <p className="text-xs text-slate-600 dark:text-slate-300">Decay paused in freezer shelf.</p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900">
-                <span className="text-xs font-bold text-teal-700 dark:text-teal-300 block mb-1">❤️ Donated ({donateItems.length})</span>
-                <p className="text-xs text-slate-600 dark:text-slate-300">Allocated for community pantry.</p>
-              </div>
-            </div>
-
-            <div className="flex justify-center gap-3">
+            <div className="flex justify-center gap-3 mt-6">
               <Link
                 to="/recipes"
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-2xl text-xs shadow-md"
               >
-                Cook Recipe with Urgent Items
+                {t('cookRecipeWithThese')}
               </Link>
               <Link
                 to="/dashboard"
                 className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold px-6 py-3 rounded-2xl text-xs"
               >
-                Back to Dashboard
+                {t('navDashboard')}
               </Link>
             </div>
           </div>

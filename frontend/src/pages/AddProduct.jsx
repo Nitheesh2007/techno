@@ -1,19 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import api from '../services/api';
-import { storage } from '../services/storage';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { sound } from '../services/sound';
+import { triggerConfetti } from '../services/confetti';
+import { useLanguage } from '../context/LanguageContext';
 import { 
+  PackagePlus, 
   Sparkles, 
-  ArrowLeft, 
-  Barcode, 
   Calendar, 
-  Layers, 
-  MapPin, 
+  Tag, 
   DollarSign, 
-  Check,
-  ScanLine
+  MapPin, 
+  FileText, 
+  Barcode, 
+  ArrowLeft,
+  CheckCircle2
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const CATEGORIES = [
   'Produce',
@@ -23,291 +27,258 @@ const CATEGORIES = [
   'Pantry',
   'Frozen',
   'Beverages',
-  'Snacks'
+  'Snacks',
+  'General'
 ];
 
 const LOCATIONS = [
   'Fridge Top Shelf',
+  'Fridge Middle Shelf',
+  'Fridge Bottom Shelf',
   'Fridge Crisper Drawer',
   'Fridge Door',
-  'Freezer',
-  'Pantry Shelf',
-  'Countertop',
-  'Bread Box'
+  'Freezer Basket',
+  'Deep Freezer',
+  'Bread Box',
+  'Pantry Shelf 1',
+  'Pantry Shelf 2'
 ];
 
 export default function AddProduct() {
   const navigate = useNavigate();
   const location = useLocation();
+  const scannedData = location.state?.scannedData || {};
+  const { t, tf, tc, tl, language } = useLanguage();
 
-  const [formData, setFormData] = useState({
-    product_name: '',
-    category: 'Produce',
-    expiry_date: '',
-    quantity: 1,
-    unit: 'Units',
-    barcode: '',
-    location: 'Fridge Top Shelf',
-    estimated_price: 3.99,
-    notes: ''
-  });
-
-  const [ocrConfidence, setOcrConfidence] = useState(null);
-  const [barcodeQuery, setBarcodeQuery] = useState('');
-
-  // Handle scanned data passed from /scan
-  useEffect(() => {
-    if (location.state) {
-      const { product_name, category, expiry_date, batch_number, ocr_confidence, mrp, barcode } = location.state;
-      setFormData(prev => ({
-        ...prev,
-        product_name: product_name || prev.product_name,
-        category: category || prev.category,
-        expiry_date: expiry_date || prev.expiry_date,
-        barcode: barcode || prev.barcode,
-        notes: batch_number ? `Batch: ${batch_number}` : prev.notes
-      }));
-      if (ocrConfidence !== undefined) {
-        setOcrConfidence(ocr_confidence);
-      }
-    }
-  }, [location.state]);
-
-  const handleQuickDate = (days) => {
+  const getFutureDate = (days) => {
     const d = new Date();
     d.setDate(d.getDate() + days);
-    setFormData(prev => ({ ...prev, expiry_date: d.toISOString().split('T')[0] }));
+    return d.toISOString().split('T')[0];
   };
 
-  const handleBarcodeLookup = async () => {
-    if (!barcodeQuery) return;
-    const res = await api.lookupBarcode(barcodeQuery);
-    if (res.found) {
-      setFormData(prev => ({
-        ...prev,
-        product_name: res.product_name,
-        category: res.category,
-        expiry_date: res.expiry_date,
-        barcode: barcodeQuery
-      }));
-    }
+  const [formData, setFormData] = useState({
+    product_name: scannedData.product_name || '',
+    category: scannedData.category || 'Produce',
+    expiry_date: scannedData.expiry_date || getFutureDate(5),
+    quantity: scannedData.quantity || 1,
+    unit: scannedData.unit || 'pcs',
+    barcode: scannedData.barcode || '',
+    estimated_price: scannedData.estimated_price || 3.99,
+    location: scannedData.location || 'Fridge Crisper Drawer',
+    notes: scannedData.notes || '',
+    ocr_confidence: scannedData.ocr_confidence || 1.0,
+    ownership: 'Shared'
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  const setPresetDays = (days) => {
+    setFormData(prev => ({ ...prev, expiry_date: getFutureDate(days) }));
+    sound.playBeep(850, 0.03);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.product_name || !formData.expiry_date) {
+      alert(language === 'ta' ? 'தயவுசெய்து உணவின் பெயர் மற்றும் காலாவதி தேதியை உள்ளிடவும்.' : 'Please provide food name and expiry date');
+      return;
+    }
+
+    setLoading(true);
     try {
-      storage.addProduct(formData);
+      await api.addProduct(formData);
+      sound.playSuccess();
+      triggerConfetti(2500);
       navigate('/products');
-    } catch (error) {
-      console.error(error);
-      alert('Failed to save product');
+    } catch (err) {
+      console.error(err);
+      alert(language === 'ta' ? 'உணவைச் சேமிப்பதில் பிழை ஏற்பட்டது.' : 'Failed to save product');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <DashboardLayout>
-      <div className="max-w-3xl mx-auto">
-        {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between mb-6">
-          <Link 
+      <div className="max-w-4xl mx-auto">
+        {/* Top Breadcrumb */}
+        <div className="mb-6">
+          <Link
             to="/products"
-            className="flex items-center space-x-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors"
+            className="inline-flex items-center space-x-2 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
           >
             <ArrowLeft size={16} />
-            <span>Back to Inventory</span>
-          </Link>
-          <Link
-            to="/scan"
-            className="flex items-center space-x-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800"
-          >
-            <ScanLine size={14} />
-            <span>Scan from Camera / Photo</span>
+            <span>{language === 'ta' ? '← உணவுகளின் பட்டியலுக்கு திரும்பு' : '← Back to Inventory'}</span>
           </Link>
         </div>
 
-        {/* Scanned Badge Banner if applicable */}
-        {ocrConfidence && (
-          <div className="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Sparkles size={18} className="text-emerald-500" />
-              <span className="text-xs font-bold text-emerald-800 dark:text-emerald-200">
-                Data extracted from OCR Scan ({(ocrConfidence * 100).toFixed(0)}% confidence)
-              </span>
-            </div>
-            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Review & Confirm</span>
+        {/* Header */}
+        <div className="mb-8">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
+            <Sparkles size={13} />
+            <span>{t('addProductTitle')}</span>
           </div>
-        )}
-
-        {/* Main Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <h1 className="text-2xl font-heading font-extrabold text-slate-900 dark:text-white mb-2">
-            Add Food Item
+          <h1 className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+            <PackagePlus className="text-emerald-600" size={32} />
+            {t('addProductTitle')}
           </h1>
-          <p className="text-xs text-slate-400 mb-8">
-            Enter the details of the item or scan barcode to automatically track freshness.
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            {t('addProductSub')}
           </p>
+        </div>
 
-          {/* Barcode Quick Autofill */}
-          <div className="mb-8 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-              <Barcode size={14} /> Quick Barcode Auto-Fill
-            </label>
-            <div className="flex gap-2">
-              <input 
-                type="text" 
-                placeholder="Scan or type barcode (e.g. 8901030383011)"
-                value={barcodeQuery}
-                onChange={e => setBarcodeQuery(e.target.value)}
-                className="flex-1 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/40"
-              />
-              <button
-                type="button"
-                onClick={handleBarcodeLookup}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white dark:bg-slate-700 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-colors"
-              >
-                Autofill
-              </button>
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Product Name */}
+        {/* Form Container */}
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+          {/* Row 1: Name & Category */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                Item Name *
+                {t('productNameLabel')} *
               </label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 required
-                placeholder="e.g. Organic Almond Milk, Whole Wheat Bread"
+                placeholder={t('productNamePlaceholder')}
                 value={formData.product_name}
                 onChange={e => setFormData({ ...formData, product_name: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
-            {/* Category & Storage Location */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                  Category
-                </label>
-                <select 
-                  value={formData.category}
-                  onChange={e => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                >
-                  {CATEGORIES.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                  Storage Location
-                </label>
-                <select 
-                  value={formData.location}
-                  onChange={e => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                >
-                  {LOCATIONS.map(loc => (
-                    <option key={loc} value={loc}>{loc}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Expiry Date with 1-click Quick Presets */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Expiry Date *
-                </label>
-                <div className="flex items-center space-x-1.5">
-                  <span className="text-[11px] text-slate-400">Quick set:</span>
-                  <button type="button" onClick={() => handleQuickDate(2)} className="text-[10px] bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 hover:text-emerald-700 px-2 py-0.5 rounded font-semibold transition-colors">+2 Days</button>
-                  <button type="button" onClick={() => handleQuickDate(5)} className="text-[10px] bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 hover:text-emerald-700 px-2 py-0.5 rounded font-semibold transition-colors">+5 Days</button>
-                  <button type="button" onClick={() => handleQuickDate(14)} className="text-[10px] bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 hover:text-emerald-700 px-2 py-0.5 rounded font-semibold transition-colors">+2 Weeks</button>
-                </div>
-              </div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                {t('categoryLabel')}
+              </label>
+              <select
+                value={formData.category}
+                onChange={e => setFormData({ ...formData, category: e.target.value })}
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                {CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{tc(cat)}</option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-              <input 
-                type="date" 
+          {/* Quick Date Presets */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
+              ⚡ {t('quickPresetsTitle')}
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {[2, 4, 7, 14, 30].map(days => (
+                <button
+                  type="button"
+                  key={days}
+                  onClick={() => setPresetDays(days)}
+                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 text-xs font-bold hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition-all"
+                >
+                  {t('addDaysBtn', { days })}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2: Expiry Date & Quantity */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                {t('expiryDateLabel')} *
+              </label>
+              <input
+                type="date"
                 required
                 value={formData.expiry_date}
                 onChange={e => setFormData({ ...formData, expiry_date: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
-            {/* Quantity & Unit & Estimated Price */}
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                  Quantity
-                </label>
-                <input 
-                  type="number" 
-                  min="1"
-                  value={formData.quantity}
-                  onChange={e => setFormData({ ...formData, quantity: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                  Unit
-                </label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. 500g, Pack, Bottle"
-                  value={formData.unit}
-                  onChange={e => setFormData({ ...formData, unit: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                  Est. Cost ($)
-                </label>
-                <input 
-                  type="number" 
-                  step="0.01"
-                  value={formData.estimated_price}
-                  onChange={e => setFormData({ ...formData, estimated_price: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                />
-              </div>
-            </div>
-
-            {/* Notes */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                Storage Notes (Optional)
+                {t('quantityLabel')}
               </label>
-              <textarea
-                rows={2}
-                placeholder="e.g. Keep sealed after opening, store in dark cupboard"
-                value={formData.notes}
-                onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none text-sm resize-none"
+              <input
+                type="number"
+                min="1"
+                value={formData.quantity}
+                onChange={e => setFormData({ ...formData, quantity: e.target.value })}
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
-            {/* Submit Button */}
-            <button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-3.5 rounded-2xl shadow-md shadow-emerald-600/20 transition-all hover:scale-[1.01] flex items-center justify-center space-x-2"
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                {t('unitLabel')}
+              </label>
+              <input
+                type="text"
+                placeholder={t('unitPlaceholder')}
+                value={formData.unit}
+                onChange={e => setFormData({ ...formData, unit: e.target.value })}
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          </div>
+
+          {/* Row 3: Location & Price */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                {t('locationLabel')}
+              </label>
+              <select
+                value={formData.location}
+                onChange={e => setFormData({ ...formData, location: e.target.value })}
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                {LOCATIONS.map(loc => (
+                  <option key={loc} value={loc}>{tl(loc)}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                {t('estimatedPriceLabel')}
+              </label>
+              <input
+                type="number"
+                step="0.10"
+                value={formData.estimated_price}
+                onChange={e => setFormData({ ...formData, estimated_price: e.target.value })}
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+              {t('notesLabel')}
+            </label>
+            <input
+              type="text"
+              placeholder={t('notesPlaceholder')}
+              value={formData.notes}
+              onChange={e => setFormData({ ...formData, notes: e.target.value })}
+              className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* Submit Action */}
+          <div className="pt-4 flex justify-end">
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3.5 rounded-2xl text-xs sm:text-sm shadow-lg shadow-emerald-600/20 transition-all hover:scale-105 flex items-center space-x-2"
             >
-              <Check size={18} />
-              <span>Save to Inventory</span>
+              <CheckCircle2 size={18} />
+              <span>{loading ? (language === 'ta' ? 'சேமிக்கிறது...' : 'Saving...') : t('saveProductBtn')}</span>
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </DashboardLayout>
   );

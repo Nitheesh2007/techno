@@ -3,6 +3,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import { storage } from '../services/storage';
 import { sound } from '../services/sound';
 import { triggerConfetti } from '../services/confetti';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   Trophy, 
   Flame, 
@@ -17,6 +18,7 @@ import {
 export default function Challenges() {
   const [data, setData] = useState(storage.getChallenges());
   const [toastMsg, setToastMsg] = useState(null);
+  const { t, tf, tc, tl, language } = useLanguage();
 
   const loadData = () => {
     setData(storage.getChallenges());
@@ -31,7 +33,7 @@ export default function Challenges() {
     if (res.success) {
       sound.playSuccess();
       triggerConfetti(3000);
-      setToastMsg(`⚡ Quest completed! Earned +${res.xpEarned} XP!`);
+      setToastMsg(language === 'ta' ? `⚡ சவால் முடிந்தது! +${res.xpEarned} XP பெறப்பட்டது!` : `⚡ Quest completed! Earned +${res.xpEarned} XP!`);
       setTimeout(() => setToastMsg(null), 3000);
       loadData();
     }
@@ -56,14 +58,14 @@ export default function Challenges() {
           <div>
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
               <Sparkles size={13} />
-              <span>Eco-Gamification & Level Progression</span>
+              <span>{t('challengesTitle')}</span>
             </div>
             <h1 className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
               <Trophy className="text-emerald-600" size={32} />
-              Zero-Waste Quests & Achievements
+              {t('challengesTitle')}
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Complete sustainability quests, maintain daily food preservation streaks, and unlock master eco-trophies.
+              {t('challengesSub')}
             </p>
           </div>
         </div>
@@ -76,9 +78,9 @@ export default function Challenges() {
                 {data.level}
               </div>
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-200">Guardian Rank</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-200">{t('levelRank')}</span>
                 <h2 className="text-2xl font-heading font-extrabold mt-0.5">{data.levelTitle}</h2>
-                <p className="text-xs text-emerald-100 mt-0.5">{data.xp} total XP accumulated</p>
+                <p className="text-xs text-emerald-100 mt-0.5">{data.xp} {language === 'ta' ? 'மொத்த XP' : 'total XP accumulated'}</p>
               </div>
             </div>
 
@@ -86,8 +88,8 @@ export default function Challenges() {
               <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-md border border-white/20 px-5 py-3 rounded-2xl">
                 <Flame size={28} className="text-amber-400 fill-amber-400 animate-bounce" />
                 <div>
-                  <p className="text-xl font-heading font-extrabold">{data.currentStreakDays} Days</p>
-                  <p className="text-[11px] text-emerald-100">Zero-Waste Streak 🔥</p>
+                  <p className="text-xl font-heading font-extrabold">{data.currentStreakDays} {language === 'ta' ? 'நாட்கள்' : 'Days'}</p>
+                  <p className="text-[11px] text-emerald-100">{t('streakTitle')}</p>
                 </div>
               </div>
             </div>
@@ -96,7 +98,7 @@ export default function Challenges() {
           {/* Level Progress Bar */}
           <div className="mt-6 pt-6 border-t border-white/20">
             <div className="flex justify-between text-xs font-bold mb-2">
-              <span>Progress to Level {data.level + 1}</span>
+              <span>{language === 'ta' ? `நிலை ${data.level + 1}-க்கான முன்னேற்றம்` : `Progress to Level ${data.level + 1}`}</span>
               <span>{levelProgressPct}% ({data.xp} / {nextLevelXp} XP)</span>
             </div>
             <div className="w-full bg-black/30 rounded-full h-3 overflow-hidden">
@@ -111,7 +113,7 @@ export default function Challenges() {
         {/* Weekly Quests Section */}
         <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white mb-4 flex items-center gap-2">
           <Zap className="text-amber-500" size={22} />
-          Active Weekly Quests
+          {t('activeQuestsTitle')}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -143,19 +145,19 @@ export default function Challenges() {
 
               <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  Progress: {q.progress} / {q.target}
+                  {language === 'ta' ? 'முன்னேற்றம்:' : 'Progress:'} {q.progress} / {q.target}
                 </span>
 
                 {q.completed ? (
                   <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                    <CheckCircle2 size={14} /> Completed ✓
+                    <CheckCircle2 size={14} /> {t('completedBadge')}
                   </span>
                 ) : (
                   <button
                     onClick={() => handleClaim(q.id)}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-xl text-xs shadow-sm transition-all"
                   >
-                    Claim +{q.xpReward} XP
+                    {t('claimXpBtn', { xp: q.xpReward })}
                   </button>
                 )}
               </div>
@@ -166,28 +168,28 @@ export default function Challenges() {
         {/* Trophies Grid */}
         <h3 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white mb-4 flex items-center gap-2">
           <Award className="text-emerald-600" size={22} />
-          Master Eco-Trophies
+          {t('trophiesTitle')}
         </h3>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {data.trophies.map((t) => (
+          {data.trophies.map((tItem) => (
             <div
-              key={t.id}
+              key={tItem.id}
               className={`p-5 rounded-3xl border text-center transition-all ${
-                t.unlocked
+                tItem.unlocked
                   ? 'bg-white dark:bg-slate-900 border-amber-300 dark:border-amber-700/60 shadow-sm'
                   : 'bg-slate-100/60 dark:bg-slate-800/30 border-slate-200 dark:border-slate-800 opacity-50'
               }`}
             >
-              <div className="text-3xl mb-2">{t.icon}</div>
+              <div className="text-3xl mb-2">{tItem.icon}</div>
               <h5 className="font-heading font-bold text-sm text-slate-900 dark:text-white">
-                {t.title}
+                {tItem.title}
               </h5>
-              <p className="text-[11px] text-slate-400 mt-1">{t.desc}</p>
+              <p className="text-[11px] text-slate-400 mt-1">{tItem.desc}</p>
               <span className={`inline-block mt-3 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                t.unlocked ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
+                tItem.unlocked ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
               }`}>
-                {t.unlocked ? 'Unlocked 🏆' : 'Locked 🔒'}
+                {tItem.unlocked ? (language === 'ta' ? 'திறக்கப்பட்டது 🏆' : 'Unlocked 🏆') : (language === 'ta' ? 'பூட்டப்பட்டுள்ளது 🔒' : 'Locked 🔒')}
               </span>
             </div>
           ))}

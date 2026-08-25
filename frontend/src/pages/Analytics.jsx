@@ -1,50 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { storage } from '../services/storage';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   BarChart3, 
   TrendingUp, 
-  DollarSign, 
   Leaf, 
+  DollarSign, 
   Droplet, 
   Sparkles, 
-  ShieldCheck,
+  ArrowUpRight, 
   AlertTriangle,
-  Award
+  Calendar
 } from 'lucide-react';
 import { 
-  ResponsiveContainer, 
   AreaChart, 
   Area, 
   XAxis, 
   YAxis, 
   Tooltip, 
+  ResponsiveContainer, 
   BarChart, 
-  Bar, 
-  CartesianGrid 
+  Bar 
 } from 'recharts';
 
 export default function Analytics() {
-  const stats = storage.getDashboardStats();
-  const savings = storage.getSavingsStats();
-  const products = storage.getProducts();
+  const [savingsStats, setSavingsStats] = useState(storage.getSavingsStats());
+  const [products, setProducts] = useState([]);
+  const { t, tf, tc, tl, language } = useLanguage();
 
-  const monthlyData = savings.history || [
-    { month: 'Apr', saved: 95, wasted: 18 },
-    { month: 'May', saved: 120, wasted: 12 },
-    { month: 'Jun', saved: 135, wasted: 10 },
-    { month: 'Jul', saved: 142, wasted: 8 },
-    { month: 'Aug', saved: 148.75, wasted: 6 }
-  ];
+  useEffect(() => {
+    setSavingsStats(storage.getSavingsStats());
+    setProducts(storage.getProducts());
+  }, []);
 
-  // Category Risk Analysis
-  const categoryRisk = [
-    { category: 'Produce', risk: 'High', avgShelfLife: '3-5 days', advice: 'Store in crisper with humidity control' },
-    { category: 'Dairy & Eggs', risk: 'Medium', avgShelfLife: '7-14 days', advice: 'Keep on middle shelf, avoid fridge door' },
-    { category: 'Bakery', risk: 'High', avgShelfLife: '3-4 days', advice: 'Freeze slices or use bread box' },
-    { category: 'Meat & Poultry', risk: 'Critical', avgShelfLife: '1-2 days', advice: 'Cook immediately or deep freeze' },
-    { category: 'Pantry', risk: 'Low', avgShelfLife: '6-12 months', advice: 'Keep dry, airtight, and away from sunlight' }
-  ];
+  const totalEstimatedValue = products.reduce((sum, p) => sum + (p.estimated_price || 3.5) * (p.quantity || 1), 0);
+  const urgentValue = products.filter(p => p.status === 'URGENT').reduce((sum, p) => sum + (p.estimated_price || 3.5) * (p.quantity || 1), 0);
 
   return (
     <DashboardLayout>
@@ -53,125 +44,131 @@ export default function Analytics() {
         <div className="mb-8">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
             <Sparkles size={13} />
-            <span>AI Waste Prediction & Impact Intelligence</span>
+            <span>{t('analyticsTitle')}</span>
           </div>
           <h1 className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             <BarChart3 className="text-emerald-600" size={32} />
-            Sustainability & Waste Analytics
+            {t('analyticsTitle')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Track your financial savings, carbon emission offsets, and predictive food risk metrics.
+            {t('analyticsSub')}
           </p>
         </div>
 
-        {/* Impact Highlight Cards */}
+        {/* 4 Top KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3">
-              <DollarSign size={22} />
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('moneySaved')}</span>
+              <div className="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+                <DollarSign size={18} />
+              </div>
             </div>
-            <p className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white">${stats.moneySaved}</p>
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">Total Grocery Money Saved</p>
-            <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">+18% vs last month</p>
-          </div>
-
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="w-10 h-10 rounded-2xl bg-teal-100 dark:bg-teal-950 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-3">
-              <Leaf size={22} />
-            </div>
-            <p className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white">{stats.co2PreventedKg} kg</p>
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">CO₂ Emissions Prevented</p>
-            <p className="text-[11px] text-teal-600 font-semibold mt-0.5">Equivalent to planting 3 trees 🌲</p>
-          </div>
-
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="w-10 h-10 rounded-2xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
-              <Droplet size={22} />
-            </div>
-            <p className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white">{stats.foodItemsSaved * 420} L</p>
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">Virtual Water Saved</p>
-            <p className="text-[11px] text-blue-600 font-semibold mt-0.5">From agriculture footprint</p>
-          </div>
-
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
-              <Award size={22} />
-            </div>
-            <p className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white">{stats.wasteScore}%</p>
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">Zero-Waste Score</p>
-            <p className="text-[11px] text-amber-600 font-semibold mt-0.5">Top 5% Eco Guardian</p>
-          </div>
-        </div>
-
-        {/* Savings Trend Chart */}
-        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white">
-                Monthly Savings & Waste Reduction Trend ($)
-              </h3>
-              <p className="text-xs text-slate-400">Comparing food saved vs food discarded</p>
-            </div>
-            <span className="text-xs font-semibold px-3 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 rounded-full">
-              Steady Improvement 📈
+            <p className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white">
+              ${savingsStats.moneySaved}
+            </p>
+            <span className="text-xs text-emerald-600 font-semibold mt-1 flex items-center gap-1">
+              <TrendingUp size={13} /> +18.4% {language === 'ta' ? 'கடந்த மாதம்' : 'vs last month'}
             </span>
           </div>
 
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
-                <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
-                <YAxis stroke="#94a3b8" fontSize={12} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: 'none', color: '#fff' }}
-                />
-                <Area type="monotone" dataKey="saved" stroke="#10b981" fill="#10b981" fillOpacity={0.2} name="Money Saved ($)" />
-                <Area type="monotone" dataKey="wasted" stroke="#ef4444" fill="#ef4444" fillOpacity={0.1} name="Wasted Items ($)" />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{language === 'ta' ? 'தடுக்கப்பட்ட CO₂' : 'CO₂ Offset'}</span>
+              <div className="p-2.5 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400">
+                <Leaf size={18} />
+              </div>
+            </div>
+            <p className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white">
+              {savingsStats.co2PreventedKg} kg
+            </p>
+            <span className="text-xs text-slate-400 mt-1 block">{language === 'ta' ? 'பசுமை இல்ல வாயுக்கள் குறைக்கப்பட்டது' : 'Greenhouse gases avoided'}</span>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{language === 'ta' ? 'சேமிக்கப்பட்ட நீர்' : 'Virtual Water Saved'}</span>
+              <div className="p-2.5 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                <Droplet size={18} />
+              </div>
+            </div>
+            <p className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white">
+              {(savingsStats.foodItemsSaved * 180).toLocaleString()} L
+            </p>
+            <span className="text-xs text-slate-400 mt-1 block">{language === 'ta' ? 'விவசாய நீர் சேமிக்கப்பட்டது' : 'Agricultural water saved'}</span>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-rose-500 uppercase tracking-wider">{language === 'ta' ? 'அபாயத்தில் உள்ள மதிப்பு' : 'Value at Risk'}</span>
+              <div className="p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-500">
+                <AlertTriangle size={18} />
+              </div>
+            </div>
+            <p className="text-3xl font-heading font-extrabold text-rose-500">
+              ${urgentValue.toFixed(2)}
+            </p>
+            <span className="text-xs text-slate-400 mt-1 block">{products.filter(p => p.status === 'URGENT').length} {language === 'ta' ? 'அவசர உணவுகள்' : 'urgent items'}</span>
           </div>
         </div>
 
-        {/* Predictive Category Risk Table */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white mb-2">
-            Predictive Food Waste Risk Matrix
-          </h3>
-          <p className="text-xs text-slate-400 mb-6">
-            AI-modeled decay rates and actionable storage advice by category
-          </p>
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+          {/* Monthly Savings Trend Chart (7 cols) */}
+          <div className="lg:col-span-7 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <h3 className="font-heading font-bold text-base text-slate-900 dark:text-white mb-1">
+              {t('monthlySavingsTrend')}
+            </h3>
+            <p className="text-xs text-slate-400 mb-6">{language === 'ta' ? 'உணவு சேமிப்பு மற்றும் கழிவு ஒப்பீடு' : 'Comparing prevented waste vs lost value over past 5 months'}</p>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase tracking-wider font-bold">
-                  <th className="py-3 px-4">Category</th>
-                  <th className="py-3 px-4">Waste Risk Level</th>
-                  <th className="py-3 px-4">Avg. Shelf Life</th>
-                  <th className="py-3 px-4">AI Storage Recommendation</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {categoryRisk.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">{item.category}</td>
-                    <td className="py-3.5 px-4">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                        item.risk === 'Critical' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300' :
-                        item.risk === 'High' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' :
-                        item.risk === 'Medium' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' :
-                        'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-                      }`}>
-                        {item.risk}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300 font-medium">{item.avgShelfLife}</td>
-                    <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400">{item.advice}</td>
-                  </tr>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={savingsStats.history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="savedColor" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="wastedColor" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: 'none', color: '#fff' }} />
+                  <Area type="monotone" dataKey="saved" name={t('moneySavedArea')} stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#savedColor)" />
+                  <Area type="monotone" dataKey="wasted" name={t('wastedArea')} stroke="#f43f5e" strokeWidth={2} fillOpacity={1} fill="url(#wastedColor)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Predictive Decay Risk Matrix (5 cols) */}
+          <div className="lg:col-span-5 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+            <div>
+              <h3 className="font-heading font-bold text-base text-slate-900 dark:text-white mb-1">
+                {t('decayRiskMatrix')}
+              </h3>
+              <p className="text-xs text-slate-400 mb-4">{language === 'ta' ? 'அடுக்கு வாழ்க்கை பாதுகாப்பு வழிமுறைகள்' : 'Category decay modeling & preservation safety rules'}</p>
+
+              <div className="space-y-3">
+                {[
+                  { cat: 'Produce', risk: 'High Decay Risk', rate: '3-5 Days', advice: 'Store in humidity crisper drawer.' },
+                  { cat: 'Dairy & Eggs', risk: 'Medium Risk', rate: '7-14 Days', advice: 'Keep on middle shelf, avoid door fluctuation.' },
+                  { cat: 'Meat & Poultry', risk: 'Critical Risk', rate: '1-3 Days', advice: 'Freeze immediately if not cooking today.' },
+                  { cat: 'Pantry Grains', risk: 'Low Risk', rate: '180+ Days', advice: 'Airtight container in cool cupboard.' }
+                ].map(r => (
+                  <div key={r.cat} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-heading font-bold text-slate-900 dark:text-white">{tc(r.cat)}</span>
+                      <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-full">{r.rate}</span>
+                    </div>
+                    <p className="text-slate-400 text-[11px]">{r.advice}</p>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>

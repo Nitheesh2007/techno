@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { storage } from '../services/storage';
 import { sound } from '../services/sound';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   Tag, 
   Sparkles, 
@@ -80,6 +81,7 @@ const DEALS = [
 export default function DealsRadar() {
   const [activeStore, setActiveStore] = useState('ALL');
   const [toastMsg, setToastMsg] = useState(null);
+  const { t, tf, tc, language } = useLanguage();
 
   const handleAddDealToCart = (deal) => {
     storage.addShoppingItem({
@@ -91,7 +93,9 @@ export default function DealsRadar() {
       addedFrom: 'deals'
     });
     sound.playSuccess();
-    setToastMsg(`🛒 Added "${deal.item}" at $${deal.dealPrice.toFixed(2)} (${deal.discountPct}% off) to your Shopping List!`);
+    setToastMsg(language === 'ta'
+      ? `🛒 "${deal.item}" $${deal.dealPrice.toFixed(2)} (${deal.discountPct}% தள்ளுபடி) விலையில் ஷாப்பிங் பட்டியலில் சேர்க்கப்பட்டது!`
+      : `🛒 Added "${deal.item}" at $${deal.dealPrice.toFixed(2)} (${deal.discountPct}% off) to your Shopping List!`);
     setTimeout(() => setToastMsg(null), 3000);
   };
 
@@ -112,14 +116,14 @@ export default function DealsRadar() {
           <div>
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
               <Sparkles size={13} />
-              <span>Surplus & Markdown Radar</span>
+              <span>{t('dealsTitle')}</span>
             </div>
             <h1 className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
               <Tag className="text-emerald-600" size={32} />
-              Grocery Deals & Markdown Radar
+              {t('dealsTitle')}
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Find discounted near-expiry & surplus groceries at nearby markets (30%-50% off) and add straight to your cart.
+              {t('dealsSub')}
             </p>
           </div>
         </div>
@@ -136,7 +140,7 @@ export default function DealsRadar() {
                   : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
-              {store === 'ALL' ? '🏬 All Nearby Stores' : store}
+              {store === 'ALL' ? t('allStoresTab') : store}
             </button>
           ))}
         </div>
@@ -159,10 +163,10 @@ export default function DealsRadar() {
                 </div>
 
                 <h3 className="font-heading font-bold text-slate-900 dark:text-white text-base">
-                  {deal.item}
+                  {tf(deal.item)}
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  Tag: {deal.type} • Ideal for quick use
+                  {tc(deal.category)} • {deal.type}
                 </p>
 
                 <div className="flex items-baseline space-x-2 my-4">
@@ -173,7 +177,7 @@ export default function DealsRadar() {
                     ${deal.originalPrice.toFixed(2)}
                   </span>
                   <span className="text-xs font-semibold text-emerald-600">
-                    (Save ${(deal.originalPrice - deal.dealPrice).toFixed(2)})
+                    ({language === 'ta' ? 'சேமிப்பு' : 'Save'} ${(deal.originalPrice - deal.dealPrice).toFixed(2)})
                   </span>
                 </div>
               </div>
@@ -183,7 +187,7 @@ export default function DealsRadar() {
                 className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-emerald-600 dark:hover:bg-emerald-500 dark:hover:text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-sm transition-all flex items-center justify-center gap-1.5"
               >
                 <ShoppingCart size={14} />
-                <span>Add to Shopping List</span>
+                <span>{t('addToShoppingListBtn')}</span>
               </button>
             </div>
           ))}

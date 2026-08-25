@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { storage } from '../services/storage';
 import { sound } from '../services/sound';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   Search, 
   LayoutDashboard, 
@@ -32,6 +33,7 @@ export default function CommandPalette({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState([]);
   const navigate = useNavigate();
+  const { t, tf, tc, tl, language } = useLanguage();
 
   useEffect(() => {
     if (isOpen) {
@@ -53,26 +55,26 @@ export default function CommandPalette({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const NAV_ITEMS = [
-    { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, category: 'Navigation' },
-    { title: 'Food Inventory', path: '/products', icon: Package, category: 'Inventory' },
-    { title: 'Add New Food Item', path: '/products/add', icon: PlusCircle, category: 'Action' },
-    { title: 'Smart OCR Scanner', path: '/scan', icon: ScanLine, category: 'Action' },
-    { title: 'AI Recipe Chef', path: '/recipes', icon: ChefHat, category: 'AI Tools' },
-    { title: 'Zero-Waste Meal Planner', path: '/meal-plan', icon: CalendarDays, category: 'Planning' },
-    { title: 'Smart Shopping List', path: '/shopping-list', icon: ShoppingCart, category: 'Planning' },
-    { title: 'Fridge 2D Storage Map', path: '/fridge-map', icon: Layers, category: 'Storage' },
-    { title: 'Nutritional Horizon & Macros', path: '/nutrition', icon: HeartPulse, category: 'Health' },
-    { title: '3-Min Kitchen Freshness Audit', path: '/audit', icon: ClipboardCheck, category: 'Tools' },
-    { title: 'Food Preservation Encyclopedia', path: '/preservation-guide', icon: BookOpen, category: 'Knowledge' },
-    { title: 'Scrap Repurposing & Compost Lab', path: '/compost', icon: Recycle, category: 'Sustainability' },
-    { title: 'Grocery Deals Radar & Markdowns', path: '/deals-radar', icon: Tag, category: 'Savings' },
-    { title: 'Eco Quests & XP Streaks', path: '/challenges', icon: Trophy, category: 'Gamification' },
-    { title: 'Household & Roommate Kitchen', path: '/household', icon: Home, category: 'Household' },
-    { title: 'Community Food Sharing & Donation', path: '/community', icon: Users, category: 'Community' },
-    { title: 'Printable QR & Barcode Labels', path: '/barcode-hub', icon: Command, category: 'Tools' },
-    { title: 'Sustainability Analytics', path: '/analytics', icon: BarChart3, category: 'Analytics' },
-    { title: 'Alerts & Notifications', path: '/notifications', icon: Bell, category: 'Alerts' },
-    { title: 'Settings & Preferences', path: '/settings', icon: Settings, category: 'System' }
+    { title: t('navDashboard'), path: '/dashboard', icon: LayoutDashboard, category: language === 'ta' ? 'வழிசெலுத்தல்' : 'Navigation' },
+    { title: t('navProducts'), path: '/products', icon: Package, category: language === 'ta' ? 'இருப்பு' : 'Inventory' },
+    { title: t('navAddProduct'), path: '/products/add', icon: PlusCircle, category: language === 'ta' ? 'செயல்' : 'Action' },
+    { title: t('navScan'), path: '/scan', icon: ScanLine, category: language === 'ta' ? 'செயல்' : 'Action' },
+    { title: t('navRecipes'), path: '/recipes', icon: ChefHat, category: language === 'ta' ? 'AI கருவிகள்' : 'AI Tools' },
+    { title: t('navMealPlan'), path: '/meal-plan', icon: CalendarDays, category: language === 'ta' ? 'திட்டம்' : 'Planning' },
+    { title: t('navShoppingList'), path: '/shopping-list', icon: ShoppingCart, category: language === 'ta' ? 'திட்டம்' : 'Planning' },
+    { title: t('navFridgeMap'), path: '/fridge-map', icon: Layers, category: language === 'ta' ? 'சேமிப்பு' : 'Storage' },
+    { title: t('navNutrition'), path: '/nutrition', icon: HeartPulse, category: language === 'ta' ? 'ஆரோக்கியம்' : 'Health' },
+    { title: t('navAudit'), path: '/audit', icon: ClipboardCheck, category: language === 'ta' ? 'கருவிகள்' : 'Tools' },
+    { title: t('navPreservation'), path: '/preservation-guide', icon: BookOpen, category: language === 'ta' ? 'அறிவுக்களஞ்சியம்' : 'Knowledge' },
+    { title: t('navCompost'), path: '/compost', icon: Recycle, category: language === 'ta' ? 'மறுபயன்பாடு' : 'Sustainability' },
+    { title: t('navDeals'), path: '/deals-radar', icon: Tag, category: language === 'ta' ? 'சேமிப்பு' : 'Savings' },
+    { title: t('navChallenges'), path: '/challenges', icon: Trophy, category: language === 'ta' ? 'சவால்கள்' : 'Gamification' },
+    { title: t('navHousehold'), path: '/household', icon: Home, category: language === 'ta' ? 'வீடு' : 'Household' },
+    { title: t('navCommunity'), path: '/community', icon: Users, category: language === 'ta' ? 'சமூகம்' : 'Community' },
+    { title: t('navBarcode'), path: '/barcode-hub', icon: Command, category: language === 'ta' ? 'கருவிகள்' : 'Tools' },
+    { title: t('navAnalytics'), path: '/analytics', icon: BarChart3, category: language === 'ta' ? 'பகுப்பாய்வு' : 'Analytics' },
+    { title: t('navAlerts'), path: '/notifications', icon: Bell, category: language === 'ta' ? 'எச்சரிக்கைகள்' : 'Alerts' },
+    { title: t('navSettings'), path: '/settings', icon: Settings, category: language === 'ta' ? 'அமைப்புகள்' : 'System' }
   ];
 
   const filteredNav = NAV_ITEMS.filter(item => 
@@ -100,13 +102,13 @@ export default function CommandPalette({ isOpen, onClose }) {
           <input
             type="text"
             autoFocus
-            placeholder="Type a command, search food, or jump to page..."
+            placeholder={language === 'ta' ? 'ஒரு கட்டளையைத் தட்டச்சு செய்யவும் அல்லது உணவைத் தேடவும்...' : 'Type a command, search food, or jump to page...'}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="flex-1 bg-transparent text-slate-900 dark:text-white outline-none text-sm sm:text-base placeholder-slate-400"
           />
           <span className="text-[10px] font-mono uppercase bg-slate-100 dark:bg-slate-800 text-slate-400 px-2 py-1 rounded">
-            ESC to close
+            ESC {language === 'ta' ? 'மூடு' : 'close'}
           </span>
         </div>
 
@@ -116,7 +118,7 @@ export default function CommandPalette({ isOpen, onClose }) {
           {query.trim() && filteredProducts.length > 0 && (
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 block mb-1">
-                Matching Fridge Inventory
+                {language === 'ta' ? 'பொருந்திய குளிர்சாதனப் பொருட்கள்' : 'Matching Fridge Inventory'}
               </span>
               <div className="space-y-1">
                 {filteredProducts.map(p => (
@@ -127,10 +129,10 @@ export default function CommandPalette({ isOpen, onClose }) {
                   >
                     <div className="flex items-center space-x-2.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <span className="font-bold text-slate-900 dark:text-white">{p.product_name}</span>
-                      <span className="text-slate-400 font-mono">({p.location || 'Fridge'})</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{tf(p.product_name)}</span>
+                      <span className="text-slate-400 font-mono">({tl(p.location || 'Fridge')})</span>
                     </div>
-                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">{p.status}</span>
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">{p.status === 'SAFE' ? t('statusSafe') : t('statusUrgent')}</span>
                   </div>
                 ))}
               </div>
@@ -140,7 +142,7 @@ export default function CommandPalette({ isOpen, onClose }) {
           {/* Navigation Items */}
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 block mb-1">
-              All 20 Modules & Quick Actions
+              {language === 'ta' ? 'அனைத்து 20 தொகுதிகள் & குறுக்குவழிகள்' : 'All 20 Modules & Quick Actions'}
             </span>
             <div className="space-y-1">
               {filteredNav.map((item, idx) => {

@@ -3,22 +3,19 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import { storage } from '../services/storage';
 import { sound } from '../services/sound';
 import { triggerConfetti } from '../services/confetti';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   ShoppingCart, 
   Plus, 
-  Trash2, 
   Check, 
+  Trash2, 
   ArrowRight, 
   Sparkles, 
-  DollarSign, 
   Share2, 
-  Printer, 
-  RotateCcw,
-  CheckCircle2,
-  PackagePlus,
-  Layers
+  CheckCircle2, 
+  RefreshCw,
+  DollarSign
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 const CATEGORIES = [
   'Produce',
@@ -28,7 +25,8 @@ const CATEGORIES = [
   'Pantry',
   'Frozen',
   'Beverages',
-  'Snacks'
+  'Snacks',
+  'General'
 ];
 
 export default function ShoppingList() {
@@ -36,9 +34,8 @@ export default function ShoppingList() {
   const [newItemName, setNewItemName] = useState('');
   const [newItemCategory, setNewItemCategory] = useState('Produce');
   const [newItemQty, setNewItemQty] = useState(1);
-  const [newItemUnit, setNewItemUnit] = useState('pcs');
-  const [newItemPrice, setNewItemPrice] = useState(3.50);
   const [toastMsg, setToastMsg] = useState(null);
+  const { t, tf, tc, language } = useLanguage();
 
   const loadList = () => {
     setItems(storage.getShoppingList());
@@ -56,54 +53,57 @@ export default function ShoppingList() {
       name: newItemName.trim(),
       category: newItemCategory,
       quantity: newItemQty,
-      unit: newItemUnit,
-      estimatedPrice: newItemPrice,
+      unit: 'pcs',
+      estimatedPrice: 2.99,
       addedFrom: 'manual'
     });
 
     setNewItemName('');
-    sound.playBeep(980, 0.05);
+    sound.playBeep(920, 0.04);
     loadList();
   };
 
   const handleToggle = (id) => {
     storage.toggleShoppingItem(id);
-    sound.playClick?.() || sound.playBeep(600, 0.04);
+    sound.playClick?.() || sound.playBeep(800, 0.03);
     loadList();
   };
 
   const handleDelete = (id) => {
     storage.deleteShoppingItem(id);
+    sound.playBeep(450, 0.04);
     loadList();
   };
 
-  const handleTransferToInventory = () => {
-    const res = storage.transferCheckedToInventory();
-    if (res.transferred > 0) {
+  const handleTransferToFridge = () => {
+    const result = storage.transferCheckedToInventory();
+    if (result.transferred > 0) {
       sound.playSuccess();
-      triggerConfetti(2500);
-      setToastMsg(`🎉 Transferred ${res.transferred} bought items to your Food Inventory with auto-calculated expiry dates!`);
-      setTimeout(() => setToastMsg(null), 4500);
+      triggerConfetti(3000);
+      setToastMsg(language === 'ta'
+        ? `🎉 ${result.transferred} வாங்கிய உணவுகள் தானாக உங்கள் குளிர்சாதனப் பெட்டியில் சேர்க்கப்பட்டன!`
+        : `🎉 Transferred ${result.transferred} bought items into your Kitchen Inventory with calculated shelf-life!`);
+      setTimeout(() => setToastMsg(null), 4000);
       loadList();
     } else {
-      alert('Please check off the items you bought before transferring to inventory.');
+      alert(language === 'ta' ? 'முதலில் நீங்கள் வாங்கிய பொருட்களை சரிபார்க்கவும் (Check items).' : 'Please check/tick the items you purchased first!');
     }
   };
 
-  const handleCopyFormatted = () => {
-    const text = items.map(i => `${i.checked ? '✅' : '⬜'} ${i.name} (${i.quantity} ${i.unit}) - $${i.estimatedPrice.toFixed(2)}`).join('\n');
-    navigator.clipboard.writeText(`🛒 Food Guardian Shopping List:\n\n${text}`);
-    setToastMsg('📋 Shopping list copied to clipboard!');
-    setTimeout(() => setToastMsg(null), 2500);
+  const handleShareWhatsApp = () => {
+    const unbought = items.filter(i => !i.checked);
+    const text = language === 'ta'
+      ? `🛒 *உணவு பாதுகாவலன் - ஷாப்பிங் பட்டியல்:*\n` + unbought.map(i => `• ${i.name} (${i.quantity} ${i.unit || ''})`).join('\n')
+      : `🛒 *Food Guardian AI - Shopping List:*\n` + unbought.map(i => `• ${i.name} (${i.quantity} ${i.unit || ''})`).join('\n');
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  const totalEstimated = items.reduce((acc, i) => acc + (i.estimatedPrice || 0) * (i.quantity || 1), 0);
-  const checkedEstimated = items.filter(i => i.checked).reduce((acc, i) => acc + (i.estimatedPrice || 0) * (i.quantity || 1), 0);
-  const checkedCount = items.filter(i => i.checked).length;
+  const totalBudget = items.reduce((sum, i) => sum + (i.estimatedPrice || 3) * (i.quantity || 1), 0);
+  const checkedBudget = items.filter(i => i.checked).reduce((sum, i) => sum + (i.estimatedPrice || 3) * (i.quantity || 1), 0);
 
   return (
     <DashboardLayout>
-      {/* Toast */}
+      {/* Toast Notification */}
       {toastMsg && (
         <div className="fixed top-20 right-8 z-50 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center space-x-2 animate-in fade-in slide-in-from-top-4 duration-200">
           <CheckCircle2 size={20} className="text-emerald-200" />
@@ -113,186 +113,150 @@ export default function ShoppingList() {
 
       <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
               <Sparkles size={13} />
-              <span>Smart Restock & Grocery Budgeting</span>
+              <span>{t('autoRestockBadge')}</span>
             </div>
             <h1 className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
               <ShoppingCart className="text-emerald-600" size={32} />
-              Smart Shopping List
+              {t('shoppingTitle')}
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Restock ingredients automatically as you cook, budget groceries, and transfer bought items to your fridge in 1 click.
+              {t('shoppingSub')}
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Quick Sharing & Fridge Transfer */}
+          <div className="flex items-center space-x-3">
             <button
-              onClick={handleCopyFormatted}
-              className="flex items-center space-x-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 rounded-xl font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
-              title="Copy to Clipboard"
+              onClick={handleShareWhatsApp}
+              className="flex items-center space-x-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 rounded-xl font-bold text-xs hover:bg-slate-50 transition-all shadow-sm"
             >
-              <Share2 size={15} />
-              <span>Share List</span>
+              <Share2 size={15} className="text-emerald-500" />
+              <span>{language === 'ta' ? 'பகிர்' : 'Share List'}</span>
             </button>
+
             <button
-              onClick={handleTransferToInventory}
-              disabled={checkedCount === 0}
-              className="flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-40 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md shadow-emerald-600/20 transition-all hover:scale-105"
+              onClick={handleTransferToFridge}
+              className="flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-md shadow-emerald-600/20 transition-all hover:scale-105"
             >
-              <PackagePlus size={16} />
-              <span>Transfer Bought ({checkedCount}) to Fridge</span>
+              <CheckCircle2 size={16} />
+              <span>{t('transferBoughtBtn')}</span>
             </button>
           </div>
         </div>
 
-        {/* Budget Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Est. Budget</p>
-            <p className="text-2xl font-heading font-extrabold text-slate-900 dark:text-white mt-1">
-              ${totalEstimated.toFixed(2)}
-            </p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{items.length} items on list</p>
-          </div>
-
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">In Cart (Checked)</p>
-            <p className="text-2xl font-heading font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
-              ${checkedEstimated.toFixed(2)}
-            </p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{checkedCount} items bought</p>
-          </div>
-
-          <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800/80 dark:to-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 shadow-inner flex items-center justify-between">
+        {/* Budget Tally Bar */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center space-x-6">
             <div>
-              <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Auto-Restock AI</p>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                Items you eat are auto-added here so you never run dry.
-              </p>
+              <span className="text-xs text-slate-400 font-bold uppercase">{t('cartTotal')}</span>
+              <p className="text-2xl font-heading font-extrabold text-slate-900 dark:text-white">${totalBudget.toFixed(2)}</p>
             </div>
-            <Sparkles size={24} className="text-emerald-500 flex-shrink-0" />
+            <div className="w-px h-8 bg-slate-200 dark:bg-slate-800" />
+            <div>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold uppercase">{language === 'ta' ? 'கார்ட்டில் உள்ளவை' : 'In Cart (Checked)'}</span>
+              <p className="text-2xl font-heading font-extrabold text-emerald-600 dark:text-emerald-400">${checkedBudget.toFixed(2)}</p>
+            </div>
           </div>
+
+          <span className="text-xs text-slate-400">
+            {items.filter(i => !i.checked).length} {t('unboughtItems')}
+          </span>
         </div>
 
-        {/* Quick Add Bar */}
-        <form onSubmit={handleAddItem} className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mb-8 flex flex-col md:flex-row items-center gap-3">
+        {/* Add Item Form */}
+        <form onSubmit={handleAddItem} className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm mb-6 flex flex-col sm:flex-row items-center gap-3">
           <input
             type="text"
-            placeholder="Add item (e.g. Oat Milk, Greek Yogurt, Avocados)..."
+            placeholder={t('itemNamePlaceholder')}
             value={newItemName}
             onChange={(e) => setNewItemName(e.target.value)}
-            className="flex-1 w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+            className="flex-1 px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
           />
 
           <select
             value={newItemCategory}
             onChange={(e) => setNewItemCategory(e.target.value)}
-            className="w-full md:w-44 px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-700 dark:text-slate-300 outline-none"
+            className="px-3 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs outline-none"
           >
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            {CATEGORIES.map(c => <option key={c} value={c}>{tc(c)}</option>)}
           </select>
 
-          <div className="flex gap-2 w-full md:w-auto">
-            <input
-              type="number"
-              min="1"
-              value={newItemQty}
-              onChange={(e) => setNewItemQty(e.target.value)}
-              className="w-20 px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white outline-none"
-              title="Quantity"
-            />
-            <input
-              type="number"
-              step="0.1"
-              value={newItemPrice}
-              onChange={(e) => setNewItemPrice(e.target.value)}
-              className="w-24 px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white outline-none"
-              title="Est Price ($)"
-            />
-            <button
-              type="submit"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md transition-all flex items-center gap-1 whitespace-nowrap"
-            >
-              <Plus size={16} />
-              <span>Add</span>
-            </button>
-          </div>
+          <input
+            type="number"
+            min="1"
+            value={newItemQty}
+            onChange={(e) => setNewItemQty(Number(e.target.value))}
+            className="w-16 px-3 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs outline-none"
+          />
+
+          <button
+            type="submit"
+            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-2xl text-xs shadow-sm transition-all flex items-center justify-center space-x-1.5"
+          >
+            <Plus size={16} />
+            <span>{t('addItemToShop')}</span>
+          </button>
         </form>
 
         {/* Shopping Items List */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <h3 className="font-heading font-bold text-base text-slate-900 dark:text-white">
-              Grocery Items ({items.length})
-            </h3>
-            {checkedCount > 0 && (
-              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                {checkedCount} ready for fridge transfer
-              </span>
-            )}
-          </div>
-
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {items.length === 0 ? (
-              <div className="p-12 text-center text-slate-400">
-                <ShoppingCart size={36} className="mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-                <p className="font-bold text-sm">Your shopping list is clear</p>
-                <p className="text-xs mt-1">Add items above or let auto-restock populate it as you cook.</p>
-              </div>
-            ) : (
-              items.map((item) => (
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden p-6">
+          {items.length === 0 ? (
+            <div className="text-center py-12">
+              <ShoppingCart className="mx-auto text-slate-300 dark:text-slate-700 mb-3" size={44} />
+              <p className="text-xs text-slate-400 max-w-sm mx-auto">{t('noShopItems')}</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {items.map((item) => (
                 <div
                   key={item.id}
-                  onClick={() => handleToggle(item.id)}
-                  className={`p-4 flex items-center justify-between cursor-pointer transition-colors ${
+                  className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${
                     item.checked
-                      ? 'bg-emerald-50/40 dark:bg-emerald-950/20 text-slate-400 dark:text-slate-500'
-                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/40 text-slate-800 dark:text-slate-200'
+                      ? 'bg-slate-50/60 dark:bg-slate-800/30 border-slate-200 dark:border-slate-800 opacity-60'
+                      : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 shadow-sm'
                   }`}
                 >
                   <div className="flex items-center space-x-3.5">
-                    <div className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-all ${
-                      item.checked
-                        ? 'bg-emerald-600 border-emerald-600 text-white'
-                        : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'
-                    }`}>
+                    <button
+                      onClick={() => handleToggle(item.id)}
+                      className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-all ${
+                        item.checked
+                          ? 'bg-emerald-600 border-emerald-600 text-white'
+                          : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:border-emerald-500'
+                      }`}
+                    >
                       {item.checked && <Check size={14} />}
-                    </div>
+                    </button>
 
                     <div>
-                      <p className={`font-heading font-bold text-sm ${item.checked ? 'line-through' : ''}`}>
-                        {item.name}
+                      <p className={`font-heading font-bold text-sm ${item.checked ? 'line-through text-slate-400' : 'text-slate-900 dark:text-white'}`}>
+                        {tf(item.name)}
                       </p>
-                      <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
-                        <span>Qty: {item.quantity} {item.unit}</span>
-                        <span>•</span>
-                        <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.2 rounded text-[10px] font-semibold">{item.category}</span>
-                        {item.addedFrom === 'restock' && (
-                          <span className="text-emerald-600 text-[10px] font-bold">✨ Auto-Restocked</span>
-                        )}
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        {tc(item.category)} • Qty: {item.quantity} {item.unit || ''}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-4">
-                    <span className="font-heading font-bold text-sm">
-                      ${((item.estimatedPrice || 0) * (item.quantity || 1)).toFixed(2)}
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      ${((item.estimatedPrice || 3) * item.quantity).toFixed(2)}
                     </span>
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      title="Remove item"
+                      onClick={() => handleDelete(item.id)}
+                      className="p-1.5 text-slate-400 hover:text-rose-500 transition-colors"
                     >
                       <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

@@ -5,6 +5,7 @@ import { aiEngine } from '../services/aiEngine';
 import { storage } from '../services/storage';
 import { sound } from '../services/sound';
 import { triggerConfetti } from '../services/confetti';
+import { useLanguage } from '../context/LanguageContext';
 import CookModeModal from '../components/CookModeModal';
 import { 
   ChefHat, 
@@ -25,9 +26,9 @@ export default function Recipes() {
   const [recipes, setRecipes] = useState([]);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [filterTag, setFilterTag] = useState('ALL');
   const [cookedSuccess, setCookedSuccess] = useState(null);
   const [cookModalOpen, setCookModalOpen] = useState(false);
+  const { t, tf, tc, tl, language } = useLanguage();
 
   const fetchRecipes = async () => {
     setLoading(true);
@@ -60,7 +61,9 @@ export default function Recipes() {
 
     sound.playSuccess();
     triggerConfetti(3000);
-    setCookedSuccess(`🍳 Amazing! Cooked "${recipe.title}" and consumed ${consumedCount || 1} expiring item(s) from your kitchen!`);
+    setCookedSuccess(language === 'ta'
+      ? `🍳 அற்புதம்! "${recipe.title}" சமைக்கப்பட்டது மற்றும் ${consumedCount || 1} காலாவதியாகும் பொருட்கள் பயன்படுத்தப்பட்டன!`
+      : `🍳 Amazing! Cooked "${recipe.title}" and consumed ${consumedCount || 1} expiring item(s) from your kitchen!`);
     setTimeout(() => setCookedSuccess(null), 4000);
   };
 
@@ -88,14 +91,14 @@ export default function Recipes() {
         <div>
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
             <Sparkles size={13} />
-            <span>AI Zero-Waste Culinary Engine</span>
+            <span>{t('aiCulinaryBadge')}</span>
           </div>
           <h1 className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             <ChefHat className="text-emerald-600" size={32} />
-            Smart Recipe Generator
+            {t('recipesTitle')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Chef recommendations crafted specifically from your expiring fridge ingredients.
+            {t('recipesSub')}
           </p>
         </div>
 
@@ -105,7 +108,7 @@ export default function Recipes() {
           className="flex items-center space-x-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all hover:scale-105"
         >
           <RefreshCw className={loading ? 'animate-spin text-emerald-500' : 'text-emerald-500'} size={16} />
-          <span>Regenerate Recipes</span>
+          <span>{t('regenerateBtn')}</span>
         </button>
       </div>
 
@@ -113,10 +116,10 @@ export default function Recipes() {
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-16 text-center border border-slate-200 dark:border-slate-800">
           <ChefHat className="animate-bounce mx-auto text-emerald-500 mb-4" size={48} />
           <h3 className="font-heading font-bold text-lg text-slate-800 dark:text-white">
-            AI Chef is Analyzing Your Kitchen...
+            {language === 'ta' ? 'AI செஃப் உங்கள் சமையலறையை ஆய்வு செய்கிறார்...' : 'AI Chef is Analyzing Your Kitchen...'}
           </h3>
           <p className="text-xs text-slate-400 mt-1">
-            Matching flavor profiles, cooking times, and urgent expiry dates
+            {language === 'ta' ? 'சுவை, சமையல் நேரம் மற்றும் காலாவதி தேதிகள் பொருத்தப்படுகின்றன' : 'Matching flavor profiles, cooking times, and urgent expiry dates'}
           </p>
         </div>
       ) : (
@@ -124,7 +127,7 @@ export default function Recipes() {
           {/* Left Column: Recipe Cards Selector */}
           <div className="space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Suggested Dishes ({recipes.length})
+              {t('suggestedDishes')} ({recipes.length})
             </h3>
 
             {recipes.map((r) => {
@@ -157,9 +160,9 @@ export default function Recipes() {
 
                   <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60 text-xs">
                     <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                      <Leaf size={12} /> Saves {r.wasteSavedGrams}g waste
+                      <Leaf size={12} /> {t('wasteSaved')}: {r.wasteSavedGrams}g
                     </span>
-                    <span className="text-slate-400">{r.servings} servings</span>
+                    <span className="text-slate-400">{r.servings} {t('servings')}</span>
                   </div>
                 </div>
               );
@@ -170,13 +173,12 @@ export default function Recipes() {
           {selectedRecipe && (
             <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
               <div>
-                {/* Title & Action Buttons */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
                   <div>
                     <div className="flex flex-wrap gap-2 mb-2">
-                      {selectedRecipe.tags.map(t => (
-                        <span key={t} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                          {t}
+                      {selectedRecipe.tags.map(tItem => (
+                        <span key={tItem} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                          {tItem}
                         </span>
                       ))}
                     </div>
@@ -194,14 +196,14 @@ export default function Recipes() {
                       className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md shadow-emerald-600/20 transition-all hover:scale-105 flex items-center space-x-1.5 whitespace-nowrap"
                     >
                       <Play size={14} />
-                      <span>Start Guided Cooking</span>
+                      <span>{t('startGuidedCooking')}</span>
                     </button>
                     <button
                       onClick={() => handleCookMeal(selectedRecipe)}
                       className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs transition-colors flex items-center gap-1.5"
                     >
                       <Check size={14} />
-                      <span>Mark Consumed</span>
+                      <span>{t('markConsumed')}</span>
                     </button>
                   </div>
                 </div>
@@ -210,22 +212,22 @@ export default function Recipes() {
                 <div className="grid grid-cols-4 gap-3 my-6 text-center">
                   <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                     <Clock size={16} className="mx-auto text-emerald-500 mb-1" />
-                    <p className="text-[10px] text-slate-400">Prep / Cook</p>
+                    <p className="text-[10px] text-slate-400">{t('prepCook')}</p>
                     <p className="text-xs font-bold text-slate-800 dark:text-white">{selectedRecipe.prepTime}</p>
                   </div>
                   <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                     <Flame size={16} className="mx-auto text-amber-500 mb-1" />
-                    <p className="text-[10px] text-slate-400">Calories</p>
+                    <p className="text-[10px] text-slate-400">{t('calories')}</p>
                     <p className="text-xs font-bold text-slate-800 dark:text-white">{selectedRecipe.calories} kcal</p>
                   </div>
                   <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                     <Users size={16} className="mx-auto text-blue-500 mb-1" />
-                    <p className="text-[10px] text-slate-400">Servings</p>
-                    <p className="text-xs font-bold text-slate-800 dark:text-white">{selectedRecipe.servings} ppl</p>
+                    <p className="text-[10px] text-slate-400">{t('servings')}</p>
+                    <p className="text-xs font-bold text-slate-800 dark:text-white">{selectedRecipe.servings}</p>
                   </div>
                   <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                     <Leaf size={16} className="mx-auto text-teal-500 mb-1" />
-                    <p className="text-[10px] text-slate-400">Waste Saved</p>
+                    <p className="text-[10px] text-slate-400">{t('wasteSaved')}</p>
                     <p className="text-xs font-bold text-slate-800 dark:text-white">{selectedRecipe.wasteSavedGrams}g</p>
                   </div>
                 </div>
@@ -233,30 +235,30 @@ export default function Recipes() {
                 {/* Ingredients Section */}
                 <div className="mb-6">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-                    Ingredients Needed
+                    {t('ingredientsNeeded')}
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {selectedRecipe.matchedIngredients.map((item, idx) => (
                       <div key={idx} className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 flex items-center justify-between text-xs font-semibold text-emerald-900 dark:text-emerald-200">
-                        <span>{item}</span>
+                        <span>{tf(item)}</span>
                         <span className="text-[10px] bg-emerald-200 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1 font-bold">
-                          <Check size={10} /> in fridge
+                          <Check size={10} /> {t('inFridgeBadge')}
                         </span>
                       </div>
                     ))}
                     {selectedRecipe.missingIngredients.map((item, idx) => (
                       <div key={idx} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/40 flex items-center justify-between text-xs text-slate-600 dark:text-slate-300">
-                        <span>{item}</span>
-                        <span className="text-[10px] text-slate-400 font-medium">pantry staple</span>
+                        <span>{tf(item)}</span>
+                        <span className="text-[10px] text-slate-400 font-medium">{t('pantryStaple')}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Step by Step Instructions */}
+                {/* Cooking Steps */}
                 <div className="mb-6">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-                    Cooking Steps
+                    {t('cookingSteps')}
                   </h4>
                   <div className="space-y-3">
                     {selectedRecipe.instructions.map((step, idx) => (
@@ -269,17 +271,6 @@ export default function Recipes() {
                     ))}
                   </div>
                 </div>
-
-                {/* Storage Pro Tip */}
-                {selectedRecipe.storageTip && (
-                  <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-xs text-amber-900 dark:text-amber-200 flex items-start space-x-2">
-                    <span className="text-base">💡</span>
-                    <div>
-                      <strong className="block font-bold">Leftover & Storage Tip:</strong>
-                      <span>{selectedRecipe.storageTip}</span>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           )}

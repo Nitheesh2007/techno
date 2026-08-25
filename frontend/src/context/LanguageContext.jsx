@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { translations } from '../services/translations';
+import { translations, translateFood, translateCategory, translateLocation } from '../services/translations';
 
 const LanguageContext = createContext();
 
@@ -31,8 +31,12 @@ export const LanguageProvider = ({ children }) => {
     return text;
   };
 
+  const tf = (name) => translateFood(name, language);
+  const tc = (category) => translateCategory(category, language);
+  const tl = (location) => translateLocation(location, language);
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, tf, tc, tl }}>
       {children}
     </LanguageContext.Provider>
   );
