@@ -33,14 +33,14 @@ export default function FreshBot() {
   useEffect(() => {
     // Initial welcome message based on language
     const welcome = language === 'ta'
-      ? "👋 வணக்கம்! நான் FreshBot AI, உங்கள் சமையலறை உணவுப் பாதுகாவலன். உங்கள் உணவுகள் வீணாவதைத் தடுக்க நான் எவ்வாறு உதவ முடியும்?"
+      ? "👋 வணக்கம்! நான் FreshBot AI, உங்கள் தனிப்பட்ட சமையலறை உணவுப் பாதுகாவலன். உங்கள் உணவுகள் வீணாவதைத் தடுக்க, சமையல் குறிப்புகள் அறிய அல்லது காலாவதியாகும் உணவுகளைப் பற்றி அறிய என்னிடம் தமிழில் கேளுங்கள்!"
       : "👋 Hi there! I am FreshBot AI, your personal food waste guardian. How can I help you save food and cook smart today?";
 
     setMessages([
       { sender: 'bot', text: welcome, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
     ]);
 
-    // Setup Web Speech Recognition
+    // Setup Web Speech Recognition for Tamil & English
     try {
       if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -81,7 +81,7 @@ export default function FreshBot() {
     if (isOpen) scrollToBottom();
   }, [messages, isOpen]);
 
-  // High-Quality Bilingual Voice Synthesizer
+  // High-Quality Bilingual Voice Synthesizer (Tamil ta-IN & English en-US)
   const speakText = (text) => {
     try {
       if (!voiceEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
@@ -146,7 +146,7 @@ export default function FreshBot() {
     } catch (err) {
       console.warn('FreshBot chat error caught safely:', err);
       const fallbackText = language === 'ta'
-        ? "✨ FreshBot AI குரல் உதவியாளர் செயலில் உள்ளது! சமையல் குறிப்புகள் அல்லது காலாவதியாகும் உணவுகளைப் பற்றி கேளுங்கள்."
+        ? "✨ FreshBot AI குரல் உதவியாளர் செயலில் உள்ளது! சமையல் குறிப்புகள் அல்லது காலாவதியாகும் உணவுகளைப் பற்றி தமிழில் கேளுங்கள்."
         : "✨ FreshBot AI is active! Ask me for quick zero-waste recipes or to check what's expiring.";
       
       setMessages((prev) => [
@@ -232,7 +232,9 @@ export default function FreshBot() {
               <div>
                 <h3 className="font-heading font-extrabold text-sm flex items-center gap-1.5">
                   {t('freshBotTitle')}
-                  <span className="text-[10px] bg-emerald-400 text-emerald-950 px-1.5 py-0.2 rounded-full font-bold">LIVE</span>
+                  <span className="text-[10px] bg-emerald-400 text-emerald-950 px-1.5 py-0.2 rounded-full font-bold">
+                    {language === 'ta' ? 'நேரலை' : 'LIVE'}
+                  </span>
                 </h3>
                 <p className="text-[11px] text-emerald-100">{t('freshBotLive')}</p>
               </div>
@@ -241,7 +243,7 @@ export default function FreshBot() {
             <div className="flex items-center space-x-1">
               <button
                 onClick={() => setVoiceEnabled(!voiceEnabled)}
-                title={voiceEnabled ? 'Mute speech voice' : 'Enable speech voice'}
+                title={voiceEnabled ? (language === 'ta' ? 'குரல் ஒலியை முடக்கு' : 'Mute speech voice') : (language === 'ta' ? 'குரல் ஒலியை இயக்கு' : 'Enable speech voice')}
                 className="p-1.5 rounded-lg text-emerald-100 hover:bg-white/10 transition-colors"
               >
                 {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
@@ -249,6 +251,7 @@ export default function FreshBot() {
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1.5 rounded-lg text-emerald-100 hover:bg-white/10 transition-colors"
+                title={language === 'ta' ? 'மூடு' : 'Close'}
               >
                 <X size={18} />
               </button>
@@ -270,6 +273,22 @@ export default function FreshBot() {
                   }`}
                 >
                   <p className="whitespace-pre-line">{m.text}</p>
+                  
+                  {/* Suggested Action Buttons */}
+                  {m.suggestedActions && m.suggestedActions.length > 0 && (
+                    <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-700/60 flex flex-wrap gap-1.5">
+                      {m.suggestedActions.map((action, aIdx) => (
+                        <button
+                          key={aIdx}
+                          onClick={() => handleSend(action)}
+                          className="text-[10px] bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 px-2 py-1 rounded-lg font-semibold transition-colors text-left"
+                        >
+                          💬 {action}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   <span className={`text-[9px] block text-right mt-1 ${m.sender === 'user' ? 'text-emerald-200' : 'text-slate-400'}`}>
                     {m.time}
                   </span>
