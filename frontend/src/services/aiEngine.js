@@ -5,14 +5,12 @@ export const aiEngine = {
   // Generate comprehensive, intelligent recipes tailored to expiring items with 20+ diverse culinary dishes
   generateRecipe: async (options = {}) => {
     const products = storage.getProducts();
-    const urgentItems = products.filter(p => p.status === 'URGENT' || p.status === 'EXPIRING SOON');
-    const safeItems = products.filter(p => p.status === 'SAFE');
+    const urgentItems = products.filter(p => p.status === 'CRITICAL' || p.status === 'URGENT' || p.status === 'EXPIRING SOON');
     
     // Small artificial delay for realistic AI feel
-    await new Promise(r => setTimeout(r, 350));
+    await new Promise(r => setTimeout(r, 250));
 
     const itemNames = urgentItems.map(i => i.product_name).slice(0, 5);
-    const primaryIngredient = itemNames[0] || (products[0]?.product_name) || 'Fresh Garden Vegetables';
 
     const recipes = [
       {
@@ -111,392 +109,6 @@ export const aiEngine = {
           'Add cold cooked rice and soy sauce, tossing continuously over high heat for 3-4 minutes until aromatic.'
         ],
         storageTip: 'Fried rice freezes remarkably well! Portion into microwave-safe containers for ready-made lunches.'
-      },
-      {
-        id: 'rec-5',
-        title: 'Rustic Sourdough French Toast with Caramelized Fruit',
-        prepTime: '6 mins',
-        cookTime: '8 mins',
-        difficulty: 'Easy',
-        servings: 2,
-        calories: 360,
-        wasteSavedGrams: 290,
-        mealType: 'Breakfast',
-        cuisine: 'French',
-        dietary: 'Vegetarian',
-        matchedIngredients: products.filter(p => p.category === 'Bakery' || p.category === 'Dairy & Eggs' || p.category === 'Produce').map(p => p.product_name),
-        missingIngredients: ['Cinnamon', 'Vanilla Extract', 'Butter', 'Maple Syrup'],
-        tags: ['Bakery Rescue', 'Sweet Breakfast', 'Kids Favorite'],
-        summary: 'Turn stale or drying bread slices into fluffy, golden French toast topped with warm stewed berries.',
-        instructions: [
-          'Whisk eggs, milk, a pinch of cinnamon, and vanilla in a shallow dish.',
-          'Submerge thick bread slices for 30 seconds per side until fully custard-soaked.',
-          'Melt butter in a skillet over medium heat and sear bread for 3-4 minutes per side until golden brown.',
-          'In the same pan, gently warm sliced fruit with a drizzle of honey for a quick warm compote topping.'
-        ],
-        storageTip: 'Cooked French toast slices can be frozen and popped directly into a toaster for an instant breakfast.'
-      },
-      {
-        id: 'rec-6',
-        title: 'Mediterranean Herb-Roasted Protein & Veggie Platter',
-        prepTime: '12 mins',
-        cookTime: '25 mins',
-        difficulty: 'Medium',
-        servings: 4,
-        calories: 520,
-        wasteSavedGrams: 550,
-        mealType: 'Dinner',
-        cuisine: 'Mediterranean',
-        dietary: 'High-Protein',
-        matchedIngredients: products.filter(p => p.category === 'Meat & Poultry' || p.category === 'Produce').map(p => p.product_name),
-        missingIngredients: ['Olive Oil', 'Dried Oregano', 'Lemon Juice', 'Garlic Powder'],
-        tags: ['Sheet Pan Meal', 'High Protein', 'Keto Friendly'],
-        summary: 'An all-in-one sheet pan dinner roasting proteins and mixed vegetables with fragrant Mediterranean herbs.',
-        instructions: [
-          'Preheat oven to 200°C (400°F) and line a large baking sheet with parchment.',
-          'Chop chicken, tofu, or meats into bite-sized pieces and slice vegetables.',
-          'Toss everything together with olive oil, oregano, minced garlic, lemon juice, salt, and pepper.',
-          'Spread evenly in a single layer and roast for 22-25 minutes until proteins are cooked and veggies are roasted.'
-        ],
-        storageTip: 'Ideal for weekly meal prep! Keeps fresh in sealed containers for up to 4 days.'
-      },
-      {
-        id: 'rec-7',
-        title: 'Warm Harvest Minestrone & Leftover Soup',
-        prepTime: '10 mins',
-        cookTime: '20 mins',
-        difficulty: 'Easy',
-        servings: 4,
-        calories: 310,
-        wasteSavedGrams: 480,
-        mealType: 'Dinner',
-        cuisine: 'Italian',
-        dietary: 'Vegan',
-        matchedIngredients: products.map(p => p.product_name),
-        missingIngredients: ['Canned Tomatoes', 'Vegetable Broth', 'Italian Seasoning'],
-        tags: ['Hearty Soup', 'Comfort Food', 'Zero-Waste Champion'],
-        summary: 'A nourishing, steaming pot of Italian soup that absorbs any mix of vegetables, beans, pasta, or leafy greens.',
-        instructions: [
-          'Sauté chopped aromatics (onions, carrots, celery, garlic) in olive oil in a deep soup pot for 5 minutes.',
-          'Pour in vegetable broth, canned tomatoes, and add chopped hearty vegetables.',
-          'Simmer for 15 minutes, then drop in quick-cooking greens and leftover pasta or beans.',
-          'Season with salt, pepper, and fresh lemon juice, then ladle into warm bowls with a sprinkle of cheese.'
-        ],
-        storageTip: 'Soup flavors deepen overnight! Freeze extra batches in mason jars for busy weeknight dinners.'
-      },
-      {
-        id: 'rec-8',
-        title: 'Crispy Sourdough Cheese Melt & Tomato Skillet',
-        prepTime: '5 mins',
-        cookTime: '7 mins',
-        difficulty: 'Easy',
-        servings: 1,
-        calories: 430,
-        wasteSavedGrams: 210,
-        mealType: 'Lunch',
-        cuisine: 'American',
-        dietary: 'Quick',
-        matchedIngredients: products.filter(p => p.category === 'Bakery' || p.category === 'Dairy & Eggs').map(p => p.product_name),
-        missingIngredients: ['Butter', 'Mustard or Mayo (optional)', 'Black Pepper'],
-        tags: ['15-Minute Meal', 'Comfort Food', 'Quick Lunch'],
-        summary: 'The ultimate golden-brown grilled cheese featuring sourdough and melting cheeses with tomato slices.',
-        instructions: [
-          'Butter the outer sides of two sourdough bread slices.',
-          'Layer sliced cheddar cheese and fresh tomato or spinach between the bread slices.',
-          'Place in a medium-hot skillet and press down gently with a spatula.',
-          'Cook for 3-4 minutes per side until bread is golden and the cheese is fully melted and gooey.'
-        ],
-        storageTip: 'Serve immediately for maximum crunch and melty cheese stretch!'
-      },
-      {
-        id: 'rec-9',
-        title: 'Avocado Lime Green Goddess Grain Bowl',
-        prepTime: '8 mins',
-        cookTime: '10 mins',
-        difficulty: 'Easy',
-        servings: 2,
-        calories: 380,
-        wasteSavedGrams: 320,
-        mealType: 'Lunch',
-        cuisine: 'Mexican',
-        dietary: 'Vegan',
-        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Pantry').map(p => p.product_name),
-        missingIngredients: ['Cooked Quinoa or Rice', 'Lime Juice', 'Cumin', 'Coriander / Cilantro'],
-        tags: ['Superfood', 'Healthy', 'Gluten-Free', 'Vegan'],
-        summary: 'A vibrant power bowl packed with grains, creamy diced avocados, greens, and a zesty lime vinaigrette.',
-        instructions: [
-          'Warm pre-cooked grains (quinoa, brown rice, or couscous) in a bowl.',
-          'Dice ripe avocados, tomatoes, cucumbers, and shred fresh leafy greens.',
-          'Whisk lime juice, olive oil, minced garlic, cumin, salt, and cilantro for the dressing.',
-          'Layer the ingredients in colorful bowls, drizzle generously with dressing, and enjoy!'
-        ],
-        storageTip: 'Keep dressing separate until ready to serve to keep greens crisp.'
-      },
-      {
-        id: 'rec-10',
-        title: 'Creamy Coconut Curry with Wilted Greens & Protein',
-        prepTime: '10 mins',
-        cookTime: '18 mins',
-        difficulty: 'Easy',
-        servings: 3,
-        calories: 490,
-        wasteSavedGrams: 410,
-        mealType: 'Dinner',
-        cuisine: 'Indian',
-        dietary: 'High-Protein',
-        matchedIngredients: products.map(p => p.product_name),
-        missingIngredients: ['Coconut Milk', 'Curry Powder or Garam Masala', 'Turmeric', 'Ginger'],
-        tags: ['Indian Curry', 'Comfort Food', 'Warm & Spiced'],
-        summary: 'A rich, golden curry simmering whatever vegetables and proteins you have in aromatic coconut broth.',
-        instructions: [
-          'Heat oil in a wide pot and sauté diced onions, garlic, and minced ginger for 3 minutes.',
-          'Stir in curry powder, turmeric, and cumin until fragrant.',
-          'Add your diced vegetables, proteins, and pour in 1 can of coconut milk.',
-          'Simmer on medium-low for 15 minutes, tossing in leafy greens in the last 2 minutes until wilted. Serve over basmati rice.'
-        ],
-        storageTip: 'Curry tastes even better on day 2 as spices meld together!'
-      },
-      {
-        id: 'rec-11',
-        title: 'Golden Spinach & Feta Frittata Bake',
-        prepTime: '8 mins',
-        cookTime: '16 mins',
-        difficulty: 'Easy',
-        servings: 3,
-        calories: 340,
-        wasteSavedGrams: 300,
-        mealType: 'Breakfast',
-        cuisine: 'Mediterranean',
-        dietary: 'High-Protein',
-        matchedIngredients: products.filter(p => p.category === 'Dairy & Eggs' || p.category === 'Produce').map(p => p.product_name),
-        missingIngredients: ['Eggs (4-6)', 'Feta or Cheddar Cheese', 'Olive Oil', 'Black Pepper'],
-        tags: ['High-Protein', 'Keto Friendly', 'Easy Brunch'],
-        summary: 'A fluffy oven or skillet frittata turning excess eggs and wilting greens into an upscale brunch centerpiece.',
-        instructions: [
-          'Preheat oven to 190°C (375°F) or heat an oven-safe skillet on the stovetop.',
-          'Sauté spinach, peppers, and onions in olive oil until soft and wilted.',
-          'Whisk eggs with a splash of milk, salt, pepper, and pour evenly over the vegetables.',
-          'Crumble feta cheese on top and bake or cook covered on low for 12-15 minutes until set and puffy.'
-        ],
-        storageTip: 'Slices can be wrapped in foil and kept in the fridge for up to 4 days for grab-and-go morning protein.'
-      },
-      {
-        id: 'rec-12',
-        title: 'Loaded Sweet Potato & Black Bean Burrito Skillet',
-        prepTime: '10 mins',
-        cookTime: '15 mins',
-        difficulty: 'Easy',
-        servings: 3,
-        calories: 420,
-        wasteSavedGrams: 370,
-        mealType: 'Dinner',
-        cuisine: 'Mexican',
-        dietary: 'Vegetarian',
-        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Pantry').map(p => p.product_name),
-        missingIngredients: ['Canned Black Beans', 'Salsa', 'Cheddar Cheese', 'Taco Seasoning'],
-        tags: ['Tex-Mex', 'One-Pan Meal', 'Family Friendly'],
-        summary: 'All the vibrant flavors of a loaded burrito packed into a fast, cheesy one-pan weeknight skillet.',
-        instructions: [
-          'Dice sweet potatoes or potatoes and microwave for 3 minutes to accelerate cooking.',
-          'In a hot skillet with olive oil, sauté the potatoes and vegetables with taco seasoning for 6 minutes.',
-          'Fold in rinsed black beans, salsa, and simmer for 4 minutes until bubbling.',
-          'Top with shredded cheese, cover with a lid for 2 minutes to melt, and garnish with green onions.'
-        ],
-        storageTip: 'Great filling for wraps, quesadillas, or over tortilla chips for loaded nachos!'
-      },
-      {
-        id: 'rec-13',
-        title: 'Spicy Garlic Sesame Noodles with Crunchy Greens',
-        prepTime: '5 mins',
-        cookTime: '8 mins',
-        difficulty: 'Easy',
-        servings: 2,
-        calories: 390,
-        wasteSavedGrams: 260,
-        mealType: 'Lunch',
-        cuisine: 'Asian',
-        dietary: 'Quick',
-        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Pantry').map(p => p.product_name),
-        missingIngredients: ['Noodles or Spaghetti', 'Soy Sauce', 'Chili Crisp / Sriracha', 'Sesame Seeds'],
-        tags: ['15-Minute Meal', 'Pan-Asian', 'Quick Lunch'],
-        summary: 'Slurpable, addictive garlic chili noodles tossed with whatever leftover crisp veggies you need to finish.',
-        instructions: [
-          'Boil noodles according to package directions; drain and rinse with cold water.',
-          'In a bowl, whisk soy sauce, sesame oil, minced garlic, chili crisp, and a pinch of sugar.',
-          'In a hot pan, quickly flash-fry sliced cabbage, carrots, or greens for 2 minutes.',
-          'Toss noodles, vegetables, and the spicy sauce together over medium heat until glossy and coated.'
-        ],
-        storageTip: 'Delicious served either piping hot or chilled straight out of the fridge!'
-      },
-      {
-        id: 'rec-14',
-        title: 'Crispy Smashed Rosemary Potatoes with Garlic Aioli',
-        prepTime: '10 mins',
-        cookTime: '20 mins',
-        difficulty: 'Easy',
-        servings: 2,
-        calories: 320,
-        wasteSavedGrams: 350,
-        mealType: 'Lunch',
-        cuisine: 'American',
-        dietary: 'Vegetarian',
-        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Pantry').map(p => p.product_name),
-        missingIngredients: ['Olive Oil', 'Fresh Rosemary or Thyme', 'Sea Salt', 'Mayo & Garlic'],
-        tags: ['Crispy Side', 'Snack', 'Comfort Food'],
-        summary: 'Boiled and crushed baby potatoes roasted until ultra-crisp and served with a quick lemon garlic dip.',
-        instructions: [
-          'Boil whole potatoes in salted water for 12 minutes until fork-tender.',
-          'Place potatoes on a baking sheet and smash flat using the bottom of a glass cup.',
-          'Drizzle generously with olive oil, salt, pepper, and chopped rosemary.',
-          'Bake at 220°C (425°F) for 18 minutes until edges are golden brown and crackly.'
-        ],
-        storageTip: 'Reheat in an air fryer for 3 minutes to regain 100% crispiness.'
-      },
-      {
-        id: 'rec-15',
-        title: 'Overripe Banana Walnut Fluffy Oat Pancakes',
-        prepTime: '6 mins',
-        cookTime: '8 mins',
-        difficulty: 'Easy',
-        servings: 2,
-        calories: 350,
-        wasteSavedGrams: 280,
-        mealType: 'Breakfast',
-        cuisine: 'American',
-        dietary: 'Vegetarian',
-        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy & Eggs' || p.category === 'Bakery').map(p => p.product_name),
-        missingIngredients: ['Rolled Oats or Flour', 'Baking Powder', 'Cinnamon', 'Maple Syrup'],
-        tags: ['Zero Sugar Added', 'Kid Friendly', 'Bakery Rescue'],
-        summary: 'Rescue spotted or browning bananas by turning them into naturally sweet, protein-rich fluffy pancakes.',
-        instructions: [
-          'Mash 2 ripe bananas in a bowl until smooth.',
-          'Whisk in 2 eggs, 1 cup oats (blended or rolled), 1 tsp baking powder, and a dash of cinnamon.',
-          'Ladle batter onto a buttered non-stick pan over medium heat.',
-          'Flip once bubbles appear (about 2 minutes per side) and serve warm with walnuts and maple syrup.'
-        ],
-        storageTip: 'Freeze cooked pancakes separated by parchment paper; pop into the toaster anytime!'
-      },
-      {
-        id: 'rec-16',
-        title: 'Zesty Citrus Herb Chicken Salad with Sourdough Croutons',
-        prepTime: '10 mins',
-        cookTime: '12 mins',
-        difficulty: 'Easy',
-        servings: 2,
-        calories: 440,
-        wasteSavedGrams: 390,
-        mealType: 'Lunch',
-        cuisine: 'Mediterranean',
-        dietary: 'High-Protein',
-        matchedIngredients: products.filter(p => p.category === 'Meat & Poultry' || p.category === 'Produce' || p.category === 'Bakery').map(p => p.product_name),
-        missingIngredients: ['Dijon Mustard', 'Olive Oil', 'Lemon Juice', 'Parmesan'],
-        tags: ['High-Protein', 'Fresh Salad', 'Keto Friendly'],
-        summary: 'Tender pan-seared chicken breast tossed over crisp greens with toasted homemade garlic croutons.',
-        instructions: [
-          'Season chicken breast with salt, pepper, and dried oregano; pan-sear for 6 minutes per side until cooked.',
-          'Cube leftover bread and toast with olive oil in a skillet until crunchy croutons form.',
-          'Whisk olive oil, Dijon mustard, lemon juice, salt, and pepper into a bright vinaigrette.',
-          'Slice warm chicken and assemble over greens with croutons, shaved parmesan, and dressing.'
-        ],
-        storageTip: 'Store grilled chicken in the fridge for easy meal additions throughout the week.'
-      },
-      {
-        id: 'rec-17',
-        title: 'Savory Bread & Cheese Strata Casserole',
-        prepTime: '12 mins',
-        cookTime: '25 mins',
-        difficulty: 'Medium',
-        servings: 4,
-        calories: 480,
-        wasteSavedGrams: 520,
-        mealType: 'Dinner',
-        cuisine: 'Italian',
-        dietary: 'Vegetarian',
-        matchedIngredients: products.filter(p => p.category === 'Bakery' || p.category === 'Dairy & Eggs' || p.category === 'Produce').map(p => p.product_name),
-        missingIngredients: ['Eggs (4)', 'Milk (1 cup)', 'Cheddar / Mozzarella', 'Nutmeg / Herbs'],
-        tags: ['Family Dinner', 'Comfort Food', 'Zero-Waste Champion'],
-        summary: 'A golden baked Italian strata turning day-old bread, eggs, cheese, and vegetables into a luscious soufflé bake.',
-        instructions: [
-          'Cube 3-4 slices of day-old bread and arrange in a greased baking dish.',
-          'Layer sautéed vegetables (spinach, onions, tomatoes) and shredded cheese between bread cubes.',
-          'Whisk eggs, milk, salt, pepper, and a pinch of nutmeg; pour evenly over the dish.',
-          'Bake at 180°C (350°F) for 25 minutes until golden, puffed, and set in the center.'
-        ],
-        storageTip: 'Can be assembled the night before and baked fresh in the morning!'
-      },
-      {
-        id: 'rec-18',
-        title: 'Chilled Mango Yogurt Lassi & Chia Seed Bowl',
-        prepTime: '5 mins',
-        cookTime: '0 mins',
-        difficulty: 'Easy',
-        servings: 2,
-        calories: 220,
-        wasteSavedGrams: 200,
-        mealType: 'Breakfast',
-        cuisine: 'Indian',
-        dietary: 'Quick',
-        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy & Eggs').map(p => p.product_name),
-        missingIngredients: ['Cardamom Powder', 'Honey', 'Crushed Pistachios'],
-        tags: ['No-Cook', 'Probiotic Boost', 'Refreshing Drink'],
-        summary: 'A cool, creamy Indian yogurt drink rescuing ripe mangoes or sweet fruits with aromatic cardamom.',
-        instructions: [
-          'Peel and dice ripe mango or tropical fruit.',
-          'Blend yogurt, fruit, cold water or milk, a dash of ground cardamom, and a spoonful of honey.',
-          'Blend until frothy and smooth.',
-          'Pour into chilled glasses and garnish with crushed pistachios or mint leaves.'
-        ],
-        storageTip: 'Keeps refreshing and cold in an insulated flask for up to 24 hours.'
-      },
-      {
-        id: 'rec-19',
-        title: 'Smoky Chipotle Shakshuka with Poached Eggs',
-        prepTime: '8 mins',
-        cookTime: '14 mins',
-        difficulty: 'Easy',
-        servings: 2,
-        calories: 360,
-        wasteSavedGrams: 340,
-        mealType: 'Breakfast',
-        cuisine: 'Mediterranean',
-        dietary: 'High-Protein',
-        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy & Eggs').map(p => p.product_name),
-        missingIngredients: ['Canned Chopped Tomatoes', 'Eggs (3-4)', 'Smoked Paprika', 'Cumin'],
-        tags: ['Middle Eastern', 'One-Skillet', 'Spiced Brunch'],
-        summary: 'Eggs gently poached in a simmering spiced sauce of tomatoes, bell peppers, garlic, and smoked chili.',
-        instructions: [
-          'Sauté chopped onions, garlic, and bell peppers in olive oil in a wide skillet for 5 minutes.',
-          'Add canned tomatoes, cumin, smoked paprika, salt, and black pepper; simmer until sauce thickens.',
-          'Make 3-4 small wells in the sauce and crack whole eggs directly into each well.',
-          'Cover with a lid and cook on low heat for 5-7 minutes until egg whites are set but yolks remain runny.',
-          'Garnish with fresh parsley and serve with warm bread for dipping.'
-        ],
-        storageTip: 'Leftover tomato base can be frozen or used as a rich pasta sauce.'
-      },
-      {
-        id: 'rec-20',
-        title: 'Crispy Vegetable Fritters with Garlic Herb Dip',
-        prepTime: '10 mins',
-        cookTime: '10 mins',
-        difficulty: 'Easy',
-        servings: 3,
-        calories: 290,
-        wasteSavedGrams: 400,
-        mealType: 'Lunch',
-        cuisine: 'Fusion',
-        dietary: 'Quick',
-        matchedIngredients: products.filter(p => p.category === 'Produce' || p.category === 'Dairy & Eggs').map(p => p.product_name),
-        missingIngredients: ['Flour (1/2 cup)', 'Baking Powder', 'Egg (1)', 'Yogurt Dip'],
-        tags: ['Finger Food', 'Scrap Rescue', 'Crispy Snack'],
-        summary: 'Grated zucchini, carrots, potatoes, and greens bound in a light batter and pan-fried until golden crisp.',
-        instructions: [
-          'Grate or finely shred any surplus vegetables (carrots, potatoes, zucchini, broccoli stems).',
-          'Squeeze out excess moisture with a clean kitchen towel.',
-          'Mix with 1 egg, 1/2 cup flour, salt, pepper, and herbs until a thick batter forms.',
-          'Drop spoonfuls into hot oil in a skillet, flattening slightly, and fry for 3-4 minutes per side until golden brown.',
-          'Serve hot with a side of garlic yogurt or spicy mayo dip.'
-        ],
-        storageTip: 'Fritters reheat to crispy perfection in an oven or air fryer at 200°C for 4 minutes.'
       }
     ];
 
@@ -506,109 +118,165 @@ export const aiEngine = {
     };
   },
 
-  // Interactive FreshBot Assistant with Inventory Intelligence (100% Pure Tamil & English)
+  // Interactive FreshBot Assistant that answers 100% of user messages in English & Tamil
   chatFreshBot: async (message, lang = 'en') => {
     try {
       const products = storage.getProducts() || [];
-      const urgentItems = products.filter(p => p.status === 'URGENT');
-      const soonItems = products.filter(p => p.status === 'EXPIRING SOON');
-      const msg = (message || '').toLowerCase().trim();
+      const stats = storage.getDashboardStats();
+      const rawMsg = (message || '').trim();
+      const msg = rawMsg.toLowerCase();
 
-      await new Promise(r => setTimeout(r, 350));
+      await new Promise(r => setTimeout(r, 300));
 
-      const isTa = lang === 'ta' || msg.includes('காலாவதி') || msg.includes('அவசரம்') || msg.includes('பிரிட்ஜ்') || msg.includes('வணக்கம்') || msg.includes('சமையல்');
+      const isTa = lang === 'ta' || /[\u0B80-\u0BFF]/.test(rawMsg) || msg.includes('வணக்கம்') || msg.includes('சமையல்') || msg.includes('காலாவதி');
 
-      // 1. Expiry & Inventory Queries
-      if (msg.includes('expir') || msg.includes('urgent') || msg.includes('காலாவதி') || msg.includes('அவசரம்') || msg.includes('fridge') || msg.includes('பிரிட்ஜ்') || msg.includes('what do i have')) {
-        if (urgentItems.length === 0 && soonItems.length === 0) {
+      // 1. Expiry, Inventory & "What's in my fridge" queries
+      if (msg.includes('expir') || msg.includes('urgent') || msg.includes('critical') || msg.includes('fridge') || msg.includes('inventory') || msg.includes('காலாவதி') || msg.includes('அவசரம்') || msg.includes('பிரிட்ஜ்') || msg.includes('உணவு')) {
+        const urgentItems = products.filter(p => p.status === 'CRITICAL' || p.status === 'URGENT' || (p.days_left !== undefined && p.days_left <= 6 && p.days_left >= 0));
+        const soonItems = products.filter(p => p.status === 'EXPIRING SOON' || (p.days_left !== undefined && p.days_left >= 7 && p.days_left <= 30));
+        const expiredItems = products.filter(p => p.status === 'EXPIRED' || (p.days_left !== undefined && p.days_left < 0));
+
+        if (urgentItems.length === 0 && soonItems.length === 0 && expiredItems.length === 0) {
           return {
             reply: isTa
-              ? `🎉 மகிழ்ச்சியான செய்தி! அடுத்த 3 நாட்களில் எந்த உணவும் காலாவதியாகவில்லை. உங்கள் ${products.length} உணவுப் பொருட்களும் புத்தம் புதியதாகவும் பாதுகாப்பாகவும் உள்ளன!`
-              : `🎉 Great news! You have no urgent items expiring in the next 3 days. All your ${products.length} products are fresh and safe!`,
+              ? `🎉 **சிறந்த செய்தி!** உங்கள் சமையலறையில் உள்ள ${products.length} உணவுகளும் முழுப் பாதுகாப்பாக உள்ளன. அடுத்த 7 நாட்களில் எதுவும் காலாவதியாகவில்லை!`
+              : `🎉 **Great news!** All ${products.length} items in your inventory are safe. You have zero items expiring in the next 7 days!`,
             suggestedActions: isTa
-              ? ['இரவு உணவு செய்முறை தாருங்கள்', 'வெண்ணெய் பழத்தை பாதுகாப்பது எப்படி?', 'சேமிப்பு விவரங்களைக் காட்டு']
-              : ['Suggest a dinner recipe', 'How to store avocados', 'Show my savings']
+              ? ['இரவு உணவு செய்முறை தாருங்கள்', 'பழங்களை சேமிக்கும் வழிகள்', 'கழிவு புள்ளிவிவரங்கள்']
+              : ['Suggest a dinner recipe', 'Storage tips for greens', 'View waste analytics']
           };
         }
-        
+
         if (isTa) {
-          const urgentList = urgentItems.map(i => `• **${i.product_name}** (${i.days_left <= 0 ? 'இன்றே காலாவதியாகிறது' : 'நாளை காலாவதியாகிறது'})`).join('\n');
-          const soonList = soonItems.map(i => `• ${i.product_name} (${i.days_left} நாட்களில்)`).join('\n');
+          let report = `📋 **உங்கள் சமையலறை காலாவதி நிலை:**\n\n`;
+          if (urgentItems.length > 0) {
+            report += `🚨 **அவசர கவனம் (1-6 நாட்கள்):**\n${urgentItems.map(i => `• **${i.product_name}** — ${i.days_left <= 0 ? 'இன்றே காலாவதியாகிறது!' : `${i.days_left} நாட்களில் காலாவதி`}`).join('\n')}\n\n`;
+          }
+          if (soonItems.length > 0) {
+            report += `⏳ **விரைவில் காலாவதியாகும் (7-30 நாட்கள்):**\n${soonItems.slice(0, 4).map(i => `• ${i.product_name} (${i.days_left} நாட்கள்)`).join('\n')}\n\n`;
+          }
+          if (expiredItems.length > 0) {
+            report += `⛔ **காலாவதியானது:**\n${expiredItems.map(i => `• ${i.product_name}`).join('\n')}\n\n`;
+          }
+          report += `💡 இந்த உணவுகளை உடனடியாக சமைத்து வீணாவதைத் தடுக்க நான் உதவவா?`;
           return {
-            reply: `⚠️ உங்கள் சமையலறையில் கவனம் செலுத்த வேண்டிய உணவுகள்:\n\n${urgentList ? `**🚨 அவசரம் (அடுத்த 24-48 மணிநேரம்):**\n${urgentList}\n\n` : ''}${soonList ? `**⏳ 2-3 நாட்களில் காலாவதி:**\n${soonList}\n\n` : ''}இவற்றை வைத்து சுவையான பூஜ்ஜிய கழிவு செய்முறையை உருவாக்கவா?`,
-            suggestedActions: ['அவசர உணவுகளுக்கான செய்முறை', 'ரொட்டியை பிரீசரில் வைப்பது எப்படி?', '3 நிமிட சமையலறை தணிக்கை']
+            reply: report,
+            suggestedActions: ['அவசர உணவுகளுக்கான செய்முறை', 'உணவு பாதுகாப்பு வழிகாட்டல்', 'நாட்காட்டியைப் பார்']
           };
         }
 
-        const urgentList = urgentItems.map(i => `• **${i.product_name}** (${i.days_left <= 0 ? 'Expires TODAY' : 'Expires tomorrow'})`).join('\n');
-        const soonList = soonItems.map(i => `• ${i.product_name} (in ${i.days_left} days)`).join('\n');
+        let report = `📋 **Kitchen Inventory Expiry Report:**\n\n`;
+        if (urgentItems.length > 0) {
+          report += `🚨 **Critical (1-6 Days):**\n${urgentItems.map(i => `• **${i.product_name}** — ${i.days_left <= 0 ? 'Expires TODAY!' : `${i.days_left}d remaining`}`).join('\n')}\n\n`;
+        }
+        if (soonItems.length > 0) {
+          report += `⏳ **Expiring Soon (7-30 Days):**\n${soonItems.slice(0, 4).map(i => `• ${i.product_name} (${i.days_left}d)`).join('\n')}\n\n`;
+        }
+        if (expiredItems.length > 0) {
+          report += `⛔ **Expired Items:**\n${expiredItems.map(i => `• ${i.product_name}`).join('\n')}\n\n`;
+        }
+        report += `💡 Shall I generate a zero-waste recipe using your critical items?`;
         return {
-          reply: `⚠️ Here is what needs attention in your kitchen:\n\n${urgentList ? `**🚨 Urgent (Next 24-48 hours):**\n${urgentList}\n\n` : ''}${soonList ? `**⏳ Expiring in 2-3 days:**\n${soonList}\n\n` : ''}Would you like me to generate a zero-waste recipe using these items?`,
-          suggestedActions: ['Generate a recipe with urgent items', 'How to freeze bread/milk?', '3-Minute Kitchen Audit']
+          reply: report,
+          suggestedActions: ['Generate zero-waste recipe', 'Food storage encyclopedia', 'View Expiry Calendar']
         };
       }
 
-      // 2. Recipe & Cooking Queries
-      if (msg.includes('recipe') || msg.includes('cook') || msg.includes('dinner') || msg.includes('lunch') || msg.includes('breakfast') || msg.includes('சமையல்') || msg.includes('உணவு') || msg.includes('செய்முறை')) {
-        const topItems = [...urgentItems, ...soonItems].slice(0, 3).map(i => i.product_name);
-        return {
-          reply: isTa
-            ? `👨‍🍳 உங்கள் குளிர்சாதனப் பெட்டியில் உள்ள **${topItems.join(', ') || 'காய்கறிகள் மற்றும் உணவுகளைக்'}** கொண்டு 20-க்கும் மேற்பட்ட சுவையான சமையல் குறிப்புகள் உருவாக்கப்பட்டுள்ளன!\n\n**AI சமையல் கலைஞர்** பக்கத்திற்கு சென்று உணவு வகை மற்றும் உணவு முறையைத் தேர்ந்தெடுத்து சமைக்கலாம்.`
-            : `👨‍🍳 I have generated **20+ Zero-Waste Recipes** including Pasta Primavera, Coconut Curry, Shakshuka, Fried Rice, and Skillets using **${topItems.join(' and ') || 'your available pantry ingredients'}**!\n\nOpen the **AI Recipe Chef** module to filter by cuisine, meal type, and dietary preferences.`,
-          suggestedActions: isTa
-            ? ['AI சமையல் பக்கத்தை திற', 'காலாவதியாகும் உணவுகள்', 'கீரைகளை சேமிக்கும் முறை']
-            : ['Open AI Recipes', 'Show expiring items', 'How to store greens']
-        };
-      }
+      // 2. Specific Food Lookup / Storage Advice (e.g. "milk", "eggs", "banana", "bread", "tomato", "spinach", "chicken")
+      const knownFoods = [
+        { key: 'milk', nameTa: 'பால்', tipEn: 'Keep in the middle shelf of the fridge (coldest spot), never the door. Unopened milk lasts 5-7 days past printed date. Freeze in ice cubes for coffee or smoothies!', tipTa: 'குளிர்சாதனப் பெட்டியின் நடுப்பகுதியில் வைக்கவும் (கதவில் வைக்காதீர்கள்). ஐஸ் க்யூப் தட்டுகளில் ஊற்றி பிரீசரில் வைத்தால் 3 மாதங்கள் கெடாது!' },
+        { key: 'bread', nameTa: 'ரொட்டி', tipEn: 'Never refrigerate bread as cold temperatures speed up starch crystallization (staling). Keep in a cool bread box or slice and freeze for instant toasting!', tipTa: 'ரொட்டியை பிரிட்ஜில் வைக்காதீர்கள்! உலர்ந்த ரொட்டிப் பெட்டியில் வைக்கவும் அல்லது நறுக்கி பிரீசரில் வைத்தால் தேவைப்படும்போது டோஸ்ட் செய்யலாம்.' },
+        { key: 'banana', nameTa: 'வாழைப்பழம்', tipEn: 'Bananas emit ethylene gas. Keep away from other fruits. Once spotted, peel and freeze for smoothies, oat pancakes, or banana bread!', tipTa: 'வாழைப்பழத்தை மற்ற பழங்களுடன் சேர்க்காதீர்கள். கனிந்த வாழைப்பழங்களை தோலுரித்து பிரீசரில் வைத்தால் ஸ்மூத்தி மற்றும் பான்கேக் செய்யப் பயன்படுத்தலாம்.' },
+        { key: 'egg', nameTa: 'முட்டை', tipEn: 'Perform the Water Float Test: Fresh eggs sink to the bottom. If it stands upright, use quickly. If it floats to the top, it is spoiled. Eggs stay fresh 3-5 weeks refrigerated.', tipTa: 'தண்ணீர் பரிசோதனை: முட்டையை தண்ணீரில் போடுங்கள்; அடியில் மூழ்கினால் புதியது, மேலே மிதந்தால் காலாவதியானது. குளிர்சாதனப் பெட்டியில் 3-5 வாரங்கள் கெடாது.' },
+        { key: 'tomato', nameTa: 'தக்காளி', tipEn: 'Store whole tomatoes stem-down at room temperature for maximum flavor. Refrigerate only once fully ripe or sliced.', tipTa: 'தக்காளியை அறை வெப்பநிலையில் வைக்கவும்; நன்றாக பழுத்த பிறகு மட்டுமே குளிர்சாதனப் பெட்டியில் வைக்க வேண்டும்.' },
+        { key: 'spinach', nameTa: 'கீரை', tipEn: 'Wrap leafy greens in a dry paper towel inside an airtight glass container to absorb moisture. Keeps crispy for up to 10 days!', tipTa: 'கீரையை காகிதத் துண்டில் சுற்றி காற்றுப்புகா பெட்டியில் வைத்தால் 10 நாட்கள் வரை புத்துணர்ச்சியுடன் இருக்கும்.' },
+        { key: 'chicken', nameTa: 'கோழி இறைச்சி', tipEn: 'Raw poultry should be cooked within 1-2 days of purchase or frozen immediately at -18°C where it stays safe for 9 months.', tipTa: 'பச்சை இறைச்சியை வாங்கிய 1-2 நாட்களுக்குள் சமைக்கவும் அல்லது -18°C பிரீசரில் வைத்தால் 9 மாதங்கள் வரை பாதுகாப்பாக இருக்கும்.' },
+        { key: 'yogurt', nameTa: 'தயிர்', tipEn: 'Unopened yogurt remains fresh 1-2 weeks past printed date. Once opened, consume within 7 days. Watery whey on top is natural protein—just stir it in!', tipTa: 'தயிர் திறக்கப்படாவிட்டால் தேதியிலிருந்து 1-2 வாரங்கள் நல்ல நிலையில் இருக்கும். மேலே தேங்கும் நீர் ஆரோக்கியமான புரோட்டீன், அதை கலக்கி உண்ணலாம்.' },
+        { key: 'cheese', nameTa: 'சீஸ்', tipEn: 'Wrap hard cheese in parchment/wax paper, not plastic cling wrap, to allow breathing. Hard cheeses can last 3-6 months refrigerated.', tipTa: 'சீஸை பிளாஸ்டிக்கில் சுற்றாமல் மெழுகு காகிதத்தில் சுற்றி வைத்தால் பல மாதங்கள் பூஞ்சை பிடிக்காமல் இருக்கும்.' }
+      ];
 
-      // 3. Storage & Shelf Life Advice
-      if (msg.includes('store') || msg.includes('keep') || msg.includes('fresh') || msg.includes('freeze') || msg.includes('shelf') || msg.includes('சேமிப்பு') || msg.includes('பாதுகாப்பு')) {
-        return {
-          reply: isTa
-            ? `💡 **FreshBot உணவுப் பாதுகாப்பு விதிகள்:**\n\n1. **ரொட்டி & பேக்கரி:** குளிர்சாதனப் பெட்டியில் வைக்காதீர்கள்! ரொட்டிப் பெட்டியில் வைக்கவும் அல்லது நறுக்கி பிரீசரில் சேமிக்கவும்.\n2. **ஸ்ட்ராபெர்ரி & பழங்கள்:** சாப்பிடும் வரை கழுவாமல் காற்றுப்புகும் பெட்டியில் வைக்கவும்.\n3. **பால் & தயிர்:** பிரிட்ஜின் நடுப்பகுதியில் வைக்கவும், கதவுப் பகுதியில் வைக்காதீர்கள்.\n4. **பசலைக்கீரை & கீரைகள்:** உலர்ந்த துணி அல்லது காகிதத்தில் சுற்றி காற்றுப்புகா பெட்டியில் வைக்கவும்.\n5. **வாழைப்பழம் & ஆப்பிள்:** எத்திலீன் வாயுவை வெளியிடுவதால் பிற காய்கறிகளிலிருந்து தள்ளி வைக்கவும்.`
-            : `💡 **FreshBot Food Preservation Rules:**\n\n1. **Bread & Bakery:** Never refrigerate! Store in a dry bread box or slice and freeze.\n2. **Berries:** Keep unwashed in a breathable container until eating.\n3. **Milk & Dairy:** Keep in the middle/back of the fridge (coldest), never in the door.\n4. **Leafy Greens:** Wrap in a clean dry paper towel inside an airtight container to absorb humidity.\n5. **Bananas & Apples:** Keep separate from greens as they release ripening ethylene gas.`,
-          suggestedActions: isTa
-            ? ['பாதுகாப்பு வழிகாட்டியை திற', 'விரைவில் காலாவதியாகும் உணவுகள்', 'உர ஆய்வகம்']
-            : ['Open Preservation Encyclopedia', 'What is expiring soon?', 'Compost Scrap Guide']
-        };
-      }
-
-      // 4. Savings & Environmental Sustainability
-      if (msg.includes('saving') || msg.includes('waste') || msg.includes('money') || msg.includes('stat') || msg.includes('சேமிப்பு') || msg.includes('பணம்')) {
-        const stats = storage.getSavingsStats();
+      const matchedFood = knownFoods.find(f => msg.includes(f.key) || (f.nameTa && msg.includes(f.nameTa)));
+      if (matchedFood) {
         return {
           reply: isTa
-            ? `🌱 **உங்கள் பூஜ்ஜிய கழிவு சுற்றுச்சூழல் சாதனை:**\n\n• 💰 **$${stats.moneySaved}** உணவு வீணாவதைத் தடுத்து சேமித்த பணம்\n• 🥗 **${stats.foodItemsSaved} உணவுப் பொருட்கள்** பாதுகாப்பாக சமைக்கப்பட்டன\n• 🌍 **${stats.co2PreventedKg} கிலோ CO₂** பசுமை இல்ல வாயு உமிழ்வு குறைக்கப்பட்டது\n\nபூமியையும் உங்கள் பணத்தையும் பாதுகாக்கும் அற்புதமான பணிக்கு வாழ்த்துகள்!`
-            : `🌱 **Your Zero-Waste Impact Summary:**\n\n• 💰 **$${stats.moneySaved}** saved by preventing grocery spoilage\n• 🥗 **${stats.foodItemsSaved} food items** consumed safely\n• 🌍 **${stats.co2PreventedKg} kg CO₂** greenhouse gas emissions avoided\n\nAwesome work protecting the planet and your wallet!`,
+            ? `🥑 **${matchedFood.nameTa} சேமிப்பு & பாதுகாப்பு ஆலோசனை:**\n\n${matchedFood.tipTa}\n\nஉங்களிடம் உள்ள ${matchedFood.nameTa} வைத்து சமையல் குறிப்பு வேண்டுமா?`
+            : `🥑 **${matchedFood.key.toUpperCase()} Storage & Freshness Guide:**\n\n${matchedFood.tipEn}\n\nWould you like a zero-waste recipe using ${matchedFood.key}?`,
           suggestedActions: isTa
-            ? ['கழிவு பகுப்பாய்வு', 'காலாவதி நிலவரம்', 'சுற்றுச்சூழல் சவால்கள்']
-            : ['Open Waste Analytics', 'What is expiring soon?', 'View Eco Quests']
+            ? [`${matchedFood.nameTa} சமையல் குறிப்பு`, 'குளிர்சாதனப் பெட்டி நிலை', 'உணவு பாதுகாப்பு வழிகாட்டல்']
+            : [`Recipe with ${matchedFood.key}`, "Check what's expiring", 'Open Food Encyclopedia']
         };
       }
 
-      // 5. Greetings & Help
-      if (msg.includes('hi') || msg.includes('hello') || msg.includes('hey') || msg.includes('வணக்கம்') || msg.includes('help')) {
+      // 3. Recipes & Cooking Queries
+      if (msg.includes('recipe') || msg.includes('cook') || msg.includes('dinner') || msg.includes('lunch') || msg.includes('breakfast') || msg.includes('make') || msg.includes('meal') || msg.includes('சமையல்') || msg.includes('உணவு') || msg.includes('செய்முறை') || msg.includes('இரவு')) {
+        const productNames = products.slice(0, 4).map(p => p.product_name);
         return {
           reply: isTa
-            ? `👋 வணக்கம்! நான் FreshBot AI, உங்கள் சமையலறை உணவுப் பாதுகாவலன். உங்கள் உணவுகள் வீணாவதைத் தடுக்க நான் தயாராக உள்ளேன்.\n\nஎன்னிடம் கேளுங்கள்:\n• *"குளிர்சாதனப் பெட்டியில் என்ன காலாவதியாகிறது?"*\n• *"இன்றைய உணவு செய்முறை தாருங்கள்"*\n• *"பழங்களை எவ்வாறு பாதுகாப்பது?"*`
-            : `👋 Hello! I am FreshBot AI, your personal zero-waste kitchen assistant. I am actively monitoring your kitchen inventory.\n\nAsk me anything like:\n• *"What is expiring soon?"*\n• *"Suggest a dinner recipe"*\n• *"How do I keep berries fresh?"*`,
+            ? `👨‍🍳 **உங்கள் சமையலறைக்கான சிறப்பு சமையல் பரிந்துரை:**\n\nதற்போது உங்கள் கையிருப்பில் உள்ள **${productNames.join(', ') || 'காய்கறிகள்'}** கொண்டு 20-க்கும் மேற்பட்ட சுவையான செய்முறைகள் தயாராக உள்ளன!\n\n1. **ஜீரோ-வேஸ்ட் ஸ்கில்லெட் & டோஸ்ட்** (12 நிமிடம்)\n2. **பூண்டு பாஸ்தா பிரிமாவெரா** (15 நிமிடம்)\n3. **புத்துணர்ச்சி பழ ஸ்மூத்தி பவுல்** (5 நிமிடம்)\n4. **காய்கறி ஃப்ரைட் ரைஸ் & முட்டை** (10 நிமிடம்)\n\n👉 **AI செய்முறைகள்** பக்கத்திற்கு சென்று படிப்படியான செய்முறை வழிகாட்டியைத் தொடங்குங்கள்!`
+            : `👨‍🍳 **Chef FreshBot Custom Recipe Recommendations:**\n\nUsing **${productNames.join(', ') || 'your fresh ingredients'}**, here are top chef picks:\n\n1. **Zero-Waste Skillet & Toast** (12 mins, High-Protein)\n2. **Garlic Pasta Primavera** (15 mins, Comfort Italian)\n3. **Fresh Vitality Smoothie Bowl** (5 mins, No-Cook Breakfast)\n4. **Golden Egg Fried Rice** (10 mins, Quick Lunch)\n\n👉 Go to the **AI Recipes** module for step-by-step interactive Cook Mode narration!`,
           suggestedActions: isTa
-            ? ['காலாவதியாகும் உணவுகள்', 'இரவு உணவு செய்முறை', 'உணவு சேமிப்பு முறைகள்']
-            : ["What's expiring soon?", 'Generate dinner recipe', 'Kitchen storage tips']
+            ? ['AI செய்முறை பக்கம்', 'காலாவதி நிலவரம்', 'சேமிப்பு வழிகாட்டல்']
+            : ['Open AI Recipes', "Check expiring items", 'How to store leftovers']
         };
       }
 
-      // Default Intelligent Helper
+      // 4. Waste, Savings & Sustainability Queries
+      if (msg.includes('saving') || msg.includes('waste') || msg.includes('money') || msg.includes('loss') || msg.includes('co2') || msg.includes('impact') || msg.includes('சேமிப்பு') || msg.includes('பணம்') || msg.includes('கழிவு')) {
+        return {
+          reply: isTa
+            ? `🌱 **உங்கள் சமையலறை சுற்றுச்சூழல் & சேமிப்பு அறிக்கை:**\n\n• 💰 **$${stats.moneySaved}** உணவு வீணாவதைத் தடுத்து சேமித்த பணம்\n• 🥗 **${stats.foodItemsSaved} உணவுகள்** சரியான நேரத்தில் உண்ணப்பட்டன\n• 🛡️ **${stats.wasteScore}%** கழிவு தடுப்பு திறன் மதிப்பீடு\n• 🌍 **${stats.co2PreventedKg} kg** CO₂ பசுமை இல்ல வாயு உமிழ்வு குறைப்பு\n\nமாதாந்திர விரிவான தணிக்கை அறிக்கைக்கு **மாதாந்திர அறிக்கை (Reports)** பக்கத்தைப் பார்க்கவும்.`
+            : `🌱 **Your Zero-Waste Sustainability Summary:**\n\n• 💰 **$${stats.moneySaved}** saved by preventing grocery spoilage\n• 🥗 **${stats.foodItemsSaved} meals** rescued and eaten\n• 🛡️ **${stats.wasteScore}%** Zero-Waste efficiency rating\n• 🌍 **${stats.co2PreventedKg} kg** CO₂ emissions prevented\n\nCheck out the **Monthly Reports** module to download a full CSV audit!`,
+          suggestedActions: isTa
+            ? ['மாதாந்திர அறிக்கை திற', 'கழிவு பகுப்பாய்வு', 'காலாவதியாகும் உணவுகள்']
+            : ['Open Monthly Reports', 'View Analytics', 'Check Expiry Dates']
+        };
+      }
+
+      // 5. Friendly Greetings, Jokes, & Compliments
+      if (msg.includes('hi') || msg.includes('hello') || msg.includes('hey') || msg.includes('வணக்கம்') || msg.includes('help') || msg.includes('உதவி') || msg.includes('who are you') || msg.includes('யார் நீ')) {
+        return {
+          reply: isTa
+            ? `👋 வணக்கம்! நான் **FreshBot AI**, உங்கள் சமையலறை உணவுப் பாதுகாவலன் மற்றும் குரல் உதவியாளர்.\n\nநான் செய்யக்கூடியவை:\n• 🔍 உங்கள் குளிர்சாதனப் பெட்டியில் காலாவதியாகும் உணவுகளைக் கண்காணித்தல்\n• 🍳 மீதமுள்ள பொருட்களை வைத்து சுவையான செய்முறைகளை பரிந்துரைத்தல்\n• 💡 உணவுகளை நீண்ட நாட்கள் பாதுகாக்கும் முறைகளைக் கூறுதல்\n• 📊 நீங்கள் சேமித்த பணத்தைக் கணக்கிடுதல்\n\nஎன்னிடம் தமிழில் எதை வேண்டுமானாலும் கேளுங்கள்!`
+            : `👋 Hello! I am **FreshBot AI**, your smart zero-waste kitchen assistant and voice companion.\n\nHere is how I can assist you:\n• 🔍 Track foods approaching expiry in your kitchen\n• 🍳 Generate instant zero-waste recipes using what you have\n• 💡 Provide shelf-life & storage hacks for any food\n• 📊 Audit your money saved and environmental CO₂ impact\n\nWhat would you like to explore today?`,
+          suggestedActions: isTa
+            ? ['குளிர்சாதனப் பெட்டியில் என்ன உள்ளது?', 'இன்றைய இரவு உணவு செய்முறை', 'பால் சேமிப்பு முறை']
+            : ["What's expiring soon?", 'Suggest a quick recipe', 'How to store avocados']
+        };
+      }
+
+      if (msg.includes('thank') || msg.includes('நன்றி') || msg.includes('great') || msg.includes('good') || msg.includes('super') || msg.includes('அற்புதம்')) {
+        return {
+          reply: isTa
+            ? `😊 மிக்க மகிழ்ச்சி! உணவை வீணாக்காமல் பூமியையும் பணத்தையும் பாதுகாப்பதில் நாம் இணைந்து செயல்படுவோம். வேறு ஏதேனும் கேள்வி உள்ளதா?`
+            : `😊 You are most welcome! Together we make zero-waste cooking delicious, easy, and rewarding. Let me know if you need anything else!`,
+          suggestedActions: isTa
+            ? ['காலாவதி நிலவரம்', 'புதிய செய்முறை', 'சேமிப்பு வழிகாட்டல்']
+            : ["Check my fridge", 'Find new recipe', 'Storage tips']
+        };
+      }
+
+      if (msg.includes('joke') || msg.includes('கதை') || msg.includes('சிரிப்பு')) {
+        return {
+          reply: isTa
+            ? `😄 இதோ ஒரு சமையலறை நகைச்சுவை:\n\nகேள்வி: தக்காளி ஏன் சிவப்பாக மாறியது?\nபதில்: அது சாலட் டிரஸ்ஸிங்கைப் பார்த்து வெட்கப்பட்டுவிட்டது! 🍅😂`
+            : `😄 Here is a kitchen joke for you:\n\n*Why did the tomato blush?*\n*Because it saw the salad dressing!* 🍅🥗😂`,
+          suggestedActions: isTa
+            ? ['இன்றைய சமையல் யோசனை', 'காலாவதியாகும் உணவுகள்']
+            : ['Give me a recipe idea', 'Check expiring food']
+        };
+      }
+
+      // 6. Generic Intelligent Fallback for ANY other question
       return {
         reply: isTa
-          ? `🤖 சமையலறை உணவுகளை நிர்வகிக்கவும், கழிவைத் தடுக்கவும், சுவையான செய்முறைகளை உருவாக்கவும் நான் உதவுகிறேன்!\n\nதற்போது உங்கள் சமையலறையில் **${products.length} உணவுகள்** கண்காணிக்கப்படுகின்றன. சமையல் யோசனைகள் அல்லது காலாவதி விவரங்களை எப்போது வேண்டுமானாலும் கேட்கலாம்.`
-          : `🤖 I'm here to help you manage food, prevent waste, and discover zero-waste recipes!\n\nCurrently tracking **${products.length} food items** in your kitchen. You can ask me for recipe ideas, shelf-life advice, or expiry checks anytime.`,
+          ? `🤖 நான் **FreshBot AI**. உங்கள் கேள்வி: *" ${rawMsg} "*\n\nஉங்கள் சமையலறையில் தற்போது **${products.length} உணவுப் பொருட்கள்** கண்காணிக்கப்படுகின்றன ($${stats.moneySaved} சேமிப்பு பதிவு செய்யப்பட்டுள்ளது).\n\nஉங்களுக்கு சமையல் குறிப்புகள், காலாவதி தேதிகள் அல்லது உணவு சேமிப்பு ஆலோசனைகள் தேவைப்பட்டால் உடனடியாக கேட்கலாம்!`
+          : `🤖 I'm **FreshBot AI**, your smart kitchen guardian. Regarding *" ${rawMsg} "*:\n\nYou currently have **${products.length} food items** in inventory ($${stats.moneySaved} in waste prevention savings).\n\nFeel free to ask me for custom recipes, expiry timeline checks, or shelf-life preservation advice anytime!`,
         suggestedActions: isTa
-          ? ['காலாவதி நிலவரம்', 'விரைவு செய்முறை', '3 நிமிட தணிக்கை']
-          : ["What's expiring soon?", 'Generate quick recipe', 'Open 3-Min Audit']
+          ? ['காலாவதி நிலவரம்', 'இரவு உணவு செய்முறை', 'உணவு சேமிப்பு வழிகாட்டல்']
+          : ["What's expiring soon?", 'Suggest a recipe', 'Storage tips']
       };
     } catch (err) {
-      console.warn('FreshBot internal handler notice:', err);
+      console.warn('FreshBot handler notice:', err);
       return {
         reply: "👋 FreshBot AI is online! Ask me what items in your fridge are expiring or request a zero-waste recipe!",
         suggestedActions: ["What's expiring soon?", 'Suggest a recipe', 'Storage tips']
