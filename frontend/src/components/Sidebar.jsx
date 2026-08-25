@@ -7,22 +7,21 @@ import {
   ScanLine, 
   ChefHat, 
   CalendarDays, 
-  ShoppingCart,
-  Layers,
-  BookOpen,
-  Users,
-  QrCode,
+  ShoppingCart, 
+  Layers, 
+  BookOpen, 
+  Users, 
   BarChart3, 
   Bell, 
-  Settings,
-  HeartPulse,
-  ClipboardCheck,
-  Recycle,
-  Tag,
-  Trophy,
-  Home,
-  Sparkles,
-  Leaf
+  Settings, 
+  HeartPulse, 
+  ClipboardCheck, 
+  Recycle, 
+  Tag, 
+  Trophy, 
+  Home, 
+  Sparkles, 
+  Leaf 
 } from 'lucide-react';
 import { storage } from '../services/storage';
 import { useLanguage } from '../context/LanguageContext';
@@ -51,7 +50,6 @@ export default function Sidebar() {
     { name: t('navChallenges'), path: '/challenges', icon: Trophy, badge: `Lvl ${challenges.level}` },
     { name: t('navHousehold'), path: '/household', icon: Home },
     { name: t('navCommunity'), path: '/community', icon: Users },
-    { name: t('navBarcode'), path: '/barcode-hub', icon: QrCode },
     { name: t('navAnalytics'), path: '/analytics', icon: BarChart3 },
     { name: t('navAlerts'), path: '/notifications', icon: Bell, badge: stats.urgent_products > 0 ? `${stats.urgent_products} urgent` : null, badgeColor: 'bg-rose-500' },
     { name: t('navSettings'), path: '/settings', icon: Settings }

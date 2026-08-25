@@ -14,7 +14,6 @@ import ShoppingList from './pages/ShoppingList';
 import FridgeMap from './pages/FridgeMap';
 import PreservationGuide from './pages/PreservationGuide';
 import Community from './pages/Community';
-import BarcodeHub from './pages/BarcodeHub';
 import Analytics from './pages/Analytics';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
@@ -129,12 +128,6 @@ function App() {
               <Route path="/community" element={
                 <ProtectedRoute>
                   <Community />
-                </ProtectedRoute>
-              } />
-
-              <Route path="/barcode-hub" element={
-                <ProtectedRoute>
-                  <BarcodeHub />
                 </ProtectedRoute>
               } />
 

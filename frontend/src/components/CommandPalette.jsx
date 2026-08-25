@@ -71,7 +71,6 @@ export default function CommandPalette({ isOpen, onClose }) {
     { title: t('navChallenges'), path: '/challenges', icon: Trophy, category: language === 'ta' ? 'சவால்கள்' : 'Gamification' },
     { title: t('navHousehold'), path: '/household', icon: Home, category: language === 'ta' ? 'வீடு' : 'Household' },
     { title: t('navCommunity'), path: '/community', icon: Users, category: language === 'ta' ? 'சமூகம்' : 'Community' },
-    { title: t('navBarcode'), path: '/barcode-hub', icon: Command, category: language === 'ta' ? 'கருவிகள்' : 'Tools' },
     { title: t('navAnalytics'), path: '/analytics', icon: BarChart3, category: language === 'ta' ? 'பகுப்பாய்வு' : 'Analytics' },
     { title: t('navAlerts'), path: '/notifications', icon: Bell, category: language === 'ta' ? 'எச்சரிக்கைகள்' : 'Alerts' },
     { title: t('navSettings'), path: '/settings', icon: Settings, category: language === 'ta' ? 'அமைப்புகள்' : 'System' }
@@ -142,7 +141,7 @@ export default function CommandPalette({ isOpen, onClose }) {
           {/* Navigation Items */}
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 block mb-1">
-              {language === 'ta' ? 'அனைத்து 20 தொகுதிகள் & குறுக்குவழிகள்' : 'All 20 Modules & Quick Actions'}
+              {language === 'ta' ? 'அனைத்து தொகுதிகள் & குறுக்குவழிகள்' : 'All Modules & Quick Actions'}
             </span>
             <div className="space-y-1">
               {filteredNav.map((item, idx) => {

@@ -13,9 +13,10 @@ import {
   DollarSign, 
   MapPin, 
   FileText, 
-  Barcode, 
   ArrowLeft,
   CheckCircle2,
+  Bell,
+  Clock,
   ScanLine
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -57,13 +58,27 @@ export default function AddProduct() {
     return d.toISOString().split('T')[0];
   };
 
+  const calculateAlertDate = (expiryStr, daysBefore) => {
+    try {
+      const exp = new Date(expiryStr);
+      exp.setDate(exp.getDate() - Number(daysBefore));
+      return exp.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch (e) {
+      return '';
+    }
+  };
+
   const [formData, setFormData] = useState({
     product_name: scannedData.product_name || '',
     category: scannedData.category || 'Produce',
     expiry_date: scannedData.expiry_date || getFutureDate(5),
+    reminder_days_before: 2,
     quantity: scannedData.quantity || 1,
     unit: scannedData.unit || 'pcs',
-    barcode: scannedData.barcode || '',
     estimated_price: scannedData.estimated_price || 3.99,
     location: scannedData.location || 'Fridge Crisper Drawer',
     notes: scannedData.notes || '',
@@ -78,6 +93,11 @@ export default function AddProduct() {
     sound.playBeep(850, 0.03);
   };
 
+  const handleReminderSelect = (days) => {
+    setFormData(prev => ({ ...prev, reminder_days_before: days }));
+    sound.playBeep(920, 0.03);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.product_name || !formData.expiry_date) {
@@ -87,7 +107,15 @@ export default function AddProduct() {
 
     setLoading(true);
     try {
-      await api.addProduct(formData);
+      // Calculate target reminder alert date
+      const expDate = new Date(formData.expiry_date);
+      expDate.setDate(expDate.getDate() - Number(formData.reminder_days_before || 2));
+      const reminderIso = expDate.toISOString().split('T')[0];
+
+      await api.addProduct({
+        ...formData,
+        reminder_date: reminderIso
+      });
       sound.playSuccess();
       triggerConfetti(2500);
       navigate('/products');
@@ -98,6 +126,8 @@ export default function AddProduct() {
       setLoading(false);
     }
   };
+
+  const alertDateDisplay = calculateAlertDate(formData.expiry_date, formData.reminder_days_before);
 
   return (
     <DashboardLayout>
@@ -117,7 +147,7 @@ export default function AddProduct() {
             className="inline-flex items-center space-x-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800 hover:scale-105 transition-all"
           >
             <ScanLine size={14} />
-            <span>{language === 'ta' ? '📷 பார்கோடு ஸ்கேன் செய்' : '📷 Auto-Scan Barcode'}</span>
+            <span>{language === 'ta' ? '📷 ஸ்மார்ட் OCR ஸ்கேனர்' : '📷 Smart OCR Scanner'}</span>
           </Link>
         </div>
 
@@ -231,28 +261,65 @@ export default function AddProduct() {
             </div>
           </div>
 
-          {/* Row 3: Barcode & Location */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 flex items-center justify-between">
-                <span>{language === 'ta' ? 'பார்கோடு (EAN / UPC)' : 'Barcode (EAN / UPC)'}</span>
-                {formData.barcode && (
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">
-                    ✓ {formData.barcode}
-                  </span>
-                )}
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="e.g. 8901030383011"
-                  value={formData.barcode}
-                  onChange={e => setFormData({ ...formData, barcode: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-mono outline-none focus:ring-2 focus:ring-emerald-500"
-                />
+          {/* DEDICATED EXPIRY REMINDER ALERT PREFERENCE SECTION */}
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-50/70 to-teal-50/40 dark:from-slate-850 dark:to-emerald-950/20 border-2 border-emerald-500/40 shadow-sm space-y-3">
+            <div className="flex items-center space-x-2">
+              <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                <Bell size={18} className="animate-bounce" />
+              </div>
+              <div>
+                <h4 className="font-heading font-extrabold text-sm text-slate-900 dark:text-white">
+                  {t('reminderHeading')}
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {t('reminderQuestion')}
+                </p>
               </div>
             </div>
 
+            {/* Selectable Days Before Alert Options */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1">
+              {[
+                { days: 1, label: t('reminder1Day') },
+                { days: 2, label: t('reminder2Days'), popular: true },
+                { days: 3, label: t('reminder3Days') },
+                { days: 5, label: t('reminder5Days') },
+                { days: 7, label: t('reminder7Days') }
+              ].map((opt) => {
+                const isSelected = formData.reminder_days_before === opt.days;
+                return (
+                  <button
+                    key={opt.days}
+                    type="button"
+                    onClick={() => handleReminderSelect(opt.days)}
+                    className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center ${
+                      isSelected
+                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-600/20 scale-[1.03]'
+                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-emerald-400'
+                    }`}
+                  >
+                    <span className="text-lg font-heading font-extrabold">{opt.days} {language === 'ta' ? 'நாள்' : 'Day'}{opt.days > 1 && language !== 'ta' ? 's' : ''}</span>
+                    <span className={`text-[10px] mt-0.5 font-semibold ${isSelected ? 'text-emerald-100' : 'text-slate-400'}`}>
+                      {opt.days === 2 ? '★ ' + (language === 'ta' ? 'பரிந்துரை' : 'Best') : (language === 'ta' ? 'முன்பு' : 'Before')}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Live Calculated Alert Date Notice */}
+            <div className="mt-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/80 flex items-center justify-between text-xs">
+              <span className="text-slate-600 dark:text-slate-300 font-medium">
+                {t('reminderWillAlertOn')}:
+              </span>
+              <span className="font-heading font-extrabold text-emerald-600 dark:text-emerald-400">
+                🔔 {alertDateDisplay} ({formData.reminder_days_before} {language === 'ta' ? 'நாட்களுக்கு முன்' : 'days before expiry'})
+              </span>
+            </div>
+          </div>
+
+          {/* Row 3: Location & Price */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                 {t('locationLabel')}
@@ -267,10 +334,7 @@ export default function AddProduct() {
                 ))}
               </select>
             </div>
-          </div>
 
-          {/* Row 4: Price & Notes */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                 {t('estimatedPriceLabel')} ($)
@@ -283,19 +347,20 @@ export default function AddProduct() {
                 className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                {t('notesLabel')}
-              </label>
-              <input
-                type="text"
-                placeholder={t('notesPlaceholder')}
-                value={formData.notes}
-                onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-            </div>
+          {/* Notes */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+              {t('notesLabel')}
+            </label>
+            <input
+              type="text"
+              placeholder={t('notesPlaceholder')}
+              value={formData.notes}
+              onChange={e => setFormData({ ...formData, notes: e.target.value })}
+              className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+            />
           </div>
 
           {/* Submit Action */}

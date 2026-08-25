@@ -23,7 +23,6 @@ export const translations = {
     navChallenges: 'Eco Quests & XP',
     navHousehold: 'Household Kitchen',
     navCommunity: 'Community Sharing',
-    navBarcode: 'Printable QR Labels',
     navAnalytics: 'Waste Analytics',
     navAlerts: 'Alerts',
     navSettings: 'Settings',
@@ -97,6 +96,17 @@ export const translations = {
     quickPresetsTitle: 'Quick Expiry Helpers',
     addDaysBtn: '+{days} Days',
     addWeeksBtn: '+{weeks} Weeks',
+
+    // Reminder Preference
+    reminderHeading: '🔔 Expiry Reminder Alert Preference',
+    reminderQuestion: 'How many days before expiry should we alert you?',
+    reminder1Day: '1 Day Before',
+    reminder2Days: '2 Days Before (Recommended)',
+    reminder3Days: '3 Days Before',
+    reminder5Days: '5 Days Before',
+    reminder7Days: '7 Days Before',
+    reminderTargetDate: 'Target Alert Date:',
+    reminderWillAlertOn: 'You will receive an automatic notification on',
 
     // Shopping List
     shoppingTitle: 'Smart Shopping List & Auto-Restock',
@@ -219,13 +229,6 @@ export const translations = {
     availableSurplus: 'Available Community Surplus Food',
     nearbyFridges: 'Nearby 24/7 Community Fridges & Food Banks',
 
-    // QR Labels
-    barcodeHubTitle: 'Printable QR & Container Label Designer',
-    barcodeHubSub: 'Generate scan-ready adhesive labels for leftovers and meal prep containers.',
-    containerNameLabel: 'Container / Dish Name',
-    prepDateLabel: 'Prep Date',
-    printLabelsBtn: 'Print Label Sheet 🖨️',
-
     // Analytics
     analyticsTitle: 'Sustainability & Waste Analytics',
     analyticsSub: 'Track monthly grocery savings, environmental impact offsets, and predictive spoilage risks.',
@@ -279,7 +282,6 @@ export const translations = {
     navChallenges: 'சுற்றுச்சூழல் சவால்கள்',
     navHousehold: 'வீட்டு சமையலறை',
     navCommunity: 'சமூக உணவுப் பகிர்வு',
-    navBarcode: 'QR லேபிள்கள்',
     navAnalytics: 'கழிவு பகுப்பாய்வு',
     navAlerts: 'எச்சரிக்கைகள்',
     navSettings: 'அமைப்புகள்',
@@ -353,6 +355,17 @@ export const translations = {
     quickPresetsTitle: 'விரைவு காலாவதி தேதிகள்',
     addDaysBtn: '+{days} நாட்கள்',
     addWeeksBtn: '+{weeks} வாரங்கள்',
+
+    // Reminder Preference
+    reminderHeading: '🔔 காலாவதி நினைவூட்டல் விருப்பத்தேர்வு',
+    reminderQuestion: 'காலாவதிக்கு எத்தனை நாட்களுக்கு முன்பு நாங்கள் உங்களுக்கு நினைவூட்ட வேண்டும்?',
+    reminder1Day: '1 நாளுக்கு முன்பு',
+    reminder2Days: '2 நாட்களுக்கு முன்பு (பரிந்துரைக்கப்பட்டது)',
+    reminder3Days: '3 நாட்களுக்கு முன்பு',
+    reminder5Days: '5 நாட்களுக்கு முன்பு',
+    reminder7Days: '7 நாட்களுக்கு முன்பு',
+    reminderTargetDate: 'நினைவூட்டல் எச்சரிக்கை தேதி:',
+    reminderWillAlertOn: 'தானியங்கி எச்சரிக்கை அனுப்பப்படும் தேதி',
 
     // Shopping List
     shoppingTitle: 'ஸ்மார்ட் ஷாப்பிங் பட்டியல் & தானியங்கி மறுஇருப்பு',
@@ -474,13 +487,6 @@ export const translations = {
     donateFoodBtn: 'உணவுப் பொருளைத் தானம் செய்',
     availableSurplus: 'கிடைக்கக்கூடிய சமூக உபரி உணவுகள்',
     nearbyFridges: 'அருகிலுள்ள 24/7 சமூக குளிர்சாதன பெட்டிகள் & உணவு வங்கிகள்',
-
-    // QR Labels
-    barcodeHubTitle: 'QR & கொள்கலன் லேபிள் வடிவமைப்பாளர்',
-    barcodeHubSub: 'மிச்ச உணவுகள் மற்றும் உணவுப் பெட்டிகளுக்கான அச்சிடக்கூடிய லேபிள்களை உருவாக்குங்கள்.',
-    containerNameLabel: 'உணவு / பெட்டியின் பெயர்',
-    prepDateLabel: 'தயாரித்த தேதி',
-    printLabelsBtn: 'லேபிள்களை அச்சிடுக 🖨️',
 
     // Analytics
     analyticsTitle: 'சுற்றுச்சூழல் & கழிவு பகுப்பாய்வு',
