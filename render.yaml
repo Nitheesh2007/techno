@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: food-expiry-guardian-api
+    env: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: DATABASE_NAME
+        value: food_expiry_guardian
+      - key: JWT_SECRET
+        sync: false
+        generateValue: true
+      - key: AI_PROVIDER
+        value: rule_based
+      - key: AI_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
