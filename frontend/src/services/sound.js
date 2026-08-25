@@ -51,12 +51,61 @@ export const speakVoice = (text, lang = 'en', onEnd) => {
     
     if (onEnd) {
       utterance.onend = onEnd;
+      utterance.onerror = onEnd;
     }
     
     window.speechSynthesis.speak(utterance);
   } catch (e) {
     console.warn('Speech synthesis notice:', e);
   }
+};
+
+export const pauseVoice = () => {
+  try {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+        window.speechSynthesis.pause();
+      }
+    }
+  } catch (e) {
+    console.warn('Speech pause error:', e);
+  }
+};
+
+export const resumeVoice = () => {
+  try {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+    }
+  } catch (e) {
+    console.warn('Speech resume error:', e);
+  }
+};
+
+export const stopVoice = () => {
+  try {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  } catch (e) {
+    console.warn('Speech stop error:', e);
+  }
+};
+
+export const isVoiceSpeaking = () => {
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    return window.speechSynthesis.speaking;
+  }
+  return false;
+};
+
+export const isVoicePaused = () => {
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    return window.speechSynthesis.paused;
+  }
+  return false;
 };
 
 class SoundEngine {
@@ -77,6 +126,18 @@ class SoundEngine {
   speak(text, lang = 'en', onEnd) {
     if (!this.enabled) return;
     speakVoice(text, lang, onEnd);
+  }
+
+  pause() {
+    pauseVoice();
+  }
+
+  resume() {
+    resumeVoice();
+  }
+
+  stop() {
+    stopVoice();
   }
 
   speakTamil(text, onEnd) {

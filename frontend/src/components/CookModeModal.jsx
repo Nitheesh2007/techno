@@ -12,9 +12,10 @@ import {
   Sparkles, 
   Clock, 
   ChefHat,
-  Flame
+  Flame,
+  Square
 } from 'lucide-react';
-import { sound, speakVoice } from '../services/sound';
+import { sound, speakVoice, pauseVoice, resumeVoice, stopVoice } from '../services/sound';
 import { triggerConfetti } from '../services/confetti';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -22,6 +23,8 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [checkedIngredients, setCheckedIngredients] = useState({});
   const [ttsActive, setTtsActive] = useState(true);
+  const [isVoicePaused, setIsVoicePaused] = useState(false);
+  const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
   const { language, tf } = useLanguage();
   
   // Timer State
@@ -61,22 +64,52 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
     return () => clearInterval(timerRef.current);
   }, [timerRunning]);
 
-  // Voice Narration on Step Change with Tamil Speech Synthesis
-  useEffect(() => {
+  // Voice Narration on Step Change
+  const narrateCurrentStep = () => {
     if (ttsActive) {
+      setIsVoiceSpeaking(true);
+      setIsVoicePaused(false);
       const text = language === 'ta'
         ? `படி ${currentStepIdx + 1}: ${steps[currentStepIdx]}`
         : `Step ${currentStepIdx + 1}: ${steps[currentStepIdx]}`;
 
-      speakVoice(text, language);
+      speakVoice(text, language, () => {
+        setIsVoiceSpeaking(false);
+        setIsVoicePaused(false);
+      });
     }
+  };
+
+  useEffect(() => {
+    narrateCurrentStep();
+    return () => stopVoice();
   }, [currentStepIdx, ttsActive, language]);
+
+  const handlePauseNarration = () => {
+    pauseVoice();
+    setIsVoicePaused(true);
+    sound.playBeep(650, 0.03);
+  };
+
+  const handleResumeNarration = () => {
+    resumeVoice();
+    setIsVoicePaused(false);
+    sound.playBeep(850, 0.03);
+  };
+
+  const handleStopNarration = () => {
+    stopVoice();
+    setIsVoiceSpeaking(false);
+    setIsVoicePaused(false);
+    sound.playBeep(450, 0.04);
+  };
 
   const toggleIng = (ing) => {
     setCheckedIngredients(prev => ({ ...prev, [ing]: !prev[ing] }));
   };
 
   const handleFinish = () => {
+    handleStopNarration();
     sound.playSuccess();
     triggerConfetti(3500);
     if (onMealCompleted) {
@@ -97,7 +130,7 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
         {/* Header */}
         <div className="p-6 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500 flex items-center justify-center text-white font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500 flex items-center justify-center text-white font-bold shadow-md shadow-emerald-500/20">
               <ChefHat size={22} />
             </div>
             <div>
@@ -110,14 +143,20 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
 
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setTtsActive(!ttsActive)}
-              className={`p-2 rounded-xl transition-colors ${ttsActive ? 'bg-white/20 text-white' : 'text-slate-400 hover:bg-white/10'}`}
+              onClick={() => {
+                if (ttsActive) handleStopNarration();
+                setTtsActive(!ttsActive);
+              }}
+              className={`p-2 rounded-xl transition-colors ${ttsActive ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-white/10'}`}
               title={ttsActive ? (language === 'ta' ? 'குரல் வழிகாட்டல் இயக்கம்' : 'Voice narration on') : (language === 'ta' ? 'குரல் வழிகாட்டல் நிறுத்து' : 'Voice narration off')}
             >
               {ttsActive ? <Volume2 size={18} /> : <VolumeX size={18} />}
             </button>
             <button
-              onClick={onClose}
+              onClick={() => {
+                handleStopNarration();
+                onClose();
+              }}
               className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
               title={language === 'ta' ? 'மூடு' : 'Close'}
             >
@@ -125,6 +164,60 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
             </button>
           </div>
         </div>
+
+        {/* VOICE NARRATION CONTROL BAR (PAUSE, RESUME, STOP, REPLAY) */}
+        {ttsActive && (
+          <div className="bg-emerald-50 dark:bg-emerald-950/80 border-b border-emerald-200 dark:border-emerald-800 px-6 py-2.5 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Volume2 size={16} className={`text-emerald-600 dark:text-emerald-400 ${isVoiceSpeaking && !isVoicePaused ? 'animate-bounce' : ''}`} />
+              <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                {isVoicePaused ? (language === 'ta' ? 'குரல் வழிகாட்டல் இடைநிறுத்தப்பட்டது' : 'Narration Paused') : 
+                 isVoiceSpeaking ? (language === 'ta' ? 'செய்முறை வாசிக்கப்படுகிறது...' : 'Narrating step instructions...') : 
+                 (language === 'ta' ? 'குரல் வழிகாட்டல் தயார்' : 'Voice Narration Ready')}
+              </span>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              {isVoiceSpeaking && !isVoicePaused ? (
+                <button
+                  onClick={handlePauseNarration}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center gap-1 shadow-sm"
+                  title="Pause voice"
+                >
+                  <Pause size={13} />
+                  <span>{language === 'ta' ? 'இடைநிறுத்து' : 'Pause'}</span>
+                </button>
+              ) : isVoicePaused ? (
+                <button
+                  onClick={handleResumeNarration}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 shadow-sm"
+                  title="Resume voice"
+                >
+                  <Play size={13} />
+                  <span>{language === 'ta' ? 'தொடர்' : 'Resume'}</span>
+                </button>
+              ) : (
+                <button
+                  onClick={narrateCurrentStep}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 shadow-sm"
+                  title="Play step audio"
+                >
+                  <Play size={13} />
+                  <span>{language === 'ta' ? 'வாசி' : 'Play Step'}</span>
+                </button>
+              )}
+
+              <button
+                onClick={handleStopNarration}
+                className="px-3 py-1.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs flex items-center gap-1 shadow-sm"
+                title="Stop voice"
+              >
+                <Square size={13} />
+                <span>{language === 'ta' ? 'முடிக்க' : 'Stop'}</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -216,7 +309,10 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
             {/* Navigation Controls */}
             <div className="flex items-center justify-between pt-6 border-t border-slate-100 dark:border-slate-800">
               <button
-                onClick={() => setCurrentStepIdx(prev => Math.max(0, prev - 1))}
+                onClick={() => {
+                  handleStopNarration();
+                  setCurrentStepIdx(prev => Math.max(0, prev - 1));
+                }}
                 disabled={currentStepIdx === 0}
                 className="flex items-center space-x-2 px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 disabled:opacity-30 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
@@ -227,6 +323,7 @@ export default function CookModeModal({ recipe, onClose, onMealCompleted }) {
               {currentStepIdx < steps.length - 1 ? (
                 <button
                   onClick={() => {
+                    handleStopNarration();
                     setCurrentStepIdx(prev => prev + 1);
                     sound.playBeep(980, 0.04);
                   }}

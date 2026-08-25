@@ -17,11 +17,15 @@ import {
   Smile,
   Zap,
   HelpCircle,
-  MessageSquare
+  MessageSquare,
+  Play,
+  Pause,
+  Square,
+  Radio
 } from 'lucide-react';
 import { aiEngine } from '../services/aiEngine';
 import { storage } from '../services/storage';
-import { sound, speakVoice } from '../services/sound';
+import { sound, speakVoice, pauseVoice, resumeVoice, stopVoice } from '../services/sound';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function FreshBot() {
@@ -32,6 +36,7 @@ export default function FreshBot() {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
   const { language, t } = useLanguage();
@@ -94,13 +99,35 @@ export default function FreshBot() {
     if (isOpen) scrollToBottom();
   }, [messages, isOpen, isTyping]);
 
-  // Voice Synthesizer with Tamil ta-IN integration
+  // Voice Synthesizer with Pause & Stop integration
   const speakText = (text) => {
     if (!voiceEnabled) return;
     setIsSpeaking(true);
-    // Strip markdown formatting symbols for natural speech audio
+    setIsPaused(false);
     const cleanSpeech = text.replace(/[*_#•`]/g, '').replace(/\[.*?\]\(.*?\)/g, '');
-    speakVoice(cleanSpeech, language, () => setIsSpeaking(false));
+    speakVoice(cleanSpeech, language, () => {
+      setIsSpeaking(false);
+      setIsPaused(false);
+    });
+  };
+
+  const handlePauseVoice = () => {
+    pauseVoice();
+    setIsPaused(true);
+    sound.playBeep(650, 0.03);
+  };
+
+  const handleResumeVoice = () => {
+    resumeVoice();
+    setIsPaused(false);
+    sound.playBeep(850, 0.03);
+  };
+
+  const handleStopVoice = () => {
+    stopVoice();
+    setIsSpeaking(false);
+    setIsPaused(false);
+    sound.playBeep(450, 0.04);
   };
 
   const handleTestVoice = () => {
@@ -113,6 +140,9 @@ export default function FreshBot() {
   const handleSend = async (manualText) => {
     const textToSend = manualText || input;
     if (!textToSend.trim()) return;
+
+    // Stop existing speech before generating new reply
+    handleStopVoice();
 
     const userMsg = {
       sender: 'user',
@@ -194,6 +224,7 @@ export default function FreshBot() {
   ];
 
   const handleClearChat = () => {
+    handleStopVoice();
     sound.playBeep(450, 0.04);
     const welcome = language === 'ta'
       ? "👋 **உரையாடல் மீட்டமைக்கப்பட்டது.**\nபுதிய சமையல் குறிப்புகள் அல்லது காலாவதி விவரங்களை கேட்கலாம்!"
@@ -235,7 +266,7 @@ export default function FreshBot() {
           <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-4 text-white flex items-center justify-between shadow-md">
             <div className="flex items-center space-x-3">
               <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                <Bot size={22} className={isSpeaking ? 'animate-bounce text-amber-300' : ''} />
+                <Bot size={22} className={isSpeaking && !isPaused ? 'animate-bounce text-amber-300' : ''} />
               </div>
               <div>
                 <h3 className="font-heading font-extrabold text-sm flex items-center gap-1.5">
@@ -259,7 +290,10 @@ export default function FreshBot() {
                 <Volume1 size={17} />
               </button>
               <button
-                onClick={() => setVoiceEnabled(!voiceEnabled)}
+                onClick={() => {
+                  if (voiceEnabled) handleStopVoice();
+                  setVoiceEnabled(!voiceEnabled);
+                }}
                 title={voiceEnabled ? (language === 'ta' ? 'குரலை முடக்கு' : 'Mute speech') : (language === 'ta' ? 'குரலை இயக்கு' : 'Enable speech')}
                 className="p-1.5 rounded-xl text-emerald-100 hover:bg-white/10 transition-colors"
               >
@@ -273,7 +307,10 @@ export default function FreshBot() {
                 <RotateCcw size={15} />
               </button>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  handleStopVoice();
+                  setIsOpen(false);
+                }}
                 className="p-1.5 rounded-xl text-emerald-100 hover:bg-white/10 transition-colors"
                 title={language === 'ta' ? 'மூடு' : 'Close'}
               >
@@ -281,6 +318,50 @@ export default function FreshBot() {
               </button>
             </div>
           </div>
+
+          {/* DEDICATED ACTIVE VOICE NARRATION CONTROL BAR (PAUSE, RESUME, STOP) */}
+          {isSpeaking && (
+            <div className="bg-emerald-50 dark:bg-emerald-950/80 border-b border-emerald-200 dark:border-emerald-800/80 px-4 py-2 flex items-center justify-between animate-in slide-in-from-top-2 duration-150">
+              <div className="flex items-center space-x-2">
+                <div className="flex space-x-1 items-end h-3.5">
+                  <div className={`w-1 bg-emerald-500 rounded-full ${!isPaused ? 'animate-[bounce_0.6s_infinite]' : 'h-2'}`} />
+                  <div className={`w-1 bg-emerald-500 rounded-full ${!isPaused ? 'animate-[bounce_0.8s_infinite_0.2s]' : 'h-3'}`} />
+                  <div className={`w-1 bg-emerald-500 rounded-full ${!isPaused ? 'animate-[bounce_0.5s_infinite_0.4s]' : 'h-1.5'}`} />
+                </div>
+                <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                  {isPaused ? (language === 'ta' ? 'குரல் இடைநிறுத்தப்பட்டது' : 'Voice Paused') : (language === 'ta' ? 'FreshBot பேசுகிறது...' : 'FreshBot Speaking...')}
+                </span>
+              </div>
+
+              <div className="flex items-center space-x-1.5">
+                {isPaused ? (
+                  <button
+                    onClick={handleResumeVoice}
+                    className="p-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-1 text-[10px] font-bold px-2"
+                    title="Resume Speaking"
+                  >
+                    <Play size={11} /> {language === 'ta' ? 'தொடர்' : 'Resume'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handlePauseVoice}
+                    className="p-1.5 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors flex items-center gap-1 text-[10px] font-bold px-2"
+                    title="Pause Speaking"
+                  >
+                    <Pause size={11} /> {language === 'ta' ? 'நிறுத்து' : 'Pause'}
+                  </button>
+                )}
+
+                <button
+                  onClick={handleStopVoice}
+                  className="p-1.5 rounded-lg bg-rose-500 text-white hover:bg-rose-600 transition-colors flex items-center gap-1 text-[10px] font-bold px-2"
+                  title="Stop Speaking"
+                >
+                  <Square size={11} /> {language === 'ta' ? 'முடிக்க' : 'Stop'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Messages Area */}
           <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-slate-50/60 dark:bg-slate-950/60 custom-scrollbar">
@@ -328,9 +409,20 @@ export default function FreshBot() {
                     </div>
                   )}
 
-                  <span className={`text-[9px] block text-right mt-1.5 font-mono ${m.sender === 'user' ? 'text-emerald-200' : 'text-slate-400'}`}>
-                    {m.time}
-                  </span>
+                  <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-slate-100/40 dark:border-slate-700/30 text-[9px]">
+                    {m.sender === 'bot' && (
+                      <button
+                        onClick={() => speakText(m.text)}
+                        className="text-slate-400 hover:text-emerald-600 flex items-center gap-1 font-semibold"
+                        title="Read aloud"
+                      >
+                        <Volume2 size={11} /> {language === 'ta' ? 'வாசிக்க' : 'Play'}
+                      </button>
+                    )}
+                    <span className={`font-mono ml-auto ${m.sender === 'user' ? 'text-emerald-200' : 'text-slate-400'}`}>
+                      {m.time}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}

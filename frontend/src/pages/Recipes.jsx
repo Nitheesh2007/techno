@@ -3,7 +3,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import api from '../services/api';
 import { aiEngine } from '../services/aiEngine';
 import { storage } from '../services/storage';
-import { sound } from '../services/sound';
+import { sound, speakVoice, pauseVoice, resumeVoice, stopVoice } from '../services/sound';
 import { triggerConfetti } from '../services/confetti';
 import { useLanguage } from '../context/LanguageContext';
 import CookModeModal from '../components/CookModeModal';
@@ -17,6 +17,9 @@ import {
   CheckCircle2, 
   Check, 
   Play, 
+  Pause,
+  Square,
+  Volume2,
   Leaf, 
   ArrowRight,
   Search,
@@ -37,6 +40,8 @@ export default function Recipes() {
   const [cuisineFilter, setCuisineFilter] = useState('ALL');
   const [dietaryFilter, setDietaryFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
+  const [isVoicePaused, setIsVoicePaused] = useState(false);
   const { t, tf, tc, tl, language } = useLanguage();
 
   const fetchRecipes = async () => {
@@ -54,6 +59,7 @@ export default function Recipes() {
 
   useEffect(() => {
     fetchRecipes();
+    return () => stopVoice();
   }, []);
 
   const handleCookMeal = (recipe) => {
@@ -74,6 +80,39 @@ export default function Recipes() {
       ? `🍳 அற்புதம்! "${recipe.title}" சமைக்கப்பட்டது மற்றும் ${consumedCount || 1} காலாவதியாகும் பொருட்கள் பயன்படுத்தப்பட்டன!`
       : `🍳 Amazing! Cooked "${recipe.title}" and consumed ${consumedCount || 1} expiring item(s) from your kitchen!`);
     setTimeout(() => setCookedSuccess(null), 4000);
+  };
+
+  const handleReadRecipeAloud = (recipe) => {
+    if (!recipe) return;
+    setIsVoiceSpeaking(true);
+    setIsVoicePaused(false);
+    const speechText = language === 'ta'
+      ? `${recipe.title}. செய்முறை விவரம்: ${recipe.summary}. சமையல் நேரம் ${recipe.cookTime}.`
+      : `${recipe.title}. Summary: ${recipe.summary}. Cooking time is ${recipe.cookTime}. Ingredients include: ${recipe.matchedIngredients.join(', ')}.`;
+
+    speakVoice(speechText, language, () => {
+      setIsVoiceSpeaking(false);
+      setIsVoicePaused(false);
+    });
+  };
+
+  const handlePauseVoice = () => {
+    pauseVoice();
+    setIsVoicePaused(true);
+    sound.playBeep(650, 0.03);
+  };
+
+  const handleResumeVoice = () => {
+    resumeVoice();
+    setIsVoicePaused(false);
+    sound.playBeep(850, 0.03);
+  };
+
+  const handleStopVoice = () => {
+    stopVoice();
+    setIsVoiceSpeaking(false);
+    setIsVoicePaused(false);
+    sound.playBeep(450, 0.04);
   };
 
   const filteredRecipes = recipes.filter(r => {
@@ -248,7 +287,10 @@ export default function Recipes() {
                   return (
                     <div
                       key={r.id}
-                      onClick={() => setSelectedRecipe(r)}
+                      onClick={() => {
+                        handleStopVoice();
+                        setSelectedRecipe(r);
+                      }}
                       className={`p-4 sm:p-5 rounded-3xl border cursor-pointer transition-all ${
                         isSelected 
                           ? 'bg-emerald-50/70 dark:bg-slate-800 border-emerald-500/50 shadow-md ring-2 ring-emerald-500/20 scale-[1.01]' 
@@ -318,17 +360,59 @@ export default function Recipes() {
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Voice Read Aloud Controls (Play, Pause, Stop) */}
+                    {!isVoiceSpeaking ? (
+                      <button
+                        onClick={() => handleReadRecipeAloud(selectedRecipe)}
+                        className="bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 font-bold px-3.5 py-2.5 rounded-xl text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                        title="Read recipe aloud"
+                      >
+                        <Volume2 size={15} />
+                        <span>{language === 'ta' ? 'வாசி' : 'Read Aloud'}</span>
+                      </button>
+                    ) : (
+                      <div className="flex items-center space-x-1 bg-emerald-50 dark:bg-emerald-950/80 p-1 rounded-xl border border-emerald-300 dark:border-emerald-700">
+                        {isVoicePaused ? (
+                          <button
+                            onClick={handleResumeVoice}
+                            className="p-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold flex items-center gap-1 px-2"
+                            title="Resume voice"
+                          >
+                            <Play size={12} /> {language === 'ta' ? 'தொடர்' : 'Resume'}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handlePauseVoice}
+                            className="p-1.5 rounded-lg bg-amber-500 text-white text-xs font-bold flex items-center gap-1 px-2"
+                            title="Pause voice"
+                          >
+                            <Pause size={12} /> {language === 'ta' ? 'நிறுத்து' : 'Pause'}
+                          </button>
+                        )}
+                        <button
+                          onClick={handleStopVoice}
+                          className="p-1.5 rounded-lg bg-rose-500 text-white text-xs font-bold flex items-center gap-1 px-2"
+                          title="Stop voice"
+                        >
+                          <Square size={12} /> {language === 'ta' ? 'முடிக்க' : 'Stop'}
+                        </button>
+                      </div>
+                    )}
+
                     <button
-                      onClick={() => setCookModalOpen(true)}
-                      className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md shadow-emerald-600/20 transition-all hover:scale-105 flex items-center space-x-1.5 whitespace-nowrap"
+                      onClick={() => {
+                        handleStopVoice();
+                        setCookModalOpen(true);
+                      }}
+                      className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md shadow-emerald-600/20 transition-all hover:scale-105 flex items-center space-x-1.5 whitespace-nowrap"
                     >
                       <Play size={14} />
                       <span>{t('startGuidedCooking')}</span>
                     </button>
                     <button
                       onClick={() => handleCookMeal(selectedRecipe)}
-                      className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs transition-colors flex items-center gap-1.5"
+                      className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold px-3.5 py-2.5 rounded-xl text-xs transition-colors flex items-center gap-1.5"
                     >
                       <Check size={14} />
                       <span>{t('markConsumed')}</span>
