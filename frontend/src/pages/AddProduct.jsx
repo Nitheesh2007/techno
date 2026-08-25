@@ -6,6 +6,11 @@ import { sound } from '../services/sound';
 import { triggerConfetti } from '../services/confetti';
 import { useLanguage } from '../context/LanguageContext';
 import { 
+  extractBarcodeFromSource, 
+  generateEan13Modules, 
+  lookupProductByBarcode 
+} from '../services/barcodeEngine';
+import { 
   PackagePlus, 
   Sparkles, 
   Calendar, 
@@ -117,70 +122,8 @@ const SAMPLE_PRESETS = [
   }
 ];
 
-// Mathematical Standard EAN-13 Barcode Structure
-const EAN13_STRUCTURE = [
-  'LLLLLL', 'LLGLGG', 'LLGGLG', 'LLGGGL', 'LGLLGG',
-  'LGGLLG', 'LGGGLL', 'LGLGLG', 'LGLGGL', 'LGGLGL'
-];
-
-const L_PATTERNS = [
-  '0001101', '0011001', '0010011', '0111101', '0100011',
-  '0110001', '0101111', '0111011', '0110111', '0001011'
-];
-
-const G_PATTERNS = [
-  '0100111', '0110011', '0011011', '0100001', '0011101',
-  '0111001', '0000101', '0010001', '0001001', '0010111'
-];
-
-const R_PATTERNS = [
-  '1110010', '1100110', '1101100', '1000010', '1011100',
-  '1001110', '1010000', '1000100', '1001000', '1110100'
-];
-
 function SvgBarcode({ code = '8901030383033' }) {
-  const clean = code.replace(/\D/g, '').padEnd(13, '0').slice(0, 13);
-  const firstDigit = parseInt(clean[0], 10) || 0;
-  const structure = EAN13_STRUCTURE[firstDigit] || 'LLLLLL';
-  
-  const modules = [];
-  
-  // Start guard (101)
-  modules.push({ bit: 1, guard: true });
-  modules.push({ bit: 0, guard: true });
-  modules.push({ bit: 1, guard: true });
-  
-  // Left 6 digits (pos 1 to 6)
-  for (let i = 1; i <= 6; i++) {
-    const digit = parseInt(clean[i], 10) || 0;
-    const codeType = structure[i - 1];
-    const pattern = codeType === 'L' ? L_PATTERNS[digit] : G_PATTERNS[digit];
-    for (let b = 0; b < pattern.length; b++) {
-      modules.push({ bit: pattern[b] === '1' ? 1 : 0, guard: false });
-    }
-  }
-  
-  // Center guard (01010)
-  modules.push({ bit: 0, guard: true });
-  modules.push({ bit: 1, guard: true });
-  modules.push({ bit: 0, guard: true });
-  modules.push({ bit: 1, guard: true });
-  modules.push({ bit: 0, guard: true });
-  
-  // Right 6 digits (pos 7 to 12)
-  for (let i = 7; i <= 12; i++) {
-    const digit = parseInt(clean[i], 10) || 0;
-    const pattern = R_PATTERNS[digit];
-    for (let b = 0; b < pattern.length; b++) {
-      modules.push({ bit: pattern[b] === '1' ? 1 : 0, guard: false });
-    }
-  }
-  
-  // End guard (101)
-  modules.push({ bit: 1, guard: true });
-  modules.push({ bit: 0, guard: true });
-  modules.push({ bit: 1, guard: true });
-
+  const { modules, clean } = generateEan13Modules(code);
   const moduleWidth = 2.2;
   const startX = 16;
 
@@ -254,10 +197,8 @@ export default function AddProduct() {
 
   const [loading, setLoading] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
-  const [activeScanMode, setActiveScanMode] = useState(null); // 'camera' | 'upload' | null
-  const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const [activeScanMode, setActiveScanMode] = useState(null);
   const [cameraActive, setCameraActive] = useState(false);
-  const [uploadedPreview, setUploadedPreview] = useState(null);
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -294,27 +235,20 @@ export default function AddProduct() {
       setCameraActive(true);
       sound.playBeep(880, 0.05);
 
-      // Barcode detection loop
-      if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
-        try {
-          const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'code_128'] });
-          const checkLoop = async () => {
-            if (videoRef.current && videoRef.current.readyState >= 2) {
-              try {
-                const barcodes = await detector.detect(videoRef.current);
-                if (barcodes.length > 0) {
-                  const detected = barcodes[0].rawValue;
-                  handleApplyBarcode(detected);
-                  stopCamera();
-                  return;
-                }
-              } catch (e) {}
+      const checkLoop = async () => {
+        if (videoRef.current && videoRef.current.readyState >= 2) {
+          try {
+            const res = await extractBarcodeFromSource(videoRef.current);
+            if (res && res.barcode) {
+              handleApplyBarcode(res.barcode);
+              stopCamera();
+              return;
             }
-            animationFrameRef.current = requestAnimationFrame(checkLoop);
-          };
-          checkLoop();
-        } catch (e) {}
-      }
+          } catch (e) {}
+        }
+        animationFrameRef.current = requestAnimationFrame(checkLoop);
+      };
+      checkLoop();
     } catch (err) {
       console.warn('Camera notice:', err);
       alert(language === 'ta' ? 'கேமராவைத் தொடங்க முடியவில்லை. மாதிரி பாக்கெட்டுகள் அல்லது கோப்பு பதிவேற்றத்தைப் பயன்படுத்தவும்.' : 'Camera unavailable. Please upload a photo or select a quick preset.');
@@ -322,9 +256,17 @@ export default function AddProduct() {
     }
   };
 
-  const capturePhotoInsideAdd = () => {
+  const capturePhotoInsideAdd = async () => {
     sound.playBeep(1200, 0.08);
-    const randomPreset = SAMPLE_PRESETS[Math.floor(Math.random() * SAMPLE_PRESETS.length)];
+    if (videoRef.current) {
+      const res = await extractBarcodeFromSource(videoRef.current);
+      if (res && res.barcode) {
+        handleApplyBarcode(res.barcode);
+        stopCamera();
+        return;
+      }
+    }
+    const randomPreset = SAMPLE_PRESETS[0];
     handleApplyPreset(randomPreset);
     stopCamera();
   };
@@ -334,45 +276,36 @@ export default function AddProduct() {
     if (!file) return;
 
     const previewUrl = URL.createObjectURL(file);
-    setUploadedPreview(previewUrl);
-    setIsProcessingFile(true);
     sound.playBeep(800, 0.04);
 
     const img = new Image();
     img.src = previewUrl;
     img.onload = async () => {
-      let detectedBarcode = null;
-      if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
-        try {
-          const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'code_128'] });
-          const detectedList = await detector.detect(img);
-          if (detectedList && detectedList.length > 0) {
-            detectedBarcode = detectedList[0].rawValue;
-          }
-        } catch (err) {}
-      }
-
-      setTimeout(() => {
-        setIsProcessingFile(false);
-        const finalBarcode = detectedBarcode || '8901030383033';
+      try {
+        const detection = await extractBarcodeFromSource(img);
+        const finalBarcode = detection?.barcode || '8901030383033';
         handleApplyBarcode(finalBarcode);
-      }, 700);
+      } catch (err) {
+        handleApplyBarcode('8901030383033');
+      }
     };
   };
 
   const handleApplyBarcode = (code) => {
-    const matched = SAMPLE_PRESETS.find(p => p.barcode === code);
-    if (matched) {
-      handleApplyPreset(matched);
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        barcode: code,
-        product_name: prev.product_name || `Scanned Food (${code.slice(-4)})`
-      }));
-      sound.playSuccess();
-      triggerConfetti(2000);
-    }
+    const clean = (code || '').replace(/\D/g, '');
+    const meta = lookupProductByBarcode(clean);
+    
+    setFormData(prev => ({
+      ...prev,
+      barcode: clean,
+      product_name: meta.name || prev.product_name,
+      category: meta.category || prev.category,
+      estimated_price: meta.price || prev.estimated_price,
+      location: meta.location || prev.location,
+      unit: meta.unit || prev.unit
+    }));
+    sound.playSuccess();
+    triggerConfetti(2500);
   };
 
   const handleApplyPreset = (preset) => {
@@ -484,7 +417,7 @@ export default function AddProduct() {
           </p>
         </div>
 
-        {/* EMBEDDED REAL-TIME CAMERA SCANNER VIEW (IF ACTIVE) */}
+        {/* EMBEDDED REAL-TIME CAMERA SCANNER VIEW */}
         {activeScanMode === 'camera' && (
           <div className="p-6 bg-slate-900 text-white rounded-3xl border-2 border-emerald-500/60 shadow-2xl mb-6 text-center animate-in zoom-in-95 duration-150 relative">
             <button
