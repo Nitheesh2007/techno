@@ -26,6 +26,8 @@ class ProductBase(BaseModel):
     price: Optional[float] = None
     manufacturing_date: Optional[date] = None
     expiry_date: date
+    reminder_days_before: Optional[int] = 2
+    reminder_date: Optional[date] = None
     purchase_date: Optional[date] = None
     opened_date: Optional[date] = None
     image_url: Optional[str] = None
@@ -48,8 +50,9 @@ class ProductUpdate(BaseModel):
     category: Optional[str] = None
     quantity: Optional[float] = None
     expiry_date: Optional[date] = None
+    reminder_days_before: Optional[int] = None
+    reminder_date: Optional[date] = None
     status: Optional[ProductStatus] = None
-    # Add other fields as needed
 
 class ProductResponse(ProductBase):
     id: str
