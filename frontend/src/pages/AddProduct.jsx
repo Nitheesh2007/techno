@@ -10,6 +10,7 @@ import {
   generateEan13Modules, 
   lookupProductByBarcode 
 } from '../services/barcodeEngine';
+import { storage } from '../services/storage';
 import { 
   PackagePlus, 
   Sparkles, 
@@ -157,6 +158,14 @@ export default function AddProduct() {
   const scannedData = location.state?.scannedData || {};
   const { t, tf, tc, tl, language } = useLanguage();
 
+  const pastProductNames = Array.from(new Set(storage.getProducts().map(p => p.product_name)));
+  const COMMON_SUGGESTIONS = [
+    'Fresh Milk', 'Fresh Strawberries', 'French Fries', 'Fish', 'Flour', 'Feta Cheese',
+    'Apple', 'Banana', 'Bread', 'Butter', 'Carrots', 'Chicken', 'Eggs', 'Garlic', 
+    'Onions', 'Potatoes', 'Rice', 'Spinach', 'Tomatoes', 'Yogurt'
+  ];
+  const allSuggestions = Array.from(new Set([...pastProductNames, ...COMMON_SUGGESTIONS])).sort();
+
   const getFutureDate = (days) => {
     const d = new Date();
     d.setDate(d.getDate() + days);
@@ -209,14 +218,19 @@ export default function AddProduct() {
     img.onload = async () => {
       try {
         const detection = await extractBarcodeFromSource(img);
-        const finalBarcode = detection?.barcode || '8901030383033';
-        setTimeout(() => {
+        if (detection && detection.barcode) {
+          const finalBarcode = detection.barcode;
+          setTimeout(() => {
+            setIsExtracting(false);
+            handleApplyBarcode(finalBarcode);
+          }, 500);
+        } else {
           setIsExtracting(false);
-          handleApplyBarcode(finalBarcode);
-        }, 500);
+          alert(language === 'ta' ? 'பார்கோடு கண்டுபிடிக்க முடியவில்லை. சரியான படத்தை பதிவேற்றவும்.' : 'Could not detect barcode from image. Please try a clearer image.');
+        }
       } catch (err) {
         setIsExtracting(false);
-        handleApplyBarcode('8901030383033');
+        alert(language === 'ta' ? 'பார்கோடு கண்டுபிடிக்க முடியவில்லை. சரியான படத்தை பதிவேற்றவும்.' : 'Could not detect barcode from image. Please try a clearer image.');
       }
     };
   };
@@ -429,12 +443,18 @@ export default function AddProduct() {
               </label>
               <input
                 type="text"
+                list="product-suggestions"
                 required
                 placeholder={t('productNamePlaceholder')}
                 value={formData.product_name}
                 onChange={e => setFormData({ ...formData, product_name: e.target.value })}
                 className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
               />
+              <datalist id="product-suggestions">
+                {allSuggestions.map((name, i) => (
+                  <option key={i} value={name} />
+                ))}
+              </datalist>
             </div>
 
             <div>

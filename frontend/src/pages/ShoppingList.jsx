@@ -37,6 +37,14 @@ export default function ShoppingList() {
   const [toastMsg, setToastMsg] = useState(null);
   const { t, tf, tc, language } = useLanguage();
 
+  const pastProductNames = Array.from(new Set(storage.getProducts().map(p => p.product_name)));
+  const COMMON_SUGGESTIONS = [
+    'Fresh Milk', 'Fresh Strawberries', 'French Fries', 'Fish', 'Flour', 'Feta Cheese',
+    'Apple', 'Banana', 'Bread', 'Butter', 'Carrots', 'Chicken', 'Eggs', 'Garlic', 
+    'Onions', 'Potatoes', 'Rice', 'Spinach', 'Tomatoes', 'Yogurt'
+  ];
+  const allSuggestions = Array.from(new Set([...pastProductNames, ...COMMON_SUGGESTIONS])).sort();
+
   const loadList = () => {
     setItems(storage.getShoppingList());
   };
@@ -171,11 +179,17 @@ export default function ShoppingList() {
         <form onSubmit={handleAddItem} className="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm mb-6 flex flex-col sm:flex-row items-center gap-3">
           <input
             type="text"
+            list="shopping-suggestions"
             placeholder={t('itemNamePlaceholder')}
             value={newItemName}
             onChange={(e) => setNewItemName(e.target.value)}
             className="flex-1 px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
           />
+          <datalist id="shopping-suggestions">
+            {allSuggestions.map((name, i) => (
+              <option key={i} value={name} />
+            ))}
+          </datalist>
 
           <select
             value={newItemCategory}

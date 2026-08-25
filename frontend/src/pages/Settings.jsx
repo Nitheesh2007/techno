@@ -34,6 +34,8 @@ const CURRENCIES = [
 const DIETARY_PREFERENCES = [
   'All (No Restrictions)',
   'Vegetarian (சைவம்)',
+  'Non-Vegetarian (அசைவம்)',
+  'Mixed (கலப்பு உணவு)',
   'Vegan (சுத்த சைவம்)',
   'Gluten-Free',
   'Keto / Low-Carb',

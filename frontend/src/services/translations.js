@@ -543,6 +543,15 @@ export const translations = {
     warningAlertsTab: 'எச்சரிக்கைகள்',
     expiredAlertsTab: 'காலாவதியானவை',
 
+    // Recipe Titles & Summaries (Top ones)
+    'Paneer Butter Masala with Warm Naan': 'பன்னீர் பட்டர் மசாலா மற்றும் நான்',
+    'A velvety, rich restaurant-style paneer curry simmered in a spiced buttery tomato cashew gravy.': 'வெண்ணெய் மற்றும் முந்திரி தக்காளி கிரேவியில் சமைக்கப்பட்ட ரெஸ்டாரண்ட் ஸ்டைல் பன்னீர் கறி.',
+    'Homestyle Yellow Dal Tadka with Jeera Rice': 'வீட்டு முறை பருப்பு தட்கா மற்றும் சீரக சாதம்',
+    'A comforting, protein-packed lentil stew infused with a sizzling tempered ghee, cumin, and garlic tadka.': 'நெய், சீரகம் மற்றும் பூண்டு தாளிப்புடன் கூடிய புரதச்சத்து நிறைந்த ஆரோக்கியமான பருப்பு குழம்பு.',
+    'South Indian Sambar & Vegetable Medley': 'தென்னிந்திய சாம்பார் & காய்கறி கலவை',
+    'The quintessential South Indian tangy stew rescuing whatever vegetables you have in a spiced tamarind broth.': 'உங்கள் வீட்டில் உள்ள காய்கறிகளை வைத்து புளிப்புச் சுவையுடன் தயாரிக்கப்படும் பாரம்பரிய தென்னிந்திய சாம்பார்.',
+
+
     // Settings
     settingsTitle: 'அமைப்புகள் & விருப்பத்தேர்வுகள்',
     settingsSub: 'சமையல் உணவு விதிகள், நாணயம், மொழி, ஆடியோ மற்றும் தரவு காப்புப்பிரதியைத் தனிப்பயனாக்குங்கள்.',

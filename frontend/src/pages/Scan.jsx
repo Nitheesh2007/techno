@@ -205,17 +205,24 @@ export default function Scan() {
     img.onload = async () => {
       try {
         const detection = await extractBarcodeFromSource(img);
-        const extractedCode = detection?.barcode || '8901030383033';
-        const extractedFormat = detection?.format || 'EAN-13';
-        
-        setTimeout(() => {
+        if (detection && detection.barcode) {
+          const extractedCode = detection.barcode;
+          const extractedFormat = detection.format || 'EAN-13';
+          
+          setTimeout(() => {
+            setIsScanning(false);
+            handleDetectedRawBarcode(extractedCode, extractedFormat);
+          }, 600);
+        } else {
           setIsScanning(false);
-          handleDetectedRawBarcode(extractedCode, extractedFormat);
-        }, 600);
+          setUploadedImagePreview(null);
+          alert(language === 'ta' ? 'பார்கோடு கண்டுபிடிக்க முடியவில்லை. சரியான படத்தை பதிவேற்றவும்.' : 'Could not detect barcode from image. Please try a clearer image.');
+        }
       } catch (err) {
         console.warn('Extraction error on image:', err);
         setIsScanning(false);
-        handleDetectedRawBarcode('8901030383033', 'EAN-13');
+        setUploadedImagePreview(null);
+        alert(language === 'ta' ? 'பார்கோடு கண்டுபிடிக்க முடியவில்லை. சரியான படத்தை பதிவேற்றவும்.' : 'Could not detect barcode from image. Please try a clearer image.');
       }
     };
   };
