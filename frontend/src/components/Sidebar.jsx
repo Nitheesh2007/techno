@@ -8,18 +8,9 @@ import {
   ChefHat, 
   CalendarDays, 
   ShoppingCart, 
-  Layers, 
-  BookOpen, 
-  Users, 
   BarChart3, 
   Bell, 
   Settings, 
-  HeartPulse, 
-  ClipboardCheck, 
-  Recycle, 
-  Tag, 
-  Trophy, 
-  Home, 
   Sparkles, 
   Leaf,
   FileText
@@ -31,7 +22,6 @@ export default function Sidebar() {
   const stats = storage.getDashboardStats();
   const shoppingList = storage.getShoppingList();
   const unboughtCount = shoppingList.filter(i => !i.checked).length;
-  const challenges = storage.getChallenges();
   const { t, language } = useLanguage();
 
   const navItems = [
@@ -41,17 +31,7 @@ export default function Sidebar() {
     { name: t('navScan'), path: '/scan', icon: ScanLine, highlight: true },
     { name: language === 'ta' ? 'காலாவதி நாட்காட்டி' : 'Expiry Calendar', path: '/calendar', icon: CalendarDays },
     { name: t('navRecipes'), path: '/recipes', icon: ChefHat },
-    { name: t('navMealPlan'), path: '/meal-plan', icon: CalendarDays },
     { name: t('navShoppingList'), path: '/shopping-list', icon: ShoppingCart, badge: unboughtCount > 0 ? unboughtCount : null },
-    { name: t('navFridgeMap'), path: '/fridge-map', icon: Layers },
-    { name: t('navNutrition'), path: '/nutrition', icon: HeartPulse },
-    { name: t('navAudit'), path: '/audit', icon: ClipboardCheck },
-    { name: t('navPreservation'), path: '/preservation-guide', icon: BookOpen },
-    { name: t('navCompost'), path: '/compost', icon: Recycle },
-    { name: t('navDeals'), path: '/deals-radar', icon: Tag },
-    { name: t('navChallenges'), path: '/challenges', icon: Trophy, badge: `Lvl ${challenges.level}` },
-    { name: t('navHousehold'), path: '/household', icon: Home },
-    { name: t('navCommunity'), path: '/community', icon: Users },
     { name: t('navAnalytics'), path: '/analytics', icon: BarChart3 },
     { name: language === 'ta' ? 'மாதாந்திர அறிக்கை' : 'Monthly Reports', path: '/reports', icon: FileText },
     { name: t('navAlerts'), path: '/notifications', icon: Bell, badge: stats.critical_products > 0 ? `${stats.critical_products} urgent` : null, badgeColor: 'bg-rose-500' },
@@ -59,20 +39,20 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-screen sticky top-0 flex flex-col justify-between shadow-sm z-20">
+    <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-screen sticky top-0 flex flex-col justify-between shadow-sm z-20 transition-colors">
       {/* Brand Header */}
       <div className="flex-1 flex flex-col min-h-0">
         <div className="p-5 border-b border-slate-100 dark:border-slate-800/60 flex-shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-primary-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-primary-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
               <Leaf size={22} className="animate-pulse" />
             </div>
             <div>
-              <h2 className="text-lg font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+              <h2 className="text-base font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
                 {t('brandName')}
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">AI</span>
+                <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">AI</span>
               </h2>
-              <p className="text-xs text-slate-400 font-medium">{t('brandTagline')}</p>
+              <p className="text-[11px] text-slate-400 font-medium">{t('brandTagline')}</p>
             </div>
           </div>
         </div>
@@ -86,15 +66,15 @@ export default function Sidebar() {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all group ${
+                  `flex items-center justify-between px-3 py-2.5 rounded-2xl text-xs font-semibold transition-all group ${
                     isActive 
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold shadow-sm border border-emerald-500/20' 
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold shadow-sm border border-emerald-500/20' 
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
                   }`
                 }
               >
                 <div className="flex items-center space-x-2.5 min-w-0">
-                  <div className="p-1 rounded-lg transition-colors group-hover:scale-105 flex-shrink-0">
+                  <div className="p-1 rounded-lg transition-transform group-hover:scale-110 flex-shrink-0">
                     <Icon size={17} />
                   </div>
                   <span className="truncate">{item.name}</span>
@@ -110,8 +90,8 @@ export default function Sidebar() {
                   </span>
                 )}
                 {item.highlight && !item.badge && (
-                  <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 flex-shrink-0">
-                    <Sparkles size={10} /> OCR
+                  <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 flex-shrink-0">
+                    <Sparkles size={9} /> OCR
                   </span>
                 )}
               </NavLink>
@@ -123,10 +103,10 @@ export default function Sidebar() {
       {/* Sustainability Quick Card */}
       <div className="p-3.5 m-3 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800/80 dark:to-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 shadow-inner flex-shrink-0">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
-            {language === 'ta' ? 'கழிவு பாதுகாப்பு' : 'Waste Guard'}
+          <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+            {language === 'ta' ? 'கழிவு பாதுகாப்பு' : 'Zero-Waste Guard'}
           </span>
-          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{stats.wasteScore}% {language === 'ta' ? 'மதிப்பெண்' : 'Score'}</span>
+          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{stats.wasteScore}%</span>
         </div>
         <div className="w-full bg-emerald-200 dark:bg-emerald-950 rounded-full h-1.5 overflow-hidden mb-1.5">
           <div 

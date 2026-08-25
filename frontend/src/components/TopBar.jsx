@@ -15,6 +15,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import { storage } from '../services/storage';
 import { sound } from '../services/sound';
 import CommandPalette from './CommandPalette';
@@ -22,24 +23,13 @@ import CommandPalette from './CommandPalette';
 export default function TopBar() {
   const { user, logout } = useAuth();
   const { language, setLanguage, t } = useLanguage();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  const [isDark, setIsDark] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
-    const isDarkMode = document.documentElement.classList.contains('dark') || 
-      localStorage.getItem('feg_theme') === 'dark' ||
-      window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    setIsDark(isDarkMode);
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-
     setNotifications(storage.getNotifications());
 
     const handleKeyDown = (e) => {
@@ -52,16 +42,9 @@ export default function TopBar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const toggleTheme = () => {
-    const nextDark = !isDark;
-    setIsDark(nextDark);
-    if (nextDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('feg_theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('feg_theme', 'light');
-    }
+  const handleToggleTheme = () => {
+    toggleTheme();
+    sound.playClick?.() || sound.playBeep(900, 0.03);
   };
 
   const toggleLanguage = () => {
@@ -133,10 +116,11 @@ export default function TopBar() {
             <span>{t('addItem')}</span>
           </Link>
 
-          {/* Theme Toggle */}
+          {/* Global Dark / Light Mode Toggle */}
           <button
-            onClick={toggleTheme}
+            onClick={handleToggleTheme}
             aria-label="Toggle theme"
+            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
           >
             {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
@@ -192,11 +176,11 @@ export default function TopBar() {
                       >
                         <div className="flex items-start space-x-3">
                           <div className={`mt-0.5 p-1.5 rounded-lg ${
-                            n.type === 'expired' ? 'bg-rose-100 text-rose-600 dark:bg-rose-950' :
-                            n.type === 'urgent' ? 'bg-amber-100 text-amber-600 dark:bg-amber-950' :
+                            n.type === 'expired' || n.type === 'EXPIRED' ? 'bg-rose-100 text-rose-600 dark:bg-rose-950' :
+                            n.type === 'urgent' || n.type === 'CRITICAL' ? 'bg-amber-100 text-amber-600 dark:bg-amber-950' :
                             'bg-blue-100 text-blue-600 dark:bg-blue-950'
                           }`}>
-                            {n.type === 'expired' ? <AlertTriangle size={14} /> : <Clock size={14} />}
+                            {n.type === 'expired' || n.type === 'EXPIRED' ? <AlertTriangle size={14} /> : <Clock size={14} />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">

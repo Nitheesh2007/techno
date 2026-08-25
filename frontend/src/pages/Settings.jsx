@@ -3,6 +3,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import { storage } from '../services/storage';
 import { sound } from '../services/sound';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import { 
   Settings as SettingsIcon, 
   DollarSign, 
@@ -15,7 +16,10 @@ import {
   CheckCircle2, 
   Sparkles,
   Languages,
-  Trash2
+  Trash2,
+  Moon,
+  Sun,
+  Laptop
 } from 'lucide-react';
 
 const CURRENCIES = [
@@ -40,6 +44,7 @@ export default function Settings() {
   const [settings, setSettings] = useState(storage.getSettings());
   const [toastMsg, setToastMsg] = useState(null);
   const { language, setLanguage, t } = useLanguage();
+  const { theme, setTheme, isDark } = useTheme();
   const fileInputRef = useRef(null);
 
   const handleSave = (updated) => {
@@ -51,6 +56,13 @@ export default function Settings() {
     setTimeout(() => setToastMsg(null), 3000);
   };
 
+  const handleThemeChange = (newTheme) => {
+    setTheme(newTheme);
+    sound.playClick?.() || sound.playBeep(900, 0.03);
+    setToastMsg(language === 'ta' ? `காட்சி முறை: ${newTheme}` : `Theme changed to: ${newTheme}`);
+    setTimeout(() => setToastMsg(null), 2500);
+  };
+
   const handleLanguageChange = (newLang) => {
     setLanguage(newLang);
     handleSave({ ...settings, language: newLang });
@@ -60,7 +72,6 @@ export default function Settings() {
     const data = {
       products: storage.getProducts(),
       shoppingList: storage.getShoppingList(),
-      mealPlan: storage.getMealPlan(),
       savings: storage.getSavingsStats(),
       settings: storage.getSettings(),
       exportedAt: new Date().toISOString()
@@ -110,7 +121,6 @@ export default function Settings() {
         const parsed = JSON.parse(event.target.result);
         if (parsed.products) storage.saveProducts(parsed.products);
         if (parsed.shoppingList) storage.saveShoppingList(parsed.shoppingList);
-        if (parsed.mealPlan) storage.saveMealPlan(parsed.mealPlan);
         if (parsed.settings) storage.saveSettings(parsed.settings);
         sound.playSuccess();
         setToastMsg(language === 'ta' ? '🎉 தரவு வெற்றிகரமாக மீட்டமைக்கப்பட்டது!' : '🎉 Backup data restored successfully!');
@@ -159,7 +169,43 @@ export default function Settings() {
 
         {/* Settings Form Cards */}
         <div className="space-y-6">
-          {/* Card 1: Language & Currency */}
+          {/* Card 1: Appearance & Permanent Dark Mode */}
+          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+              <Moon className="text-purple-500" size={20} />
+              {language === 'ta' ? 'காட்சி முறை (கருப்பு / வெளிச்சம்)' : 'Theme & Appearance'}
+            </h3>
+            <p className="text-xs text-slate-400">
+              {language === 'ta' ? 'தேர்வு செய்த காட்சி முறை அனைத்து பக்கங்களுக்கும் நிரந்தரமாகச் செயல்படுத்தப்படும்.' : 'Selected theme permanently applies across all pages, reloads, and views.'}
+            </p>
+
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { id: 'light', label: language === 'ta' ? 'வெளிச்சம்' : 'Light', icon: Sun },
+                { id: 'dark', label: language === 'ta' ? 'கருப்பு' : 'Dark', icon: Moon },
+                { id: 'system', label: language === 'ta' ? 'சிஸ்டம்' : 'System', icon: Laptop }
+              ].map(opt => {
+                const Icon = opt.icon;
+                const active = theme === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => handleThemeChange(opt.id)}
+                    className={`p-4 rounded-2xl border text-center flex flex-col items-center justify-center transition-all ${
+                      active 
+                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-600/20' 
+                        : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-400'
+                    }`}
+                  >
+                    <Icon size={20} className="mb-1.5" />
+                    <span className="font-heading font-extrabold text-xs">{opt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Card 2: Language & Currency */}
           <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
               <Languages className="text-emerald-500" size={20} />
@@ -201,7 +247,7 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Card 2: Dietary Preferences */}
+          {/* Card 3: Dietary Preferences */}
           <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
               <Leaf className="text-emerald-500" size={20} />
@@ -224,7 +270,7 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Card 3: Audio & Alerts */}
+          {/* Card 4: Audio & Alerts */}
           <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
               <Volume2 className="text-blue-500" size={20} />
@@ -263,7 +309,7 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Card 4: Data Backup & Fresh Reset */}
+          {/* Card 5: Data Backup & Fresh Reset */}
           <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
               <Download className="text-teal-500" size={20} />
