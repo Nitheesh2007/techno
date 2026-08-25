@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Bot, 
   X, 
@@ -8,237 +8,304 @@ import {
   Volume2, 
   VolumeX, 
   Sparkles, 
-  RotateCcw,
-  ChefHat,
-  Leaf
+  ChefHat, 
+  Apple, 
+  Clock, 
+  Leaf,
+  ChevronDown
 } from 'lucide-react';
-import api from '../services/api';
+import { aiEngine } from '../services/aiEngine';
+import { storage } from '../services/storage';
+import { sound } from '../services/sound';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function FreshBot() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      role: 'bot',
-      content: '👋 Hi there! I am FreshBot AI, your personal food waste guardian. How can I help you save food and cook smart today?',
-      suggestions: ['What is expiring soon?', 'Suggest a dinner recipe', 'How to store bread & berries', 'Show my savings']
-    }
-  ]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const { language, t } = useLanguage();
+
+  useEffect(() => {
+    // Initial welcome message based on language
+    const welcome = language === 'ta'
+      ? "👋 வணக்கம்! நான் FreshBot AI, உங்கள் தனிப்பட்ட உணவு பாதுகாவலன். உங்கள் சமையலறை உணவு வீணாவதைத் தடுக்க நான் எவ்வாறு உதவ முடியும்?"
+      : "👋 Hi there! I am FreshBot AI, your personal food waste guardian. How can I help you save food and cook smart today?";
+
+    setMessages([
+      { sender: 'bot', text: welcome, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+    ]);
+
+    // Setup Web Speech Recognition if available
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = language === 'ta' ? 'ta-IN' : 'en-US';
+
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setIsListening(false);
+        handleSend(transcript);
+      };
+
+      recognitionRef.current.onerror = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+  }, [language]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-    if (isOpen) {
-      scrollToBottom();
-    }
+    if (isOpen) scrollToBottom();
   }, [messages, isOpen]);
 
-  // Text to Speech
   const speakText = (text) => {
-    if (!ttsEnabled || !window.speechSynthesis) return;
+    if (!voiceEnabled || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
-    // Clean text for speech
-    const cleanText = text.replace(/[*_#•]/g, '');
+    const cleanText = text.replace(/[*_#`]/g, '');
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.rate = 1.0;
+    utterance.lang = language === 'ta' ? 'ta-IN' : 'en-US';
     window.speechSynthesis.speak(utterance);
   };
 
-  // Speech Recognition (Voice Input)
+  const handleSend = async (manualText) => {
+    const textToSend = manualText || input;
+    if (!textToSend.trim()) return;
+
+    const userMsg = {
+      sender: 'user',
+      text: textToSend,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setInput('');
+    setIsTyping(true);
+    sound.playClick?.() || sound.playBeep(800, 0.04);
+
+    try {
+      const response = await aiEngine.chatFreshBot(textToSend);
+      
+      // If in Tamil, add a localized touch
+      let botResponseText = response.reply;
+      if (language === 'ta' && !botResponseText.includes('வணக்கம்')) {
+        if (textToSend.toLowerCase().includes('expire') || textToSend.includes('காலாவதி')) {
+          const products = storage.getProducts();
+          const urgent = products.filter(p => p.status === 'URGENT' || p.status === 'EXPIRING SOON');
+          if (urgent.length === 0) {
+            botResponseText = "✨ உங்கள் குளிர்சாதனப் பெட்டியில் உள்ள அனைத்து உணவுகளும் புதியதாகவும் பாதுகாப்பாகவும் உள்ளன!";
+          } else {
+            botResponseText = `🚨 அவசரம்: உங்கள் குளிர்சாதனப் பெட்டியில் ${urgent.map(u => u.product_name).join(', ')} விரைவில் காலாவதியாகிறது!`;
+          }
+        }
+      }
+
+      const botMsg = {
+        sender: 'bot',
+        text: botResponseText,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        suggestedActions: response.suggestedActions
+      };
+
+      setMessages((prev) => [...prev, botMsg]);
+      speakText(botResponseText);
+    } catch (err) {
+      console.error(err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: 'bot',
+          text: language === 'ta' ? "மன்னிக்கவும், பதில் பெறுவதில் சிக்கல் ஏற்பட்டது." : "I'm having trouble analyzing your request. Try asking about what items in your fridge are expiring!",
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
   const toggleListening = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert('Speech recognition is not supported in this browser. Please use keyboard input.');
+    if (!recognitionRef.current) {
+      alert(language === 'ta' ? 'உங்கள் உலாவியில் குரல் அங்கீகாரம் ஆதரிக்கப்படவில்லை.' : 'Speech recognition is not supported in this browser.');
       return;
     }
 
     if (isListening) {
+      recognitionRef.current.stop();
       setIsListening(false);
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = () => setIsListening(true);
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(transcript);
-      setIsListening(false);
-    };
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
-
-    recognition.start();
-  };
-
-  const handleSend = async (messageText) => {
-    const query = messageText || input;
-    if (!query.trim() || loading) return;
-
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: query.trim() }]);
-    setLoading(true);
-
-    try {
-      const { data } = await api.post('/ai/chat', { message: query.trim() });
-      const reply = data.reply || "I've checked your inventory and everything looks organized!";
-      const suggestions = data.suggestions || ['What is expiring soon?', 'Generate a zero-waste recipe'];
-      
-      setMessages(prev => [...prev, { role: 'bot', content: reply, suggestions }]);
-      speakText(reply);
-    } catch (err) {
-      const fallback = "I'm checking your kitchen inventory. Ask me what items are expiring or request a zero-waste recipe!";
-      setMessages(prev => [...prev, { role: 'bot', content: fallback }]);
-      speakText(fallback);
-    } finally {
-      setLoading(false);
+    } else {
+      recognitionRef.current.lang = language === 'ta' ? 'ta-IN' : 'en-US';
+      recognitionRef.current.start();
+      setIsListening(true);
     }
   };
+
+  const quickPrompts = language === 'ta' ? [
+    'பிரிட்ஜில் என்ன காலாவதியாகிறது?',
+    'இன்றைய சமையல் குறிப்பு தாருங்கள்',
+    'உணவு வீணாவதைத் தடுக்கும் குறிப்புகள்',
+    'பூஜ்ஜிய கழிவு சமையல்'
+  ] : [
+    "What's expiring soon?",
+    "Quick recipe for dinner",
+    "How to keep bread fresh?",
+    "Zero-waste kitchen tips"
+  ];
 
   return (
-    <>
-      {/* Floating Trigger Button */}
-      <button 
-        onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 p-4 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-xl shadow-emerald-600/30 hover:scale-110 active:scale-95 transition-all z-40 flex items-center gap-2 group ${
-          isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
-        }`}
-        title="Chat with FreshBot AI"
-      >
-        <Bot size={24} className="group-hover:rotate-12 transition-transform" />
-        <span className="font-heading font-bold text-sm pr-1 hidden sm:inline">Ask FreshBot</span>
-        <span className="w-2.5 h-2.5 bg-emerald-300 rounded-full animate-ping absolute -top-1 -right-1" />
-      </button>
+    <div className="fixed bottom-6 right-6 z-40">
+      {/* Floating Action Button */}
+      {!isOpen && (
+        <button
+          onClick={() => {
+            setIsOpen(true);
+            sound.playBeep(900, 0.05);
+          }}
+          className="bg-gradient-to-tr from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white p-4 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center relative group"
+          aria-label="Open FreshBot Assistant"
+        >
+          <Bot size={26} className="animate-pulse" />
+          <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+          </span>
+          {/* Tooltip */}
+          <span className="absolute right-full mr-3 bg-slate-900 text-white text-xs px-3 py-1.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg pointer-events-none font-semibold">
+            {t('askFreshBot')} 🤖
+          </span>
+        </button>
+      )}
 
-      {/* Floating Chat Modal */}
+      {/* Expanded Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-[92vw] sm:w-[420px] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col z-50 overflow-hidden h-[540px] animate-in fade-in zoom-in-95 duration-200">
+        <div className="w-[360px] sm:w-[400px] h-[540px] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
           {/* Header */}
-          <div className="p-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-primary-600 text-white flex justify-between items-center shadow-sm">
-            <div className="flex items-center space-x-2.5">
-              <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+          <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-4 text-white flex items-center justify-between shadow-md">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-white/20 backdrop-blur-md rounded-2xl">
                 <Bot size={20} />
               </div>
               <div>
-                <h3 className="font-heading font-bold text-sm flex items-center gap-1.5">
-                  FreshBot AI
-                  <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono">GPT-Engine</span>
+                <h3 className="font-heading font-extrabold text-sm flex items-center gap-1.5">
+                  {t('freshBotTitle')}
+                  <span className="text-[10px] bg-emerald-400 text-emerald-950 px-1.5 py-0.2 rounded-full font-bold">LIVE</span>
                 </h3>
-                <p className="text-[11px] text-emerald-100">Live Inventory Intelligence</p>
+                <p className="text-[11px] text-emerald-100">{t('freshBotLive')}</p>
               </div>
             </div>
 
             <div className="flex items-center space-x-1">
-              <button 
-                onClick={() => setTtsEnabled(!ttsEnabled)}
-                className={`p-1.5 rounded-lg transition-colors ${ttsEnabled ? 'bg-white/30 text-white' : 'text-white/70 hover:bg-white/20'}`}
-                title={ttsEnabled ? 'Mute AI Voice' : 'Enable AI Voice'}
+              <button
+                onClick={() => setVoiceEnabled(!voiceEnabled)}
+                title={voiceEnabled ? 'Mute speech voice' : 'Enable speech voice'}
+                className="p-1.5 rounded-lg text-emerald-100 hover:bg-white/10 transition-colors"
               >
-                {ttsEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+                {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
               </button>
-              <button 
-                onClick={() => setMessages([{ role: 'bot', content: 'Chat reset. How can I help you manage your food today?', suggestions: ['What is expiring soon?', 'Dinner ideas'] }])}
-                className="p-1.5 rounded-lg text-white/70 hover:bg-white/20 transition-colors"
-                title="Reset conversation"
-              >
-                <RotateCcw size={16} />
-              </button>
-              <button 
+              <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-lg text-white/80 hover:bg-white/20 transition-colors"
-                title="Close chat"
+                className="p-1.5 rounded-lg text-emerald-100 hover:bg-white/10 transition-colors"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
           </div>
-          
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-950/40">
-            {messages.map((m, i) => (
-              <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
-                <div className={`max-w-[85%] rounded-2xl p-3.5 text-xs sm:text-sm leading-relaxed shadow-sm ${
-                  m.role === 'user' 
-                    ? 'bg-emerald-600 text-white rounded-br-none' 
-                    : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-bl-none border border-slate-200/80 dark:border-slate-700/80'
-                }`}>
-                  <div className="whitespace-pre-line">
-                    {m.content}
-                  </div>
-                </div>
 
-                {/* Suggestion Chips */}
-                {m.suggestions && m.suggestions.length > 0 && i === messages.length - 1 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2.5 max-w-[95%]">
-                    {m.suggestions.map((sug, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleSend(sug)}
-                        className="text-[11px] bg-emerald-50 hover:bg-emerald-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-slate-700 transition-colors flex items-center gap-1"
-                      >
-                        <Sparkles size={10} />
-                        {sug}
-                      </button>
-                    ))}
-                  </div>
-                )}
+          {/* Messages Area */}
+          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/50 dark:bg-slate-950/40 custom-scrollbar">
+            {messages.map((m, idx) => (
+              <div
+                key={idx}
+                className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[85%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+                    m.sender === 'user'
+                      ? 'bg-emerald-600 text-white rounded-br-none shadow-sm'
+                      : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-bl-none border border-slate-200/80 dark:border-slate-700 shadow-sm'
+                  }`}
+                >
+                  <p className="whitespace-pre-line">{m.text}</p>
+                  <span className={`text-[9px] block text-right mt-1 ${m.sender === 'user' ? 'text-emerald-200' : 'text-slate-400'}`}>
+                    {m.time}
+                  </span>
+                </div>
               </div>
             ))}
 
-            {loading && (
-              <div className="flex items-center space-x-2 text-xs text-slate-400 bg-white dark:bg-slate-800 p-3 rounded-2xl w-fit border border-slate-200 dark:border-slate-700">
-                <Leaf size={14} className="animate-spin text-emerald-500" />
-                <span>FreshBot is analyzing your fridge & recipes...</span>
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="bg-white dark:bg-slate-800 p-3 rounded-2xl rounded-bl-none border border-slate-200 dark:border-slate-700 shadow-sm flex items-center space-x-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:0.2s]" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:0.4s]" />
+                </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
-          
-          {/* Input Form */}
-          <form 
-            onSubmit={(e) => { e.preventDefault(); handleSend(); }} 
-            className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center space-x-2"
-          >
+
+          {/* Quick Action Chips */}
+          <div className="px-3 py-2 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex items-center space-x-1.5 overflow-x-auto custom-scrollbar">
+            {quickPrompts.map((prompt, i) => (
+              <button
+                key={i}
+                onClick={() => handleSend(prompt)}
+                className="text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-full whitespace-nowrap transition-colors flex-shrink-0"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+
+          {/* Input Box */}
+          <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center space-x-2">
             <button
-              type="button"
               onClick={toggleListening}
-              className={`p-2.5 rounded-xl transition-all ${
+              className={`p-2.5 rounded-2xl transition-all ${
                 isListening 
-                  ? 'bg-rose-500 text-white animate-bounce' 
-                  : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  ? 'bg-rose-500 text-white animate-pulse' 
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'
               }`}
-              title="Voice Input"
+              title={isListening ? 'Stop Listening' : 'Voice Input'}
             >
-              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+              {isListening ? <MicOff size={16} /> : <Mic size={16} />}
             </button>
 
-            <input 
-              type="text" 
+            <input
+              type="text"
+              placeholder={isListening ? t('listening') : t('askAnything')}
               value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder={isListening ? "Listening... speak now" : "Ask FreshBot anything..."}
-              className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-xl text-xs sm:text-sm outline-none focus:ring-2 focus:ring-emerald-500/50 border border-transparent focus:border-emerald-500 transition-all"
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white px-3.5 py-2.5 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-emerald-500"
             />
-            
-            <button 
-              type="submit" 
-              disabled={!input.trim() || loading} 
-              className="p-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white rounded-xl shadow-md transition-all disabled:cursor-not-allowed"
+
+            <button
+              onClick={() => handleSend()}
+              disabled={!input.trim()}
+              className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white p-2.5 rounded-2xl transition-colors shadow-sm"
             >
               <Send size={16} />
             </button>
-          </form>
+          </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

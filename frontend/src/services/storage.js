@@ -1,4 +1,4 @@
-// Intelligent Local Engine for Food Expiry Guardian AI
+// Intelligent Local Engine for Food Expiry Guardian AI - 100% Fresh Clean State
 
 const STORAGE_KEYS = {
   PRODUCTS: 'feg_products',
@@ -22,7 +22,11 @@ const getFutureDate = (days) => {
   return d.toISOString().split('T')[0];
 };
 
-const INITIAL_PRODUCTS = [
+// Clean Fresh State: 0 initial items in inventory
+const INITIAL_PRODUCTS = [];
+
+// Sample items available on-demand only if user clicks "Load Samples"
+const SAMPLE_PRODUCTS_PRESET = [
   {
     id: 'prod-1',
     product_name: 'Organic Whole Milk',
@@ -46,7 +50,7 @@ const INITIAL_PRODUCTS = [
     id: 'prod-2',
     product_name: 'Fresh Strawberries',
     category: 'Produce',
-    expiry_date: getFutureDate(0), // Today
+    expiry_date: getFutureDate(0),
     quantity: 2,
     unit: 'Punnets (250g)',
     barcode: '8901030383022',
@@ -79,152 +83,27 @@ const INITIAL_PRODUCTS = [
     fat: 10,
     fiber: 0,
     ownership: 'Personal (Alex)'
-  },
-  {
-    id: 'prod-4',
-    product_name: 'Artisan Sourdough Bread',
-    category: 'Bakery',
-    expiry_date: getFutureDate(2),
-    quantity: 1,
-    unit: 'Loaf',
-    barcode: '8901030383044',
-    estimated_price: 5.50,
-    location: 'Bread Box',
-    notes: 'Freeze half if not consumed soon',
-    ocr_confidence: 0.89,
-    calories: 1200,
-    protein: 42,
-    carbs: 230,
-    fat: 8,
-    fiber: 14,
-    ownership: 'Shared'
-  },
-  {
-    id: 'prod-5',
-    product_name: 'Organic Baby Spinach',
-    category: 'Produce',
-    expiry_date: getFutureDate(2),
-    quantity: 1,
-    unit: 'Bag (200g)',
-    barcode: '8901030383055',
-    estimated_price: 2.99,
-    location: 'Fridge Crisper Drawer',
-    notes: 'Tender leaves',
-    ocr_confidence: 0.95,
-    calories: 46,
-    protein: 6,
-    carbs: 7,
-    fat: 1,
-    fiber: 5,
-    ownership: 'Shared'
-  },
-  {
-    id: 'prod-6',
-    product_name: 'Free-Range Eggs (Large)',
-    category: 'Dairy & Eggs',
-    expiry_date: getFutureDate(14),
-    quantity: 12,
-    unit: 'Pack of 12',
-    barcode: '8901030383066',
-    estimated_price: 4.99,
-    location: 'Fridge Middle Shelf',
-    notes: 'Grade A organic',
-    ocr_confidence: 0.99,
-    calories: 840,
-    protein: 72,
-    carbs: 4,
-    fat: 60,
-    fiber: 0,
-    ownership: 'Shared'
-  },
-  {
-    id: 'prod-7',
-    product_name: 'Boneless Chicken Breast',
-    category: 'Meat & Poultry',
-    expiry_date: getFutureDate(1),
-    quantity: 2,
-    unit: 'Packs (600g)',
-    barcode: '8901030383077',
-    estimated_price: 9.40,
-    location: 'Fridge Bottom Shelf',
-    notes: 'Keep chilled or freeze today',
-    ocr_confidence: 0.96,
-    calories: 990,
-    protein: 186,
-    carbs: 0,
-    fat: 22,
-    fiber: 0,
-    ownership: 'Shared'
-  },
-  {
-    id: 'prod-8',
-    product_name: 'Sharp Cheddar Cheese Block',
-    category: 'Dairy & Eggs',
-    expiry_date: getFutureDate(25),
-    quantity: 1,
-    unit: 'Block (400g)',
-    barcode: '8901030383088',
-    estimated_price: 6.20,
-    location: 'Fridge Middle Shelf',
-    notes: 'Aged 12 months',
-    ocr_confidence: 0.92,
-    calories: 1600,
-    protein: 100,
-    carbs: 6,
-    fat: 132,
-    fiber: 0,
-    ownership: 'Shared'
-  },
-  {
-    id: 'prod-9',
-    product_name: 'Italian Penne Rigate',
-    category: 'Pantry',
-    expiry_date: getFutureDate(180),
-    quantity: 2,
-    unit: 'Boxes (500g)',
-    barcode: '8901030383099',
-    estimated_price: 2.50,
-    location: 'Pantry Shelf 1',
-    notes: 'Dry staple',
-    ocr_confidence: 0.99,
-    calories: 1750,
-    protein: 60,
-    carbs: 360,
-    fat: 8,
-    fiber: 16,
-    ownership: 'Shared'
   }
 ];
 
-const INITIAL_SHOPPING_LIST = [
-  { id: 'shop-1', name: 'Avocados (Hass)', category: 'Produce', quantity: 3, unit: 'pcs', estimatedPrice: 3.50, checked: false, addedFrom: 'restock' },
-  { id: 'shop-2', name: 'Almond Milk (Unsweetened)', category: 'Dairy & Eggs', quantity: 1, unit: 'Carton', estimatedPrice: 3.20, checked: false, addedFrom: 'manual' },
-  { id: 'shop-3', name: 'Olive Oil Extra Virgin', category: 'Pantry', quantity: 1, unit: 'Bottle (500ml)', estimatedPrice: 8.90, checked: true, addedFrom: 'manual' },
-  { id: 'shop-4', name: 'Whole Wheat Tortillas', category: 'Bakery', quantity: 1, unit: 'Pack of 8', estimatedPrice: 2.80, checked: false, addedFrom: 'recipe' }
-];
-
-const INITIAL_DONATIONS = [
-  { id: 'don-1', name: 'Unopened Canned Diced Tomatoes', category: 'Pantry', quantity: 4, bestBefore: getFutureDate(120), status: 'Available', donor: 'Alex Rivera', location: 'Downtown Community Fridge #2' },
-  { id: 'don-2', name: 'Sealed Whole Oats (1kg)', category: 'Pantry', quantity: 2, bestBefore: getFutureDate(90), status: 'Claimed', donor: 'Alex Rivera', location: 'St. Mary Food Pantry' },
-  { id: 'don-3', name: 'Organic Apples (Bag of 6)', category: 'Produce', quantity: 1, bestBefore: getFutureDate(5), status: 'Available', donor: 'Sarah Jenkins', location: 'West End Fridge Hub' }
-];
+const INITIAL_SHOPPING_LIST = [];
+const INITIAL_DONATIONS = [];
 
 const INITIAL_CHALLENGES = {
-  xp: 1250,
-  level: 4,
-  levelTitle: 'Waste Reduction Champion',
-  currentStreakDays: 6,
-  bestStreakDays: 14,
+  xp: 450,
+  level: 2,
+  levelTitle: 'Eco Guardian Novice',
+  currentStreakDays: 1,
+  bestStreakDays: 7,
   quests: [
-    { id: 'q-1', title: 'Zero-Waste Weekend', desc: 'Cook 3 consecutive meals using only existing fridge items without buying takeout.', xpReward: 300, progress: 2, target: 3, completed: false, badge: '🍳' },
-    { id: 'q-2', title: 'Leafy Green Rescue', desc: 'Consume a bag of fresh greens within 48 hours of purchase.', xpReward: 200, progress: 1, target: 1, completed: true, badge: '🥬' },
-    { id: 'q-3', title: 'Freezer Reset Master', desc: 'Thaw and eat 2 pre-frozen meals this week.', xpReward: 250, progress: 1, target: 2, completed: false, badge: '🧊' },
-    { id: 'q-4', title: 'Smart Scanner Pro', desc: 'Scan 5 items with OCR or barcode detector.', xpReward: 150, progress: 5, target: 5, completed: true, badge: '📷' }
+    { id: 'q-1', title: 'Zero-Waste First Scan', desc: 'Scan your first food item using the OCR scanner.', xpReward: 200, progress: 0, target: 1, completed: false, badge: '📷' },
+    { id: 'q-2', title: 'Fresh Fridge Setup', desc: 'Add 3 fresh grocery items to your inventory.', xpReward: 150, progress: 0, target: 3, completed: false, badge: '🥗' },
+    { id: 'q-3', title: 'Guided Chef Cooking', desc: 'Cook a recipe with your ingredients.', xpReward: 250, progress: 0, target: 1, completed: false, badge: '👨‍🍳' }
   ],
   trophies: [
-    { id: 't-1', title: 'First Food Saved', desc: 'Logged your first zero-waste meal.', unlocked: true, icon: '🌱' },
-    { id: 't-2', title: 'Centurion Saver', desc: 'Saved over $100 in prevented food waste.', unlocked: true, icon: '💰' },
-    { id: 't-3', title: 'Community Hero', desc: 'Donated an item to a community food fridge.', unlocked: true, icon: '❤️' },
+    { id: 't-1', title: 'First Food Saved', desc: 'Logged your first zero-waste meal.', unlocked: false, icon: '🌱' },
+    { id: 't-2', title: 'Centurion Saver', desc: 'Saved over $100 in prevented food waste.', unlocked: false, icon: '💰' },
+    { id: 't-3', title: 'Community Hero', desc: 'Donated an item to a community food fridge.', unlocked: false, icon: '❤️' },
     { id: 't-4', title: 'Master Chef Zero', desc: 'Cooked 10 AI zero-waste recipes.', unlocked: false, icon: '👨‍🍳' }
   ]
 };
@@ -233,27 +112,18 @@ const INITIAL_HOUSEHOLD = {
   name: 'Maplewood Suite 4B',
   members: [
     { id: 'mem-1', name: 'Alex Rivera', role: 'Kitchen Admin', avatar: '🥑', color: 'bg-emerald-500' },
-    { id: 'mem-2', name: 'Maya Lin', role: 'Roommate', avatar: '🍓', color: 'bg-rose-500' },
-    { id: 'mem-3', name: 'Sam Chen', role: 'Roommate', avatar: '🥕', color: 'bg-amber-500' }
+    { id: 'mem-2', name: 'Maya Lin', role: 'Roommate', avatar: '🍓', color: 'bg-rose-500' }
   ],
-  chores: [
-    { id: 'ch-1', chore: 'Fridge Wipe-down & Reset', assignedTo: 'Maya Lin', due: 'Saturday', status: 'Pending' },
-    { id: 'ch-2', chore: 'Mid-week Expiry Audit', assignedTo: 'Alex Rivera', due: 'Wednesday', status: 'Completed' },
-    { id: 'ch-3', chore: 'Grocery Restock Trip', assignedTo: 'Sam Chen', due: 'Sunday', status: 'Pending' }
-  ],
-  feed: [
-    { id: 'f-1', user: 'Alex Rivera', action: 'cooked Zero-Waste Skillet & rescued Whole Milk', time: '2 hours ago' },
-    { id: 'f-2', user: 'Maya Lin', action: 'added Greek Yogurt to Shared Fridge Door', time: 'Yesterday' },
-    { id: 'f-3', user: 'Sam Chen', action: 'transferred 4 items from Shopping List to Fridge', time: '2 days ago' }
-  ]
+  chores: [],
+  feed: []
 };
 
 const INITIAL_COMPOST = {
-  greensKg: 4.8, // Nitrogen (scraps, fruit peels, greens)
-  brownsKg: 5.2, // Carbon (paper towel, cardboard, dry leaves)
-  lastTurned: '3 days ago',
-  moistureLevel: 'Optimal (55%)',
-  totalCompostHarvestedKg: 28.5,
+  greensKg: 0.0,
+  brownsKg: 0.0,
+  lastTurned: 'Today',
+  moistureLevel: 'Fresh & Clean (Ready for Scraps)',
+  totalCompostHarvestedKg: 0.0,
   scrapsSaved: [
     { id: 'sc-1', item: 'Coffee Grounds', bestUse: 'Soil Nitrogen Booster & Natural Deodorizer', category: 'Garden' },
     { id: 'sc-2', item: 'Vegetable Peels (Carrot, Onion, Celery)', bestUse: 'Simmer into Golden Homemade Vegetable Scrap Broth', category: 'Broth' },
@@ -266,6 +136,7 @@ const INITIAL_COMPOST = {
 const DEFAULT_SETTINGS = {
   currency: '$',
   currencyCode: 'USD',
+  language: 'en',
   dietaryPreference: 'All (No Restrictions)',
   soundEffects: true,
   leadTimeDays: 3,
@@ -301,13 +172,13 @@ export const getDaysRemaining = (expiryDateStr) => {
 };
 
 export const storage = {
-  // Products CRUD
+  // Products CRUD - Clean Fresh Default
   getProducts: () => {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
       if (!data) {
-        localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(INITIAL_PRODUCTS));
-        return INITIAL_PRODUCTS.map(p => ({ ...p, status: computeStatus(p.expiry_date), days_left: getDaysRemaining(p.expiry_date) }));
+        localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify([]));
+        return [];
       }
       const parsed = JSON.parse(data);
       return parsed.map(p => ({
@@ -316,7 +187,7 @@ export const storage = {
         days_left: getDaysRemaining(p.expiry_date)
       }));
     } catch {
-      return INITIAL_PRODUCTS;
+      return [];
     }
   },
 
@@ -365,6 +236,18 @@ export const storage = {
     return true;
   },
 
+  clearAllProducts: () => {
+    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify([]));
+    return [];
+  },
+
+  loadSamplePresetData: () => {
+    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(SAMPLE_PRODUCTS_PRESET));
+    storage.generateNotifications();
+    return storage.getProducts();
+  },
+
   consumeProduct: (id) => {
     const products = storage.getProducts();
     const product = products.find(p => p.id === id);
@@ -394,12 +277,10 @@ export const storage = {
   },
 
   resetSampleData: () => {
-    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(INITIAL_PRODUCTS));
-    localStorage.setItem(STORAGE_KEYS.CHALLENGES, JSON.stringify(INITIAL_CHALLENGES));
-    localStorage.setItem(STORAGE_KEYS.HOUSEHOLD, JSON.stringify(INITIAL_HOUSEHOLD));
-    localStorage.setItem(STORAGE_KEYS.COMPOST, JSON.stringify(INITIAL_COMPOST));
-    storage.generateNotifications();
-    return storage.getProducts();
+    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.SHOPPING_LIST, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify([]));
+    return [];
   },
 
   // Savings & Sustainability Metrics
@@ -407,16 +288,16 @@ export const storage = {
     const saved = localStorage.getItem(STORAGE_KEYS.SAVINGS);
     if (saved) return JSON.parse(saved);
     const initialStats = {
-      moneySaved: 148.75,
-      foodItemsSaved: 38,
-      itemsWasted: 3,
-      co2PreventedKg: 42.6,
+      moneySaved: 0.0,
+      foodItemsSaved: 0,
+      itemsWasted: 0,
+      co2PreventedKg: 0.0,
       history: [
-        { month: 'Apr', saved: 95, wasted: 18 },
-        { month: 'May', saved: 120, wasted: 12 },
-        { month: 'Jun', saved: 135, wasted: 10 },
-        { month: 'Jul', saved: 142, wasted: 8 },
-        { month: 'Aug', saved: 148.75, wasted: 6 }
+        { month: 'Apr', saved: 0, wasted: 0 },
+        { month: 'May', saved: 0, wasted: 0 },
+        { month: 'Jun', saved: 0, wasted: 0 },
+        { month: 'Jul', saved: 0, wasted: 0 },
+        { month: 'Aug', saved: 0, wasted: 0 }
       ]
     };
     localStorage.setItem(STORAGE_KEYS.SAVINGS, JSON.stringify(initialStats));
@@ -461,7 +342,7 @@ export const storage = {
       moneySaved: savings.moneySaved,
       foodItemsSaved: savings.foodItemsSaved,
       co2PreventedKg: savings.co2PreventedKg,
-      wasteScore: Math.round((savings.foodItemsSaved / (savings.foodItemsSaved + savings.itemsWasted || 1)) * 100)
+      wasteScore: (savings.foodItemsSaved + savings.itemsWasted) === 0 ? 100 : Math.round((savings.foodItemsSaved / (savings.foodItemsSaved + savings.itemsWasted)) * 100)
     };
   },
 
@@ -470,12 +351,12 @@ export const storage = {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.SHOPPING_LIST);
       if (!data) {
-        localStorage.setItem(STORAGE_KEYS.SHOPPING_LIST, JSON.stringify(INITIAL_SHOPPING_LIST));
-        return INITIAL_SHOPPING_LIST;
+        localStorage.setItem(STORAGE_KEYS.SHOPPING_LIST, JSON.stringify([]));
+        return [];
       }
       return JSON.parse(data);
     } catch {
-      return INITIAL_SHOPPING_LIST;
+      return [];
     }
   },
 
@@ -569,7 +450,7 @@ export const storage = {
     return { transferred: addedProducts.length, items: addedProducts };
   },
 
-  // Eco-Challenges & Gamification
+  // Eco-Challenges
   getChallenges: () => {
     const c = localStorage.getItem(STORAGE_KEYS.CHALLENGES);
     if (c) return JSON.parse(c);
@@ -599,7 +480,7 @@ export const storage = {
     return { success: false, challenges: c };
   },
 
-  // Household Management
+  // Household
   getHousehold: () => {
     const h = localStorage.getItem(STORAGE_KEYS.HOUSEHOLD);
     if (h) return JSON.parse(h);
@@ -755,13 +636,13 @@ export const storage = {
     const saved = localStorage.getItem(STORAGE_KEYS.MEAL_PLAN);
     if (saved) return JSON.parse(saved);
     const initialPlan = {
-      Monday: { breakfast: 'Strawberry & Greek Yogurt Parfait', lunch: 'Chicken & Spinach Toasted Sandwich', dinner: 'Creamy Garlic Penne with Spinach' },
-      Tuesday: { breakfast: 'French Toast with Fresh Strawberries', lunch: 'Grilled Cheddar & Sourdough Melt', dinner: 'Herb-Roasted Chicken Breast & Greens' },
-      Wednesday: { breakfast: 'Scrambled Eggs on Buttered Sourdough', lunch: 'Leftover Penne Pasta Bowl', dinner: 'Spinach & Cheddar Omelette with Salad' },
-      Thursday: { breakfast: 'Berry Yogurt Smoothie Bowl', lunch: 'Chicken Caesar Style Wrap', dinner: 'Baked Penne with Melted Cheddar' },
-      Friday: { breakfast: 'Classic 2-Egg Breakfast with Toast', lunch: 'Crispy Sourdough Bruschetta', dinner: 'AI Chef Zero-Waste Stir Fry' },
-      Saturday: { breakfast: 'Fluffy Strawberry Pancakes', lunch: 'Artisan Grilled Cheese & Soup', dinner: 'Family Zero-Waste Feast' },
-      Sunday: { breakfast: 'Sunday Egg Scramble Special', lunch: 'Pantry Pasta Primavera', dinner: 'Weekly Fridge Reset Soup' }
+      Monday: { breakfast: '', lunch: '', dinner: '' },
+      Tuesday: { breakfast: '', lunch: '', dinner: '' },
+      Wednesday: { breakfast: '', lunch: '', dinner: '' },
+      Thursday: { breakfast: '', lunch: '', dinner: '' },
+      Friday: { breakfast: '', lunch: '', dinner: '' },
+      Saturday: { breakfast: '', lunch: '', dinner: '' },
+      Sunday: { breakfast: '', lunch: '', dinner: '' }
     };
     localStorage.setItem(STORAGE_KEYS.MEAL_PLAN, JSON.stringify(initialPlan));
     return initialPlan;

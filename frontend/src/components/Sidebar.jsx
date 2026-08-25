@@ -25,34 +25,36 @@ import {
   Leaf
 } from 'lucide-react';
 import { storage } from '../services/storage';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Sidebar() {
   const stats = storage.getDashboardStats();
   const shoppingList = storage.getShoppingList();
   const unboughtCount = shoppingList.filter(i => !i.checked).length;
   const challenges = storage.getChallenges();
+  const { t, language } = useLanguage();
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Food Inventory', path: '/products', icon: Package, badge: stats.total_products },
-    { name: 'Add Product', path: '/products/add', icon: PlusCircle },
-    { name: 'Smart Scanner', path: '/scan', icon: ScanLine, highlight: true },
-    { name: 'AI Recipe Chef', path: '/recipes', icon: ChefHat },
-    { name: 'Meal Planner', path: '/meal-plan', icon: CalendarDays },
-    { name: 'Smart Shopping List', path: '/shopping-list', icon: ShoppingCart, badge: unboughtCount > 0 ? unboughtCount : null },
-    { name: 'Fridge 2D Map', path: '/fridge-map', icon: Layers },
-    { name: 'Nutritional Horizon', path: '/nutrition', icon: HeartPulse },
-    { name: '3-Min Kitchen Audit', path: '/audit', icon: ClipboardCheck },
-    { name: 'Preservation Guide', path: '/preservation-guide', icon: BookOpen },
-    { name: 'Scrap & Compost Lab', path: '/compost', icon: Recycle },
-    { name: 'Grocery Deals Radar', path: '/deals-radar', icon: Tag },
-    { name: 'Eco Quests & XP', path: '/challenges', icon: Trophy, badge: `Lvl ${challenges.level}` },
-    { name: 'Household Kitchen', path: '/household', icon: Home },
-    { name: 'Community Sharing', path: '/community', icon: Users },
-    { name: 'Printable QR Labels', path: '/barcode-hub', icon: QrCode },
-    { name: 'Waste Analytics', path: '/analytics', icon: BarChart3 },
-    { name: 'Alerts', path: '/notifications', icon: Bell, badge: stats.urgent_products > 0 ? `${stats.urgent_products} urgent` : null, badgeColor: 'bg-rose-500' },
-    { name: 'Settings', path: '/settings', icon: Settings }
+    { name: t('navDashboard'), path: '/dashboard', icon: LayoutDashboard },
+    { name: t('navProducts'), path: '/products', icon: Package, badge: stats.total_products > 0 ? stats.total_products : null },
+    { name: t('navAddProduct'), path: '/products/add', icon: PlusCircle },
+    { name: t('navScan'), path: '/scan', icon: ScanLine, highlight: true },
+    { name: t('navRecipes'), path: '/recipes', icon: ChefHat },
+    { name: t('navMealPlan'), path: '/meal-plan', icon: CalendarDays },
+    { name: t('navShoppingList'), path: '/shopping-list', icon: ShoppingCart, badge: unboughtCount > 0 ? unboughtCount : null },
+    { name: t('navFridgeMap'), path: '/fridge-map', icon: Layers },
+    { name: t('navNutrition'), path: '/nutrition', icon: HeartPulse },
+    { name: t('navAudit'), path: '/audit', icon: ClipboardCheck },
+    { name: t('navPreservation'), path: '/preservation-guide', icon: BookOpen },
+    { name: t('navCompost'), path: '/compost', icon: Recycle },
+    { name: t('navDeals'), path: '/deals-radar', icon: Tag },
+    { name: t('navChallenges'), path: '/challenges', icon: Trophy, badge: `Lvl ${challenges.level}` },
+    { name: t('navHousehold'), path: '/household', icon: Home },
+    { name: t('navCommunity'), path: '/community', icon: Users },
+    { name: t('navBarcode'), path: '/barcode-hub', icon: QrCode },
+    { name: t('navAnalytics'), path: '/analytics', icon: BarChart3 },
+    { name: t('navAlerts'), path: '/notifications', icon: Bell, badge: stats.urgent_products > 0 ? `${stats.urgent_products} urgent` : null, badgeColor: 'bg-rose-500' },
+    { name: t('navSettings'), path: '/settings', icon: Settings }
   ];
 
   return (
@@ -65,11 +67,11 @@ export default function Sidebar() {
               <Leaf size={22} className="animate-pulse" />
             </div>
             <div>
-              <h2 className="text-xl font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
-                Food Guardian
+              <h2 className="text-lg font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                {t('brandName')}
                 <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">AI</span>
               </h2>
-              <p className="text-xs text-slate-400 font-medium">Track Smart • Waste Less</p>
+              <p className="text-xs text-slate-400 font-medium">{t('brandTagline')}</p>
             </div>
           </div>
         </div>
@@ -120,8 +122,10 @@ export default function Sidebar() {
       {/* Sustainability Quick Card */}
       <div className="p-3.5 m-3 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800/80 dark:to-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 shadow-inner flex-shrink-0">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Waste Guard</span>
-          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{stats.wasteScore}% Score</span>
+          <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+            {language === 'ta' ? 'கழிவு பாதுகாப்பு' : 'Waste Guard'}
+          </span>
+          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{stats.wasteScore}% {language === 'ta' ? 'மதிப்பெண்' : 'Score'}</span>
         </div>
         <div className="w-full bg-emerald-200 dark:bg-emerald-950 rounded-full h-1.5 overflow-hidden mb-1.5">
           <div 
@@ -130,7 +134,7 @@ export default function Sidebar() {
           />
         </div>
         <p className="text-[10px] text-slate-500 dark:text-slate-400">
-          🌱 <strong className="text-slate-700 dark:text-slate-200">${stats.moneySaved}</strong> saved this month
+          🌱 <strong className="text-slate-700 dark:text-slate-200">${stats.moneySaved}</strong> {language === 'ta' ? 'சேமிக்கப்பட்டது' : 'saved this month'}
         </p>
       </div>
     </aside>

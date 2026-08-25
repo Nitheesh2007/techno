@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Bell, 
-  User, 
   LogOut, 
   Moon, 
   Sun, 
@@ -10,17 +9,19 @@ import {
   CheckCheck,
   AlertTriangle,
   Clock,
-  Sparkles,
   Search,
-  Command
+  Languages
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { storage } from '../services/storage';
+import { sound } from '../services/sound';
 import CommandPalette from './CommandPalette';
 
 export default function TopBar() {
   const { user, logout } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const [isDark, setIsDark] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -28,7 +29,6 @@ export default function TopBar() {
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
-    // Check theme preference
     const isDarkMode = document.documentElement.classList.contains('dark') || 
       localStorage.getItem('feg_theme') === 'dark' ||
       window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -40,10 +40,8 @@ export default function TopBar() {
       document.documentElement.classList.remove('dark');
     }
 
-    // Load notifications
     setNotifications(storage.getNotifications());
 
-    // Ctrl+K or Cmd+K shortcut
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
@@ -64,6 +62,12 @@ export default function TopBar() {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('feg_theme', 'light');
     }
+  };
+
+  const toggleLanguage = () => {
+    const nextLang = language === 'en' ? 'ta' : 'en';
+    setLanguage(nextLang);
+    sound.playClick?.() || sound.playBeep(900, 0.04);
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -92,7 +96,7 @@ export default function TopBar() {
             className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 text-xs font-semibold transition-colors"
           >
             <Search size={14} />
-            <span className="hidden sm:inline">Search anything or press</span>
+            <span className="hidden sm:inline">{t('searchPlaceholder')}</span>
             <kbd className="font-mono text-[10px] bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
               Ctrl+K
             </kbd>
@@ -100,14 +104,24 @@ export default function TopBar() {
         </div>
 
         {/* Right Controls */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5">
+          {/* Prominent Language Switcher */}
+          <button
+            onClick={toggleLanguage}
+            title="Switch Language / மொழி மாற்றுக"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-700 text-xs font-bold transition-all shadow-sm"
+          >
+            <Languages size={14} className="text-emerald-600 dark:text-emerald-400" />
+            <span>{language === 'en' ? '🌐 English' : '🌐 தமிழ்'}</span>
+          </button>
+
           {/* Quick Scan Action */}
           <Link
             to="/scan"
             className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold border border-emerald-500/30 transition-all hover:scale-105"
           >
             <ScanLine size={14} />
-            <span>Quick Scan</span>
+            <span>{t('quickScan')}</span>
           </Link>
 
           {/* Quick Add Action */}
@@ -116,7 +130,7 @@ export default function TopBar() {
             className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition-all hover:scale-105"
           >
             <Plus size={14} />
-            <span>Add Item</span>
+            <span>{t('addItem')}</span>
           </Link>
 
           {/* Theme Toggle */}
@@ -147,7 +161,7 @@ export default function TopBar() {
               <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <div className="px-4 pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <h4 className="font-heading font-bold text-sm text-slate-800 dark:text-white">Alerts & Expiries</h4>
+                    <h4 className="font-heading font-bold text-sm text-slate-800 dark:text-white">{t('alertsTitle')}</h4>
                     {unreadCount > 0 && (
                       <span className="text-xs bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 font-bold px-2 py-0.5 rounded-full">
                         {unreadCount} new
@@ -159,14 +173,14 @@ export default function TopBar() {
                       onClick={markAllRead} 
                       className="text-xs text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1"
                     >
-                      <CheckCheck size={13} /> Mark all read
+                      <CheckCheck size={13} /> {t('markAllRead')}
                     </button>
                   )}
                 </div>
 
                 <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
                   {notifications.length === 0 ? (
-                    <p className="p-4 text-center text-xs text-slate-400">No alerts right now! Kitchen is fresh ✨</p>
+                    <p className="p-4 text-center text-xs text-slate-400">{t('noAlerts')}</p>
                   ) : (
                     notifications.map((n) => (
                       <div
@@ -204,7 +218,7 @@ export default function TopBar() {
                     onClick={() => setNotifOpen(false)}
                     className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
                   >
-                    View All Notification History →
+                    {t('viewAllAlerts')}
                   </Link>
                 </div>
               </div>
@@ -221,7 +235,7 @@ export default function TopBar() {
             </span>
             <button
               onClick={logout}
-              title="Sign Out"
+              title={t('signOut')}
               className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <LogOut size={16} />

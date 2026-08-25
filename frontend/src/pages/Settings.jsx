@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { storage } from '../services/storage';
 import { sound } from '../services/sound';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   Settings as SettingsIcon, 
   DollarSign, 
@@ -13,7 +14,8 @@ import {
   RotateCcw, 
   CheckCircle2, 
   Sparkles,
-  ShieldAlert
+  Languages,
+  Trash2
 } from 'lucide-react';
 
 const CURRENCIES = [
@@ -27,8 +29,8 @@ const CURRENCIES = [
 
 const DIETARY_PREFERENCES = [
   'All (No Restrictions)',
-  'Vegetarian',
-  'Vegan',
+  'Vegetarian (சைவம்)',
+  'Vegan (சுத்த சைவம்)',
   'Gluten-Free',
   'Keto / Low-Carb',
   'Dairy-Free'
@@ -37,6 +39,7 @@ const DIETARY_PREFERENCES = [
 export default function Settings() {
   const [settings, setSettings] = useState(storage.getSettings());
   const [toastMsg, setToastMsg] = useState(null);
+  const { language, setLanguage, t } = useLanguage();
   const fileInputRef = useRef(null);
 
   const handleSave = (updated) => {
@@ -44,8 +47,13 @@ export default function Settings() {
     storage.saveSettings(updated);
     sound.enabled = updated.soundEffects;
     sound.playSuccess();
-    setToastMsg('Settings saved successfully!');
+    setToastMsg(language === 'ta' ? 'அமைப்புகள் வெற்றிகரமாக சேமிக்கப்பட்டன!' : 'Settings saved successfully!');
     setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  const handleLanguageChange = (newLang) => {
+    setLanguage(newLang);
+    handleSave({ ...settings, language: newLang });
   };
 
   const handleExportJSON = () => {
@@ -64,7 +72,7 @@ export default function Settings() {
     a.download = `food-guardian-backup-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     sound.playBeep(980, 0.05);
-    setToastMsg('📦 Backup JSON downloaded!');
+    setToastMsg(language === 'ta' ? '📦 JSON காப்புப்பிரதி பதிவிறக்கம் செய்யப்பட்டது!' : '📦 Backup JSON downloaded!');
     setTimeout(() => setToastMsg(null), 3000);
   };
 
@@ -88,7 +96,7 @@ export default function Settings() {
     a.href = url;
     a.download = `food-guardian-inventory-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
-    setToastMsg('📊 CSV Inventory file exported!');
+    setToastMsg(language === 'ta' ? '📊 CSV கோப்பு பதிவிறக்கம் செய்யப்பட்டது!' : '📊 CSV Inventory file exported!');
     setTimeout(() => setToastMsg(null), 3000);
   };
 
@@ -105,7 +113,7 @@ export default function Settings() {
         if (parsed.mealPlan) storage.saveMealPlan(parsed.mealPlan);
         if (parsed.settings) storage.saveSettings(parsed.settings);
         sound.playSuccess();
-        setToastMsg('🎉 Backup data restored successfully!');
+        setToastMsg(language === 'ta' ? '🎉 தரவு வெற்றிகரமாக மீட்டமைக்கப்பட்டது!' : '🎉 Backup data restored successfully!');
         setTimeout(() => setToastMsg(null), 3500);
       } catch (err) {
         alert('Invalid backup file format');
@@ -114,11 +122,12 @@ export default function Settings() {
     reader.readAsText(file);
   };
 
-  const handleResetData = () => {
-    if (window.confirm('Reset all inventory and shopping items to factory sample data?')) {
-      storage.resetSampleData();
+  const handleClearFresh = () => {
+    if (window.confirm(language === 'ta' ? 'அனைத்து தரவையும் அழித்து 100% புத்தம் புதியதாகத் தொடங்க விரும்புகிறீர்களா?' : 'Clear all data and start 100% fresh with 0 items?')) {
+      storage.clearAllProducts();
+      storage.saveShoppingList([]);
       sound.playSuccess();
-      setToastMsg('✨ Sample kitchen data restored!');
+      setToastMsg(language === 'ta' ? '✨ அனைத்து தரவும் அழிக்கப்பட்டு புத்தம் புதியதாக மீட்டமைக்கப்பட்டது!' : '✨ All data cleared! Kitchen is 100% fresh.');
       setTimeout(() => setToastMsg(null), 3000);
     }
   };
@@ -137,45 +146,44 @@ export default function Settings() {
         <div className="mb-8">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
             <Sparkles size={13} />
-            <span>Preferences & Data Management</span>
+            <span>{t('settingsTitle')}</span>
           </div>
           <h1 className="text-3xl font-heading font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             <SettingsIcon className="text-emerald-600" size={32} />
-            Settings & Preferences
+            {t('settingsTitle')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Customize culinary dietary rules, currency, audio feedback, and backup your kitchen inventory.
+            {t('settingsSub')}
           </p>
         </div>
 
         {/* Settings Form Cards */}
         <div className="space-y-6">
-          {/* Card 1: Dietary & Currency */}
+          {/* Card 1: Language & Currency */}
           <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-              <Leaf className="text-emerald-500" size={20} />
-              Dietary & Financial Preferences
+              <Languages className="text-emerald-500" size={20} />
+              {language === 'ta' ? 'மொழி & காட்சி அமைப்புகள்' : 'Language & Display Localization'}
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                  Dietary Preference (Customizes AI Recipes)
+                  {t('languageSetting')}
                 </label>
                 <select
-                  value={settings.dietaryPreference}
-                  onChange={(e) => handleSave({ ...settings, dietaryPreference: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                  value={language}
+                  onChange={(e) => handleLanguageChange(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
                 >
-                  {DIETARY_PREFERENCES.map(d => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
+                  <option value="en">English (US / Global)</option>
+                  <option value="ta">தமிழ் (Tamil)</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                  Display Currency
+                  {t('currencySetting')}
                 </label>
                 <select
                   value={settings.currencyCode}
@@ -183,7 +191,7 @@ export default function Settings() {
                     const found = CURRENCIES.find(c => c.code === e.target.value);
                     handleSave({ ...settings, currencyCode: e.target.value, currency: found?.symbol || '$' });
                   }}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
                 >
                   {CURRENCIES.map(c => (
                     <option key={c.code} value={c.code}>{c.name}</option>
@@ -193,18 +201,41 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Card 2: Audio & Alerts */}
+          {/* Card 2: Dietary Preferences */}
+          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+              <Leaf className="text-emerald-500" size={20} />
+              {language === 'ta' ? 'உணவு விருப்பங்கள்' : 'Dietary Preferences'}
+            </h3>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                {t('dietarySetting')}
+              </label>
+              <select
+                value={settings.dietaryPreference}
+                onChange={(e) => handleSave({ ...settings, dietaryPreference: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                {DIETARY_PREFERENCES.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Card 3: Audio & Alerts */}
           <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
               <Volume2 className="text-blue-500" size={20} />
-              Sound FX & Notification Rules
+              {language === 'ta' ? 'ஒலி & எச்சரிக்கைகள்' : 'Sound FX & Alerts'}
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <div>
-                  <p className="font-heading font-bold text-sm text-slate-900 dark:text-white">Synthesizer Sound Effects</p>
-                  <p className="text-xs text-slate-400 mt-0.5">Chimes for scan, cooking timers, and food savings</p>
+                  <p className="font-heading font-bold text-sm text-slate-900 dark:text-white">{t('soundSetting')}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{t('soundDesc')}</p>
                 </div>
                 <input
                   type="checkbox"
@@ -216,27 +247,27 @@ export default function Settings() {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                  Expiry Alert Lead Time
+                  {t('leadTimeSetting')}
                 </label>
                 <select
                   value={settings.leadTimeDays}
                   onChange={(e) => handleSave({ ...settings, leadTimeDays: Number(e.target.value) })}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                 >
-                  <option value={1}>1 Day Before Expiry</option>
-                  <option value={2}>2 Days Before Expiry</option>
-                  <option value={3}>3 Days Before Expiry (Recommended)</option>
-                  <option value={5}>5 Days Before Expiry</option>
+                  <option value={1}>1 Day (1 நாள்)</option>
+                  <option value={2}>2 Days (2 நாட்கள்)</option>
+                  <option value={3}>3 Days (3 நாட்கள்)</option>
+                  <option value={5}>5 Days (5 நாட்கள்)</option>
                 </select>
               </div>
             </div>
           </div>
 
-          {/* Card 3: Data Backup & Restore */}
+          {/* Card 4: Data Backup & Fresh Reset */}
           <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
               <Download className="text-teal-500" size={20} />
-              Backup & Inventory Export
+              {language === 'ta' ? 'காப்புப்பிரதி & தரவு மீட்டமைப்பு' : 'Data Backup & Reset'}
             </h3>
 
             <div className="flex flex-wrap gap-3">
@@ -245,7 +276,7 @@ export default function Settings() {
                 className="flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs transition-colors"
               >
                 <Download size={16} />
-                <span>Export Full Backup (JSON)</span>
+                <span>{t('exportJsonBtn')}</span>
               </button>
 
               <button
@@ -253,7 +284,7 @@ export default function Settings() {
                 className="flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs transition-colors"
               >
                 <Download size={16} />
-                <span>Export Inventory (CSV)</span>
+                <span>{t('exportCsvBtn')}</span>
               </button>
 
               <button
@@ -261,15 +292,15 @@ export default function Settings() {
                 className="flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs transition-colors"
               >
                 <Upload size={16} />
-                <span>Restore Backup File</span>
+                <span>{t('restoreBackupBtn')}</span>
               </button>
 
               <button
-                onClick={handleResetData}
+                onClick={handleClearFresh}
                 className="flex items-center space-x-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold px-4 py-2.5 rounded-xl text-xs transition-colors ml-auto"
               >
-                <RotateCcw size={16} />
-                <span>Reset to Sample Data</span>
+                <Trash2 size={16} />
+                <span>{t('clearFreshBtn')}</span>
               </button>
             </div>
             <input
