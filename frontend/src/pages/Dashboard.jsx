@@ -17,7 +17,17 @@ import {
   ChefHat, 
   TrendingUp,
   Leaf,
-  DollarSign
+  DollarSign,
+  HelpCircle,
+  ChevronDown,
+  ChevronUp,
+  Layers,
+  ShoppingCart,
+  BookOpen,
+  Bell,
+  ArrowRight,
+  Zap,
+  Globe
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -37,7 +47,8 @@ export default function Dashboard() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [consumedItemName, setConsumedItemName] = useState(null);
-  const { t, language } = useLanguage();
+  const [guideExpanded, setGuideExpanded] = useState(true);
+  const { t, tf, tc, tl, language } = useLanguage();
   const navigate = useNavigate();
 
   const loadData = async () => {
@@ -111,7 +122,7 @@ export default function Dashboard() {
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold mb-2">
             <Sparkles size={13} />
@@ -143,6 +154,172 @@ export default function Dashboard() {
             <span>{t('addItem')}</span>
           </Link>
         </div>
+      </div>
+
+      {/* TOP MODULE: COMPREHENSIVE PLATFORM INSTRUCTIONS & QUICK START GUIDE */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-850 to-emerald-950 text-white rounded-3xl p-6 sm:p-7 border border-emerald-500/30 shadow-xl mb-8 relative overflow-hidden">
+        {/* Ambient Glow */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex items-center justify-between pb-3 border-b border-white/10 relative z-10">
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-400">
+              <HelpCircle size={22} />
+            </div>
+            <div>
+              <div className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 text-[10px] font-extrabold uppercase tracking-wider mb-1">
+                <span>⭐ {language === 'ta' ? 'முதல் தொகுதி: பயன்பாட்டு வழிகாட்டி' : 'Module 1: Quick Platform Guide & Instructions'}</span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-heading font-extrabold text-white">
+                {language === 'ta' ? 'சமையலறை வழிகாட்டி & விரைவு வழிமுறைகள்' : 'How Food Guardian Works: 4-Step Fast Guide'}
+              </h2>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setGuideExpanded(!guideExpanded)}
+            className="flex items-center space-x-1.5 text-xs font-bold bg-white/10 hover:bg-white/20 text-emerald-300 px-3 py-1.5 rounded-xl transition-all border border-white/15"
+          >
+            <span>{guideExpanded ? (language === 'ta' ? 'சுருக்கு' : 'Hide Guide') : (language === 'ta' ? 'முழு வழிகாட்டியைப் பார்' : 'Show Instructions')}</span>
+            {guideExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+          </button>
+        </div>
+
+        {guideExpanded && (
+          <div className="mt-5 space-y-4 relative z-10 animate-in fade-in slide-in-from-top-2 duration-200">
+            {/* 4 Interactive Guide Steps */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Step 1 */}
+              <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:border-emerald-400/40 transition-all flex flex-col justify-between group">
+                <div>
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-heading font-extrabold text-sm mb-2 group-hover:scale-110 transition-transform">
+                    1
+                  </div>
+                  <h3 className="font-heading font-bold text-sm text-white flex items-center gap-1.5">
+                    <ScanLine size={15} className="text-emerald-400" />
+                    {language === 'ta' ? 'உணவை ஸ்கேன்/சேர்' : 'Scan or Add Food'}
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                    {language === 'ta' 
+                      ? 'கேமரா, புகைப்படம் அல்லது பார்கோடு மூலம் உணவுப் பாக்கெட்டுகளை ஸ்கேன் செய்து உடனடியாகச் சேர்க்கவும்.' 
+                      : 'Scan packaging with camera, photo upload, or 1-click OCR presets.'}
+                  </p>
+                </div>
+                <Link
+                  to="/scan"
+                  className="mt-3 inline-flex items-center space-x-1 text-[11px] font-extrabold text-emerald-400 hover:text-emerald-300 transition-colors"
+                >
+                  <span>{language === 'ta' ? 'ஸ்கேனரைத் திறக்க' : 'Open Scanner'}</span>
+                  <ArrowRight size={13} />
+                </Link>
+              </div>
+
+              {/* Step 2 */}
+              <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:border-emerald-400/40 transition-all flex flex-col justify-between group">
+                <div>
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-heading font-extrabold text-sm mb-2 group-hover:scale-110 transition-transform">
+                    2
+                  </div>
+                  <h3 className="font-heading font-bold text-sm text-white flex items-center gap-1.5">
+                    <Bell size={15} className="text-amber-400" />
+                    {language === 'ta' ? 'எச்சரிக்கை நாட்கள் அமை' : 'Set Reminder Lead'}
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                    {language === 'ta' 
+                      ? 'காலாவதிக்கு 1, 2, 3, 5 அல்லது 7 நாட்களுக்கு முன்பாக உங்களுக்கு தானாக நினைவூட்டல் அனுப்பப்படும்.' 
+                      : 'Choose how many days before expiry to be alerted (1, 2, 3, 5, or 7 days).'}
+                  </p>
+                </div>
+                <Link
+                  to="/products/add"
+                  className="mt-3 inline-flex items-center space-x-1 text-[11px] font-extrabold text-amber-400 hover:text-amber-300 transition-colors"
+                >
+                  <span>{language === 'ta' ? 'உணவு சேர் படிவம்' : 'Add Item Form'}</span>
+                  <ArrowRight size={13} />
+                </Link>
+              </div>
+
+              {/* Step 3 */}
+              <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:border-emerald-400/40 transition-all flex flex-col justify-between group">
+                <div>
+                  <div className="w-8 h-8 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-heading font-extrabold text-sm mb-2 group-hover:scale-110 transition-transform">
+                    3
+                  </div>
+                  <h3 className="font-heading font-bold text-sm text-white flex items-center gap-1.5">
+                    <ChefHat size={15} className="text-teal-400" />
+                    {language === 'ta' ? '20+ AI செய்முறைகள்' : 'Cook 20+ AI Recipes'}
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                    {language === 'ta' 
+                      ? 'அவசர உணவுகளை வீணாக்காமல் சமைக்க 20-க்கும் மேற்பட்ட சர்வதேச உணவு குறிப்புகளைப் பெறுங்கள்.' 
+                      : 'Rescue urgent ingredients with AI Chef recommendations & voice-guided timers.'}
+                  </p>
+                </div>
+                <Link
+                  to="/recipes"
+                  className="mt-3 inline-flex items-center space-x-1 text-[11px] font-extrabold text-teal-400 hover:text-teal-300 transition-colors"
+                >
+                  <span>{language === 'ta' ? 'செய்முறைகளைக் காண்க' : 'Browse Recipes'}</span>
+                  <ArrowRight size={13} />
+                </Link>
+              </div>
+
+              {/* Step 4 */}
+              <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:border-emerald-400/40 transition-all flex flex-col justify-between group">
+                <div>
+                  <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-heading font-extrabold text-sm mb-2 group-hover:scale-110 transition-transform">
+                    4
+                  </div>
+                  <h3 className="font-heading font-bold text-sm text-white flex items-center gap-1.5">
+                    <ShoppingCart size={15} className="text-blue-400" />
+                    {language === 'ta' ? 'மறுஇருப்பு & 2D வரைபடம்' : 'Auto-Restock & Map'}
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                    {language === 'ta' 
+                      ? 'சாப்பிட்ட உணவுகள் தானாக ஷாப்பிங் பட்டியலில் சேரும். 1-கிளிக்கில் மீண்டும் குளிர்சாதன பெட்டியில் சேர்க்கலாம்.' 
+                      : 'Consumed foods auto-restock to your shopping list & transfer in 1 click.'}
+                  </p>
+                </div>
+                <Link
+                  to="/shopping-list"
+                  className="mt-3 inline-flex items-center space-x-1 text-[11px] font-extrabold text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <span>{language === 'ta' ? 'ஷாப்பிங் பட்டியல்' : 'Shopping List'}</span>
+                  <ArrowRight size={13} />
+                </Link>
+              </div>
+            </div>
+
+            {/* Quick Feature Shortcuts Bar */}
+            <div className="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center space-x-2 text-slate-300">
+                <Globe size={14} className="text-emerald-400" />
+                <span>{language === 'ta' ? 'மொழி மாற்றம்: மேல் பட்டியில் உள்ள "🌐 தமிழ் / English" கிளிக் செய்யவும்.' : 'Tip: Toggle English ↔ தமிழ் anytime via the Top Bar language button.'}</span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Link
+                  to="/fridge-map"
+                  className="px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-[11px] transition-colors"
+                >
+                  🧊 {language === 'ta' ? '2D பிரிட்ஜ் வரைபடம்' : 'Fridge Map'}
+                </Link>
+                <Link
+                  to="/meal-plan"
+                  className="px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-[11px] transition-colors"
+                >
+                  📅 {language === 'ta' ? 'உணவுத் திட்டம்' : 'Meal Plan'}
+                </Link>
+                <Link
+                  to="/audit"
+                  className="px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-[11px] transition-colors"
+                >
+                  📋 {language === 'ta' ? '3 நிமிட தணிக்கை' : '3-Min Audit'}
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* KPI Cards Grid */}
@@ -299,13 +476,13 @@ export default function Dashboard() {
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
                       {item.days_left <= 0 ? t('expiresToday') : item.days_left === 1 ? t('expiresTomorrow') : t('daysLeft', { days: item.days_left })}
                     </span>
-                    <span className="text-xs text-slate-400">{item.location || 'Fridge'}</span>
+                    <span className="text-xs text-slate-400">{tl(item.location || 'Fridge')}</span>
                   </div>
                   <h4 className="font-heading font-bold text-slate-900 dark:text-white text-sm">
-                    {item.product_name}
+                    {tf(item.product_name)}
                   </h4>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Qty: {item.quantity} {item.unit || ''} • {item.category}
+                    Qty: {item.quantity} {item.unit || ''} • {tc(item.category)}
                   </p>
                 </div>
 
@@ -390,7 +567,7 @@ export default function Dashboard() {
               {categoryData.slice(0, 4).map(c => (
                 <div key={c.name} className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.fill }} />
-                  <span>{c.name} ({c.value})</span>
+                  <span>{tc(c.name)} ({c.value})</span>
                 </div>
               ))}
             </div>
